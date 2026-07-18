@@ -3,6 +3,7 @@ import fitz
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
+from app.services.preprocessing import PreprocessingService
 
 client = TestClient(app)
 
@@ -32,7 +33,7 @@ def test_health_endpoint():
     }
 
 def test_upload_valid_pdf():
-    """Verify that a valid PDF file can be uploaded and text is extracted successfully."""
+    """Verify that a valid PDF file can be uploaded and text is extracted and preprocessed successfully."""
     pdf_text = "Standard legal agreement clause 1.1: The party of the first part..."
     pdf_bytes = create_mock_pdf(pdf_text)
     
@@ -45,8 +46,10 @@ def test_upload_valid_pdf():
     data = response.json()
     assert data["filename"] == "agreement.pdf"
     assert data["page_count"] == 1
-    assert pdf_text in data["extracted_text"]
-    assert data["character_count"] == len(data["extracted_text"])
+    assert "clauses" in data
+    assert len(data["clauses"]) > 0
+    assert "Standard legal agreement clause 1.1:" in data["clauses"][0]["text"]
+    assert "extracted_text" not in data
 
 def test_upload_invalid_extension():
     """Verify that uploading a file with an invalid extension returns 400 Bad Request."""
@@ -95,3 +98,85 @@ def test_upload_no_extractable_text_pdf():
     )
     assert response.status_code == 400
     assert response.json()["detail"] == "PDF contains no extractable text."
+
+
+def test_clean_text():
+    """Verify safe normalization cleans spacing, newlines, and hyphens without stripping clause separators."""
+    text = "  Hello   World!\r\nThis is a test- \n  word.   \n\n\n\nPreserved paragraph."
+    cleaned = PreprocessingService.clean_text(text)
+    assert cleaned == "Hello World!\nThis is a testword.\n\nPreserved paragraph."
+
+
+def test_mask_pii():
+    """Verify standard Indian PII (Email, Phone, Aadhaar, PAN) are masked properly."""
+    text = "Email me at user@example.com or call 9876543210. Aadhaar: 1234-5678-9012. PAN: ABCDE1234F."
+    masked = PreprocessingService.mask_pii(text)
+    assert "user@example.com" not in masked
+    assert "9876543210" not in masked
+    assert "1234-5678-9012" not in masked
+    assert "ABCDE1234F" not in masked
+    assert "[EMAIL]" in masked
+    assert "[PHONE]" in masked
+    assert "[AADHAAR]" in masked
+    assert "[PAN]" in masked
+
+
+def test_segment_clauses():
+    """Verify clause segmentation detects numbers and masks PII prior to ClauseSegment instantiation."""
+    text = "Preamble paragraph text.\n\n1. First main clause.\nSome details. Email: test@test.com\n\n1.1 Sub-clause title\nMore text."
+    clauses = PreprocessingService.segment_clauses(text)
+    assert len(clauses) == 3
+    
+    assert clauses[0].clause_id == "clause_1"
+    assert clauses[0].clause_number is None
+    assert clauses[0].text == "Preamble paragraph text."
+    
+    assert clauses[1].clause_id == "clause_2"
+    assert clauses[1].clause_number == "1."
+    assert "First main clause." in clauses[1].text
+    assert "[EMAIL]" in clauses[1].text  # Verifies PII masking is applied before ClauseSegment construction
+    
+    assert clauses[2].clause_id == "clause_3"
+    assert clauses[2].clause_number == "1.1"
+    assert "Sub-clause title" in clauses[2].text
+
+
+def test_upload_and_preprocess_integration():
+    """Verify that uploading a document preprocesses and masks it in the upload response."""
+    legal_doc = (
+        "This is a legal agreement.\n\n"
+        "1. Parties involved.\n"
+        "The first party is contact@firstparty.com with PAN ABCDE1234F.\n\n"
+        "2. Payment Terms.\n"
+        "Payment of Rs 10,000 shall be made to Aadhaar number 9876-5432-1098."
+    )
+    pdf_bytes = create_mock_pdf(legal_doc)
+    response = client.post(
+        "/documents/upload",
+        files={"file": ("legal_doc.pdf", pdf_bytes, "application/pdf")}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    
+    assert data["filename"] == "legal_doc.pdf"
+    assert data["page_count"] == 1
+    assert "clauses" in data
+    assert "extracted_text" not in data
+    clauses = data["clauses"]
+    assert len(clauses) == 3
+    
+    # Preamble
+    assert clauses[0]["clause_number"] is None
+    assert "This is a legal agreement." in clauses[0]["text"]
+    
+    # Clause 1
+    assert clauses[1]["clause_number"] == "1."
+    assert "[EMAIL]" in clauses[1]["text"]
+    assert "[PAN]" in clauses[1]["text"]
+    assert "contact@firstparty.com" not in clauses[1]["text"]
+    
+    # Clause 2
+    assert clauses[2]["clause_number"] == "2."
+    assert "[AADHAAR]" in clauses[2]["text"]
+    assert "9876-5432-1098" not in clauses[2]["text"]
+

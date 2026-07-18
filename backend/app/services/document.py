@@ -5,6 +5,7 @@ from app.services.exceptions import (
     CorruptPDFError,
     NoExtractableTextError,
 )
+from app.services.preprocessing import PreprocessingService
 
 class DocumentService:
     @staticmethod
@@ -35,11 +36,15 @@ class DocumentService:
             if not extracted_text.strip():
                 raise NoExtractableTextError("PDF contains no extractable text.")
             
+            # 4. Clean and preprocess the extracted text
+            cleaned_text = PreprocessingService.clean_text(extracted_text)
+            clauses = PreprocessingService.segment_clauses(cleaned_text)
+            
             return DocumentUploadResponse(
                 filename=filename,
                 page_count=page_count,
                 character_count=len(extracted_text),
-                extracted_text=extracted_text
+                clauses=clauses
             )
         finally:
             doc.close()
