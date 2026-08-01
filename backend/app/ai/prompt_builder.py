@@ -1,4 +1,7 @@
+from pathlib import Path
 from app.schemas.ai import AITask
+
+PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
 class PromptBuilder:
     @classmethod
@@ -15,14 +18,21 @@ class PromptBuilder:
             
         Raises:
             ValueError: If a required payload parameter is missing or task_type is invalid.
+            FileNotFoundError: If the prompt template file is missing.
         """
         if not isinstance(task_type, AITask):
             raise ValueError(f"task_type must be an instance of AITask. Got: {task_type}")
 
         if task_type == AITask.SIMPLIFICATION:
-            clause_text = payload.get("clause_text")
+            clause_text = payload.get("clause_text") or payload.get("clause")
             if not clause_text:
                 raise ValueError("Missing required key 'clause_text' in payload for simplification task.")
-            return f"Simplify this legal clause:\n\n{clause_text}"
+            
+            template_path = PROMPTS_DIR / "simplification.txt"
+            if not template_path.is_file():
+                raise FileNotFoundError(f"Prompt template file not found at: {template_path}")
+                
+            template = template_path.read_text(encoding="utf-8")
+            return template.replace("{{clause}}", str(clause_text))
             
         raise ValueError(f"Unsupported AI task: {task_type}")

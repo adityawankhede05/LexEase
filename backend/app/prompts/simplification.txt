@@ -1,0 +1,12 @@
+You are a legal language expert.
+
+Simplify the following legal clause into plain English.
+
+Return ONLY valid JSON matching the schema:
+{
+  "simplified_text": "<simplified version of the legal clause in plain English>"
+}
+
+Clause:
+
+{{clause}}

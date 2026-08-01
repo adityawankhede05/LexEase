@@ -10,6 +10,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "pymupdf>=1.28.0",
     "python-multipart>=0.0.32",
+    "google-genai>=2.16.0",
 ]
 
 [tool.uv]

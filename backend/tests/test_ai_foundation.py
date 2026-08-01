@@ -1,3 +1,4 @@
+from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pydantic import BaseModel
 from app.schemas.ai import AITask, ClauseSimplificationResponse
@@ -5,7 +6,7 @@ from app.ai.base_provider import BaseAIProvider
 from app.ai.gemini_provider import GeminiProvider
 from app.ai.prompt_builder import PromptBuilder
 from app.ai.response_parser import ResponseParser
-from app.ai.exceptions import AIResponseValidationError
+from app.ai.exceptions import AIResponseValidationError, AIProviderError
 from app.services.ai import AIService
 
 class MockAIProvider(BaseAIProvider):
@@ -20,18 +21,49 @@ class MockAIProvider(BaseAIProvider):
         return self.response_text
 
 @pytest.mark.anyio
-async def test_gemini_provider_not_implemented():
-    """Verify that the GeminiProvider skeleton raises NotImplementedError."""
-    provider = GeminiProvider()
-    with pytest.raises(NotImplementedError) as exc_info:
-        await provider.generate("test prompt")
-    assert "GeminiProvider is not yet implemented" in str(exc_info.value)
+async def test_gemini_provider_missing_api_key():
+    """Verify that GeminiProvider raises AIProviderError when GEMINI_API_KEY is missing."""
+    provider = GeminiProvider(api_key=None)
+    with patch("app.ai.gemini_provider.settings.GEMINI_API_KEY", None):
+        with pytest.raises(AIProviderError) as exc_info:
+            await provider.generate("test prompt")
+        assert "GEMINI_API_KEY is not configured" in str(exc_info.value)
+
+@pytest.mark.anyio
+async def test_gemini_provider_generate_success():
+    """Verify that GeminiProvider successfully calls genai client and returns response text."""
+    mock_genai_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.text = '{"simplified_text": "The customer must pay."}'
+    
+    mock_genai_client.aio.models.generate_content = AsyncMock(return_value=mock_response)
+    
+    provider = GeminiProvider(api_key="fake-test-key")
+    with patch.object(provider, "_get_client", return_value=mock_genai_client):
+        result = await provider.generate("Test legal prompt")
+        assert result == '{"simplified_text": "The customer must pay."}'
+        mock_genai_client.aio.models.generate_content.assert_called_once()
+
+@pytest.mark.anyio
+async def test_gemini_provider_retry_on_transient_error():
+    """Verify that GeminiProvider retries on transient errors up to max_retries."""
+    mock_genai_client = MagicMock()
+    mock_genai_client.aio.models.generate_content = AsyncMock(side_effect=TimeoutError("Request timed out"))
+    
+    provider = GeminiProvider(api_key="fake-test-key")
+    with patch.object(provider, "_get_client", return_value=mock_genai_client), \
+         patch("app.ai.gemini_provider.settings.MAX_RETRIES", 2), \
+         patch("asyncio.sleep", new_callable=AsyncMock):
+        with pytest.raises(AIProviderError) as exc_info:
+            await provider.generate("Test prompt")
+        assert "GeminiProvider failed after 2 attempts" in str(exc_info.value)
+        assert mock_genai_client.aio.models.generate_content.call_count == 2
 
 def test_prompt_builder_simplification():
-    """Verify that PromptBuilder builds correct prompt for SIMPLIFICATION."""
+    """Verify that PromptBuilder builds correct prompt for SIMPLIFICATION by loading template."""
     payload = {"clause_text": "The Client shall compensate the Provider."}
     prompt = PromptBuilder.build_prompt(AITask.SIMPLIFICATION, payload)
-    assert "Simplify this legal clause:" in prompt
+    assert "Simplify the following legal clause into plain English." in prompt
     assert "The Client shall compensate the Provider." in prompt
 
 def test_prompt_builder_missing_keys():
@@ -43,7 +75,6 @@ def test_prompt_builder_missing_keys():
 def test_prompt_builder_invalid_task():
     """Verify that PromptBuilder raises ValueError for unsupported or invalid task types."""
     with pytest.raises(ValueError) as exc_info:
-        # Pass raw string instead of AITask enum
         PromptBuilder.build_prompt("unsupported_task", {})
     assert "task_type must be an instance of AITask" in str(exc_info.value)
 
@@ -92,6 +123,5 @@ async def test_ai_service_orchestration():
     assert isinstance(result, ClauseSimplificationResponse)
     assert result.simplified_text == "Generic simplified clause."
     
-    # Assert PromptBuilder was called correctly
     assert mock_provider.last_prompt is not None
     assert "Party of the first part agrees to..." in mock_provider.last_prompt

@@ -13,6 +13,10 @@ class Settings(BaseModel):
     
     ALLOWED_ORIGINS: list[str] = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
     GEMINI_API_KEY: str | None = os.getenv("GEMINI_API_KEY")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    GEMINI_TEMPERATURE: float = float(os.getenv("GEMINI_TEMPERATURE", "0.2"))
+    GEMINI_TIMEOUT: float = float(os.getenv("GEMINI_TIMEOUT", "30.0"))
+    MAX_RETRIES: int = int(os.getenv("MAX_RETRIES", "3"))
     DATABASE_URL: str | None = os.getenv("DATABASE_URL")
     PORT: int = int(os.getenv("PORT", "8000"))
 
