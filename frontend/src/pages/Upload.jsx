@@ -61,10 +61,19 @@ function Upload() {
     if (!selectedFile || loading) return
     setLoading(true)
     
+    // Calculate size string in KB to pass in state
+    const sizeInKB = (selectedFile.size / 1024).toFixed(1) + ' KB'
+    
     // Simulate 2-second document analysis delay prior to dashboard navigation
     setTimeout(() => {
       setLoading(false)
-      navigate('/analysis')
+      navigate('/analysis', {
+        state: {
+          fileName: selectedFile.name,
+          fileSize: sizeInKB,
+          fileType: selectedFile.type || 'application/pdf'
+        }
+      })
     }, 2000)
   }
 

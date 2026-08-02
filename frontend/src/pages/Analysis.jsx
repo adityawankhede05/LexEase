@@ -1,8 +1,19 @@
 import React from 'react'
+import { useLocation } from 'react-router-dom'
 import Card from '../components/Card'
 import { mockDocument, mockClauses, mockRisks } from '../data/mockAnalysis'
 
 function Analysis() {
+  const location = useLocation()
+  const passedState = location.state
+
+  // Resolve document metadata from passed React Router location state or fallback to mock values
+  const docName = passedState?.fileName || mockDocument.name
+  const docSize = passedState?.fileSize || mockDocument.fileSize
+  const docType = passedState?.fileType || 'application/pdf'
+  const docUploadedAt = passedState ? 'Just now' : mockDocument.uploadedAt
+  const docPageCount = passedState ? 'N/A' : `${mockDocument.pageCount} pages`
+
   // Helper to resolve severity badge colors
   const getSeverityStyle = (severity) => {
     switch (severity.toLowerCase()) {
@@ -27,14 +38,16 @@ function Analysis() {
           </div>
           <div className="space-y-1">
             <h1 className="text-xl sm:text-2xl font-bold text-[#F8FAFC] tracking-tight break-all">
-              {mockDocument.name}
+              {docName}
             </h1>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[#94A3B8]">
-              <span>Uploaded: {mockDocument.uploadedAt}</span>
-              <span className="hidden sm:inline">•</span>
-              <span>Size: {mockDocument.fileSize}</span>
-              <span className="hidden sm:inline">•</span>
-              <span>Pages: {mockDocument.pageCount}</span>
+              <span>Uploaded: {docUploadedAt}</span>
+              <span className="hidden sm:inline text-slate-700">•</span>
+              <span>Size: {docSize}</span>
+              <span className="hidden sm:inline text-slate-700">•</span>
+              <span>Type: {docType}</span>
+              <span className="hidden sm:inline text-slate-700">•</span>
+              <span>Pages: {docPageCount}</span>
             </div>
           </div>
         </div>
