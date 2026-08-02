@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 class AITask(StrEnum):
     SIMPLIFICATION = "simplification"
+    DOCUMENT_SUMMARY = "document_summary"
 
 class ClauseSimplificationResponse(BaseModel):
     simplified_text: str

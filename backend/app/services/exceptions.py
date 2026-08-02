@@ -17,3 +17,11 @@ class CorruptPDFError(DocumentError):
 class NoExtractableTextError(DocumentError):
     """Raised when the PDF does not contain any extractable text."""
     pass
+
+class EmptyClauseListError(DocumentError):
+    """Raised when an empty list of clauses is provided for summarization."""
+    pass
+
+class SummaryGenerationError(DocumentError):
+    """Raised when document summarization fails in the AI service layer."""
+    pass

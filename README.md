@@ -4,10 +4,18 @@ LexEase is a web application designed to help ordinary Indian citizens understan
 
 ## Project Structure
 
-*   `/backend` - FastAPI backend application using Python 3.11, `uv` package manager, and LangChain + Gemini.
+*   `/backend` - FastAPI backend application using Python 3.11, `uv` package manager, Google Gemini API, and AI Foundation Layer.
 *   `/frontend` - React SPA frontend built with Vite, TailwindCSS, React Router, and Axios.
-*   `/docs` - Project documentation, planning, and guidelines.
+*   `/docs` - Comprehensive API, Architecture, Testing, and Deployment documentation.
 *   `docker-compose.yml` - Multi-container setup for local development.
+
+## Current Backend Features
+- Health Check (`GET /api/health`)
+- PDF Upload & Preprocessing (`POST /documents/upload`)
+- Text Extraction, Cleaning & Clause Segmentation
+- Indian PII Masking (Email, Phone, Aadhaar, PAN)
+- AI Foundation Layer (Provider agnostic, Gemini integration, structured parsing)
+- Whole Document Summarization (`POST /documents/summarize`)
 
 ## Setup Instructions
 

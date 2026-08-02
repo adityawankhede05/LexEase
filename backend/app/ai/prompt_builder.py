@@ -34,5 +34,17 @@ class PromptBuilder:
                 
             template = template_path.read_text(encoding="utf-8")
             return template.replace("{{clause}}", str(clause_text))
-            
+
+        if task_type == AITask.DOCUMENT_SUMMARY:
+            document_text = payload.get("document_text") or payload.get("document")
+            if not document_text:
+                raise ValueError("Missing required key 'document_text' in payload for document summary task.")
+
+            template_path = PROMPTS_DIR / "document_summary.txt"
+            if not template_path.is_file():
+                raise FileNotFoundError(f"Prompt template file not found at: {template_path}")
+
+            template = template_path.read_text(encoding="utf-8")
+            return template.replace("{{document}}", str(document_text))
+
         raise ValueError(f"Unsupported AI task: {task_type}")
