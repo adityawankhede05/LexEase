@@ -11,15 +11,18 @@ function Upload() {
 
   const handleDragOver = (e) => {
     e.preventDefault()
+    if (loading) return
     setIsDragOver(true)
   }
 
   const handleDragLeave = () => {
+    if (loading) return
     setIsDragOver(false)
   }
 
   const handleDrop = (e) => {
     e.preventDefault()
+    if (loading) return
     setIsDragOver(false)
     const files = e.dataTransfer.files
     if (files && files.length > 0) {
@@ -33,6 +36,7 @@ function Upload() {
   }
 
   const handleFileChange = (e) => {
+    if (loading) return
     const files = e.target.files
     if (files && files.length > 0) {
       setSelectedFile(files[0])
@@ -40,11 +44,13 @@ function Upload() {
   }
 
   const triggerFileSelect = () => {
+    if (loading) return
     fileInputRef.current.click()
   }
 
   const removeSelectedFile = (e) => {
     e.stopPropagation()
+    if (loading) return
     setSelectedFile(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -52,13 +58,14 @@ function Upload() {
   }
 
   const handleAnalyze = () => {
-    if (!selectedFile) return
+    if (!selectedFile || loading) return
     setLoading(true)
-    // Simulate short processing time prior to navigation
+    
+    // Simulate 2-second document analysis delay prior to dashboard navigation
     setTimeout(() => {
       setLoading(false)
       navigate('/analysis')
-    }, 1500)
+    }, 2000)
   }
 
   return (
@@ -86,7 +93,7 @@ function Upload() {
               : selectedFile
               ? 'border-emerald-500/50 bg-emerald-500/5'
               : 'border-slate-700/80 hover:border-[#2563EB]/50 hover:bg-slate-800/10'
-          }`}
+          } ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
         >
           <input
             type="file"
@@ -94,6 +101,7 @@ function Upload() {
             onChange={handleFileChange}
             accept=".pdf"
             className="hidden"
+            disabled={loading}
           />
 
           <div className="flex flex-col items-center justify-center space-y-4">
@@ -114,22 +122,26 @@ function Upload() {
 
             {/* Dynamic Status Text */}
             {selectedFile ? (
-              <div className="space-y-1">
-                <p className="text-[#F8FAFC] font-semibold text-lg max-w-md break-all">
+              <div className="space-y-2">
+                <p className="text-[#F8FAFC] font-semibold text-lg max-w-md break-all mx-auto">
                   {selectedFile.name}
                 </p>
-                <p className="text-[#94A3B8] text-sm">
-                  {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • PDF Document
-                </p>
-                <button
-                  onClick={removeSelectedFile}
-                  className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Remove file
-                </button>
+                <div className="text-[#94A3B8] text-sm flex flex-col sm:flex-row sm:items-center justify-center gap-x-4 gap-y-1">
+                  <span>File Size: {(selectedFile.size / 1024).toFixed(1)} KB</span>
+                  <span className="hidden sm:inline text-slate-700">•</span>
+                  <span>File Type: {selectedFile.type || 'application/pdf'}</span>
+                </div>
+                {!loading && (
+                  <button
+                    onClick={removeSelectedFile}
+                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Remove File
+                  </button>
+                )}
               </div>
             ) : (
               <div className="space-y-1">
@@ -166,7 +178,7 @@ function Upload() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                Processing Document...
+                Analyzing document...
               </>
             ) : (
               <>
