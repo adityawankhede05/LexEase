@@ -1,18 +1,51 @@
 import React from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Card from '../components/Card'
 import { mockDocument, mockClauses, mockRisks } from '../data/mockAnalysis'
 
 function Analysis() {
   const location = useLocation()
+  const navigate = useNavigate()
   const passedState = location.state
 
-  // Resolve document metadata from passed React Router location state or fallback to mock values
-  const docName = passedState?.fileName || mockDocument.name
-  const docSize = passedState?.fileSize || mockDocument.fileSize
-  const docType = passedState?.fileType || 'application/pdf'
-  const docUploadedAt = passedState ? 'Just now' : mockDocument.uploadedAt
-  const docPageCount = passedState ? 'N/A' : `${mockDocument.pageCount} pages`
+  // If no document has been uploaded, display professional empty-state
+  if (!passedState) {
+    return (
+      <div className="max-w-md mx-auto py-12 sm:py-20 text-center">
+        <div className="bg-[#1E293B] border border-slate-800 rounded-2xl p-8 sm:p-10 shadow-xl space-y-6 flex flex-col items-center">
+          {/* Custom Empty State Icon */}
+          <div className="w-16 h-16 rounded-full bg-slate-800/80 border border-slate-700/50 flex items-center justify-center text-[#D4AF37]">
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          
+          <div className="space-y-2">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-[#F8FAFC]">
+              No Document Analyzed
+            </h1>
+            <p className="text-[#94A3B8] text-sm leading-relaxed max-w-sm">
+              Upload a legal document to begin analysis.
+            </p>
+          </div>
+
+          <button
+            onClick={() => navigate('/upload')}
+            className="w-full py-3 rounded-lg font-semibold tracking-wide text-white bg-[#2563EB] hover:bg-[#2563EB]/90 transition-all duration-300 border border-[#2563EB] active:scale-95 shadow-lg shadow-[#2563EB]/10"
+          >
+            Go to Upload
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Resolve document metadata from passed React Router location state
+  const docName = passedState.fileName
+  const docSize = passedState.fileSize
+  const docType = passedState.fileType
+  const docUploadedAt = 'Just now'
+  const docPageCount = 'N/A'
 
   // Helper to resolve severity badge colors
   const getSeverityStyle = (severity) => {
