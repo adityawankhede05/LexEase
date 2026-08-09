@@ -29,6 +29,22 @@ The backend test suite is located under `backend/tests/`:
    - Large document summarization with 50+ clause segments.
    - Endpoint tests for `POST /documents/summarize` (200 OK, 400 Bad Request, 500 Internal Server Error).
 
+4. **`test_clause_analysis.py`**:
+   - `PromptBuilder` for `AITask.CLAUSE_ANALYSIS`: verifies prompt contains `clause_id`, `risk_level`, `explanation`, `recommendation`, and `confidence` keywords.
+   - `ClauseAnalysisService` success path: validates all fields in returned `ClauseRiskResult`, including `recommendation` as a non-empty string.
+   - Empty clause list raises `EmptyClauseListError`.
+   - `AIProviderError` is wrapped and re-raised as `ClauseAnalysisError`.
+   - Malformed JSON from AI raises `ClauseAnalysisError`.
+   - Schema validation failure (missing `recommendation`) raises `ClauseAnalysisError`.
+   - Large document (54 clauses) handled in a single batched request; all results returned.
+   - All `confidence` values validated within `[0.0, 1.0]`.
+   - Endpoint test for `POST /clauses/analyze` (200 OK): verifies `total_clauses`, `risk_level`, and `recommendation` in response body.
+   - Endpoint test for empty clause list → 400 Bad Request.
+   - Endpoint test for AI failure → 500 Internal Server Error.
+   - Pydantic schema test: invalid `risk_level` string raises `ValidationError`.
+   - Pydantic schema test: `confidence` outside `[0.0, 1.0]` raises `ValidationError`.
+   - Pydantic schema test: missing `recommendation` field raises `ValidationError`.
+
 ---
 
 ## Execution Commands
@@ -42,6 +58,11 @@ cd backend
 Run all tests:
 ```bash
 uv run pytest
+```
+
+Run only clause analysis tests:
+```bash
+uv run pytest tests/test_clause_analysis.py
 ```
 
 Run only summary tests:
@@ -59,5 +80,5 @@ uv run pytest -v
 ## Test Results
 
 ```
-31 passed in 6.89s
+46 passed in ~9s
 ```

@@ -6,6 +6,14 @@ This guide outlines deployment considerations for the LexEase backend and AI sum
 
 ---
 
+## Sprint 6 Notes
+
+> [!NOTE]
+> **No new environment variables are required for Sprint 6.**
+> Clause risk analysis (`POST /clauses/analyze`) reuses the existing Gemini configuration (`GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_TEMPERATURE`, `GEMINI_TIMEOUT`, `MAX_RETRIES`) and sends a single batched AI request per endpoint call.
+
+---
+
 ## Environment Configuration
 
 Ensure the following environment variables are set in your production environment or container environment (`docker-compose.yml` / `.env`):

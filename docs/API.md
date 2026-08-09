@@ -23,6 +23,8 @@ Current backend capabilities include:
 - Indian PII Masking
 - AI Foundation Layer (Internal)
 - Google Gemini Provider Integration (Internal)
+- Whole Document Summarization
+- Clause-Level Legal Risk Analysis
 
 ---
 
@@ -395,13 +397,132 @@ application/json
 
 ---
 
+---
+
+# 4. Clause-Level Risk Analysis
+
+## Endpoint
+
+```
+POST /clauses/analyze
+```
+
+## Description
+
+Analyzes a list of preprocessed clause segments for legal risk from the perspective of an ordinary Indian citizen. All clauses are processed in a **single batched AI request**.
+
+The backend automatically:
+1. Validates the non-empty clause segment array (`ClauseAnalysisRequest` extending `DocumentContext`).
+2. Serializes all clauses into a single JSON payload and constructs a batched prompt.
+3. Invokes `AIService` with `AITask.CLAUSE_ANALYSIS` and `GeminiProvider`.
+4. Parses and validates the AI response against `ClauseAnalysisAIResponse`.
+5. Returns a structured JSON response with per-clause risk results.
+
+---
+
+## Request
+
+Content-Type
+
+```
+application/json
+```
+
+### Request Body Schema (`ClauseAnalysisRequest`)
+
+```json
+{
+  "clauses": [
+    {
+      "clause_id": "clause_1",
+      "clause_number": "1.1",
+      "text": "The tenant shall pay monthly rent on or before the 5th of each month."
+    },
+    {
+      "clause_id": "clause_2",
+      "clause_number": "2.1",
+      "text": "The landlord may terminate the agreement without notice at any time."
+    }
+  ]
+}
+```
+
+---
+
+## Success Response (200 OK)
+
+```json
+{
+  "total_clauses": 2,
+  "results": [
+    {
+      "clause_id": "clause_1",
+      "clause_number": "1.1",
+      "risk_level": "low",
+      "explanation": "This is a standard rent payment clause with a clear due date and no unusual penalty terms.",
+      "recommendation": "Review for completeness; this clause is generally acceptable as written.",
+      "confidence": 0.91
+    },
+    {
+      "clause_id": "clause_2",
+      "clause_number": "2.1",
+      "risk_level": "high",
+      "explanation": "This clause grants the landlord unchecked termination rights with no notice requirement, which is highly one-sided and offers the tenant no protection.",
+      "recommendation": "Negotiate a minimum notice period (e.g., 30 days) and seek legal advice before signing.",
+      "confidence": 0.95
+    }
+  ]
+}
+```
+
+---
+
+## Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `total_clauses` | int | Number of clauses analyzed |
+| `results` | list | List of `ClauseRiskResult` objects |
+
+### ClauseRiskResult Object
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `clause_id` | str | Echoed verbatim from input for deterministic mapping |
+| `clause_number` | str \| null | Echoed verbatim from input |
+| `risk_level` | `low` \| `medium` \| `high` | AI-assigned risk classification |
+| `explanation` | str | 1–3 sentence plain-English risk explanation |
+| `recommendation` | str | 1–2 sentence actionable advice before signing |
+| `confidence` | float [0.0–1.0] | AI confidence score for the assigned risk level |
+
+---
+
+## Error Responses
+
+### Empty Clause List (400 Bad Request)
+
+```json
+{
+  "detail": "Clause list cannot be empty for clause risk analysis."
+}
+```
+
+### AI Generation Failure (500 Internal Server Error)
+
+```json
+{
+  "detail": "Clause risk analysis failed: Gemini API Error..."
+}
+```
+
+---
+
 # Upcoming Endpoints
 
 These APIs are planned and are **not yet implemented**.
 
 |Method|Endpoint|Purpose|
 |------|--------|-------|
-|POST|/clauses/analyze|Clause risk analysis|
 |POST|/chat|Grounded document Q&A|
 |POST|/translate|Hindi/Marathi translation|
 
@@ -431,7 +552,7 @@ Current backend test coverage:
 Current Result
 
 ```
-31 tests passed
+46 tests passed
 ```
 
 ---
@@ -462,3 +583,4 @@ Current Result
 |Sprint 4A – AI Foundation Layer|Completed|
 |Sprint 4B – Gemini Integration|Completed|
 |Sprint 5 – Whole Document Summarization|Completed|
+|Sprint 6 – Clause Risk Analysis|Completed|

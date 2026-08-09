@@ -25,3 +25,7 @@ class EmptyClauseListError(DocumentError):
 class SummaryGenerationError(DocumentError):
     """Raised when document summarization fails in the AI service layer."""
     pass
+
+class ClauseAnalysisError(DocumentError):
+    """Raised when clause risk analysis fails in the AI service layer."""
+    pass

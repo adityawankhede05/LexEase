@@ -1,5 +1,13 @@
 # LexEase Database Documentation
 
+## Sprint 6 Status
+
+> [!NOTE]
+> **No database changes were introduced in Sprint 6.**
+> The clause risk analysis service (`POST /clauses/analyze`) operates statelessly in-memory on the provided `ClauseSegment` payloads and AI Foundation Layer responses. No persistence layer is required.
+
+---
+
 ## Sprint 5 Status
 
 > [!NOTE]

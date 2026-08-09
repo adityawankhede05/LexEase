@@ -47,4 +47,18 @@ class PromptBuilder:
             template = template_path.read_text(encoding="utf-8")
             return template.replace("{{document}}", str(document_text))
 
+        if task_type == AITask.CLAUSE_ANALYSIS:
+            clauses_json = payload.get("clauses_json")
+            if not clauses_json:
+                raise ValueError(
+                    "Missing required key 'clauses_json' in payload for clause analysis task."
+                )
+
+            template_path = PROMPTS_DIR / "clause_risk.txt"
+            if not template_path.is_file():
+                raise FileNotFoundError(f"Prompt template file not found at: {template_path}")
+
+            template = template_path.read_text(encoding="utf-8")
+            return template.replace("{{clauses_json}}", str(clauses_json))
+
         raise ValueError(f"Unsupported AI task: {task_type}")

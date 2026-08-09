@@ -16,6 +16,7 @@ LexEase is a web application designed to help ordinary Indian citizens understan
 - Indian PII Masking (Email, Phone, Aadhaar, PAN)
 - AI Foundation Layer (Provider agnostic, Gemini integration, structured parsing)
 - Whole Document Summarization (`POST /documents/summarize`)
+- Clause-Level Legal Risk Analysis (`POST /clauses/analyze`)
 
 ## Setup Instructions
 
