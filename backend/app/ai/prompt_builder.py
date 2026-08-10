@@ -61,4 +61,24 @@ class PromptBuilder:
             template = template_path.read_text(encoding="utf-8")
             return template.replace("{{clauses_json}}", str(clauses_json))
 
+        if task_type == AITask.DOCUMENT_QA:
+            question = payload.get("question")
+            clauses_context = payload.get("clauses_context")
+            if not question:
+                raise ValueError("Missing required key 'question' in payload for document Q&A task.")
+            if not clauses_context:
+                raise ValueError("Missing required key 'clauses_context' in payload for document Q&A task.")
+
+            template_path = PROMPTS_DIR / "document_qa.txt"
+            if not template_path.is_file():
+                raise FileNotFoundError(f"Prompt template file not found at: {template_path}")
+
+            template = template_path.read_text(encoding="utf-8")
+            return (
+                template.replace("{{question}}", str(question)).replace(
+                    "{{clauses_context}}", str(clauses_context)
+                )
+            )
+
         raise ValueError(f"Unsupported AI task: {task_type}")
+

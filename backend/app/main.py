@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.logging import setup_logging
-from app.api.routers import health, documents, summary, clause_analysis
+from app.api.routers import health, documents, summary, clause_analysis, qa
 
 # Setup logging
 setup_logging()
@@ -27,3 +27,5 @@ app.include_router(health.router, prefix="/api", tags=["System"])
 app.include_router(documents.router)
 app.include_router(summary.router)
 app.include_router(clause_analysis.router)
+app.include_router(qa.router)
+

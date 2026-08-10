@@ -17,6 +17,9 @@ LexEase is a web application designed to help ordinary Indian citizens understan
 - AI Foundation Layer (Provider agnostic, Gemini integration, structured parsing)
 - Whole Document Summarization (`POST /documents/summarize`)
 - Clause-Level Legal Risk Analysis (`POST /clauses/analyze`)
+- Grounded Document Q&A (`POST /documents/ask`) with minimum lexical relevance threshold scoring (`min_score = 0.6`) and early termination before AI invocation for unrelated questions.
+
+
 
 ## Setup Instructions
 

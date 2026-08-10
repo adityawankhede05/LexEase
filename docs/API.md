@@ -131,6 +131,7 @@ multipart/form-data
     "filename": "RentalAgreement.pdf",
     "page_count": 6,
     "character_count": 7852,
+    "document_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "clauses": [
         {
             "clause_id": "clause_1",
@@ -155,7 +156,9 @@ multipart/form-data
 |filename|Uploaded PDF name|
 |page_count|Total PDF pages|
 |character_count|Characters extracted before masking|
+|document_id|Generated document context identifier for Q&A|
 |clauses|List of cleaned clauses|
+
 
 ---
 
@@ -517,13 +520,132 @@ application/json
 
 ---
 
+# 5. Grounded Document Q&A
+
+## Endpoint
+
+```
+POST /documents/ask
+```
+
+## Description
+
+Answers user questions about a previously uploaded legal document based strictly on its preprocessed clause segments. Uses lightweight lexical relevance retrieval to select top relevant clauses before sending context to Gemini.
+
+The backend automatically:
+1. Retrieves the preprocessed `ClauseSegment` list from `DocumentContextStore` by `document_id`.
+2. Runs `ClauseRetrievalService` (lexical overlap scoring with minimum relevance threshold `min_score = 0.6`) to rank and select relevant clauses.
+3. **Early Termination**: If no clauses meet the minimum relevance threshold (`min_score = 0.6`) — such as when asking unrelated questions like *"What is the capital of France?"* — the service terminates early and returns `cannot_answer: true`, `confidence: 0.0`, and `source_clauses: []` **without invoking the AI provider or Gemini API**.
+4. Otherwise formats relevant clauses into prompt payload and invokes `AIService` with `AITask.DOCUMENT_QA`.
+5. Parses and validates the AI response against `DocumentQAResponse`.
+6. Returns structured answer, source clause IDs, confidence score, and cannot_answer flag.
+
+
+---
+
+## Request
+
+Content-Type
+
+```
+application/json
+```
+
+### Request Body Schema (`DocumentQARequest`)
+
+```json
+{
+  "document_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "question": "What is the rent payment due date?"
+}
+```
+
+### Parameters
+
+|Field|Type|Required|Description|
+|-----|----|--------|-----------|
+|`document_id`|str|Yes|Generated document context identifier returned from `/documents/upload`|
+|`question`|str|Yes|User question string (max 2000 characters)|
+
+---
+
+## Success Response (200 OK)
+
+```json
+{
+  "answer": "According to clause_1, the tenant must pay monthly rent on or before the 5th of each calendar month.",
+  "source_clauses": ["clause_1"],
+  "confidence": 0.94,
+  "cannot_answer": false
+}
+```
+
+### Unanswerable Context Response (200 OK)
+
+```json
+{
+  "answer": "The provided document does not contain relevant information to answer this question.",
+  "source_clauses": [],
+  "confidence": 0.0,
+  "cannot_answer": true
+}
+```
+
+---
+
+## Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `answer` | str | Grounded plain-English answer or explanation if unanswerable |
+| `source_clauses` | list[str] | List of `clause_id` strings used to construct the answer |
+| `confidence` | float [0.0–1.0] | AI certainty score (0.0 if `cannot_answer` is true) |
+| `cannot_answer` | bool | Flag indicating if the document lacked sufficient information |
+
+---
+
+## Error Responses
+
+### Validation Error (422 Unprocessable Entity)
+
+Returned when `document_id` or `question` is missing/empty, or `question` exceeds 2000 characters.
+
+```json
+{
+  "detail": [
+    {
+      "loc": ["body", "question"],
+      "msg": "String should have at least 1 character",
+      "type": "string_type"
+    }
+  ]
+}
+```
+
+### Document Not Found (404 Not Found)
+
+```json
+{
+  "detail": "No document context found for document_id: unknown_doc_id"
+}
+```
+
+### AI Generation Failure (500 Internal Server Error)
+
+```json
+{
+  "detail": "Document Q&A failed: Gemini API Error..."
+}
+```
+
+---
+
 # Upcoming Endpoints
 
 These APIs are planned and are **not yet implemented**.
 
 |Method|Endpoint|Purpose|
 |------|--------|-------|
-|POST|/chat|Grounded document Q&A|
 |POST|/translate|Hindi/Marathi translation|
 
 ---
@@ -547,13 +669,16 @@ Current backend test coverage:
 - Document summarization prompt building
 - Whole document summarization service
 - Large document summarization (50+ clauses)
-- Summarization router endpoint (200, 400, 500 error cases)
+- Summarization router endpoint
+- Clause risk analysis service & router
+- Grounded document Q&A service & router (valid questions, missing doc, lexical retrieval, min_score threshold filtering, ranking, irrelevant question regression tests, zero AI calls on unrelated questions, grounded source clause IDs, cannot_answer response, 422/404/500 endpoint errors, large document retrieval)
 
 Current Result
 
 ```
-46 tests passed
+69 tests passed
 ```
+
 
 ---
 
@@ -584,3 +709,4 @@ Current Result
 |Sprint 4B – Gemini Integration|Completed|
 |Sprint 5 – Whole Document Summarization|Completed|
 |Sprint 6 – Clause Risk Analysis|Completed|
+|Sprint 7 – Grounded Document Q&A|Completed|

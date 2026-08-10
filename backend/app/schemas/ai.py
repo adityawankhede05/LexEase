@@ -5,6 +5,8 @@ class AITask(StrEnum):
     SIMPLIFICATION = "simplification"
     DOCUMENT_SUMMARY = "document_summary"
     CLAUSE_ANALYSIS = "clause_analysis"
+    DOCUMENT_QA = "document_qa"
+
 
 class ClauseSimplificationResponse(BaseModel):
     simplified_text: str

@@ -13,3 +13,5 @@ class DocumentUploadResponse(BaseModel):
     page_count: int
     character_count: int
     clauses: list[ClauseSegment]
+    document_id: str | None = None
+

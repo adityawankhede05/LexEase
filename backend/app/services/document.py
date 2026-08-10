@@ -1,4 +1,5 @@
 import fitz
+from app.database.document_context_store import document_context_store
 from app.schemas.document import DocumentUploadResponse
 from app.services.exceptions import (
     EmptyFileError,
@@ -40,11 +41,16 @@ class DocumentService:
             cleaned_text = PreprocessingService.clean_text(extracted_text)
             clauses = PreprocessingService.segment_clauses(cleaned_text)
             
+            # 5. Store preprocessed masked clauses server-side for Q&A context
+            document_id = document_context_store.store(clauses)
+
             return DocumentUploadResponse(
                 filename=filename,
                 page_count=page_count,
                 character_count=len(extracted_text),
-                clauses=clauses
+                clauses=clauses,
+                document_id=document_id,
             )
+
         finally:
             doc.close()

@@ -45,6 +45,20 @@ The backend test suite is located under `backend/tests/`:
    - Pydantic schema test: `confidence` outside `[0.0, 1.0]` raises `ValidationError`.
    - Pydantic schema test: missing `recommendation` field raises `ValidationError`.
 
+5. **`test_qa.py`**:
+   - `DocumentQARequest` schema validation: accepts valid IDs/questions, rejects empty question, rejects question > 2000 chars.
+   - `DocumentQAService` missing document handling: raises `DocumentContextNotFoundError` when `document_id` is invalid.
+   - `ClauseRetrievalService` unit tests: relevant term matching, stop-word filtering, term-overlap ranking order, zero-overlap empty list.
+   - Service orchestration with `MockAIProvider`: verifies valid `DocumentQAResponse` structure and grounded `source_clauses` list.
+   - Early exit optimization: returns `cannot_answer: true` without making AI provider call when retrieval yields zero matches (verified by `mock_provider.call_count == 0`).
+   - **Minimum relevance threshold regression tests**: Verifies unrelated questions — `"What is the capital of France?"`, `"What is the recipe for making pizza?"`, `"Who won the World Cup?"` — return `[]` from `ClauseRetrievalService` even when legal documents contain partial term overlaps (e.g. `"capital"` in `"working capital"`).
+   - **End-to-end regression test**: Verifies `DocumentQAService` returns `cannot_answer: true` with `confidence: 0.0` and **zero AI provider calls** for the question `"What is the capital of France?"` against a legal document.
+   - **Genuine multi-term match test**: Verifies that valid legal questions with multi-term overlap (e.g. `"What is the security deposit amount?"`) still pass the `min_score = 0.6` threshold and return the correct clause.
+   - Error handling: wraps malformed JSON and `AIProviderError` into `QAGenerationError`.
+   - `DocumentQAResponse` Pydantic confidence range validation `[0.0, 1.0]`.
+   - Large document retrieval: selects top relevant clauses from 50+ clause document.
+   - `POST /documents/ask` endpoint tests: 200 OK success, 422 validation errors, 404 document-not-found error.
+
 ---
 
 ## Execution Commands
@@ -60,6 +74,16 @@ Run all tests:
 uv run pytest
 ```
 
+Run all tests with verbose output:
+```bash
+uv run pytest -v
+```
+
+Run only Q&A tests:
+```bash
+uv run pytest tests/test_qa.py
+```
+
 Run only clause analysis tests:
 ```bash
 uv run pytest tests/test_clause_analysis.py
@@ -70,15 +94,11 @@ Run only summary tests:
 uv run pytest tests/test_summary.py
 ```
 
-Run tests with verbose output:
-```bash
-uv run pytest -v
-```
-
 ---
 
 ## Test Results
 
 ```
-46 passed in ~9s
+69 passed in ~6s
 ```
+

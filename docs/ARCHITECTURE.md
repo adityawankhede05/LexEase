@@ -5,22 +5,22 @@
 LexEase is designed around a modular, layered backend architecture built with FastAPI, Pydantic, and Google Gemini API.
 
 ```
-+-----------------------------------------------------------------------------------------------------+
-|                                          API Layer                                                  |
-|  GET /api/health  |  POST /documents/upload  |  POST /documents/summarize  |  POST /clauses/analyze |
-+-------------------+--------------------------+-----------------------------+------------------------+
++-------------------------------------------------------------------------------------------------------------------+
+|                                                 API Layer                                                         |
+|  GET /api/health  |  POST /documents/upload  |  POST /documents/summarize  |  POST /clauses/analyze |  POST /documents/ask |
++-------------------+--------------------------+-----------------------------+------------------------+-------------------+
                                               |
                                               v
-+-----------------------------------------------------------------------------------------------------+
-|                                       Services Layer                                                |
-|   DocumentService   |   DocumentSummaryService   |   ClauseAnalysisService   |   AIService          |
-+---------------------+----------------------------+---------------------------+----------------------+
++-------------------------------------------------------------------------------------------------------------------+
+|                                              Services Layer                                                       |
+|   DocumentService  |  DocumentSummaryService  |  ClauseAnalysisService  |  DocumentQAService  |  ClauseRetrievalService   |
++--------------------+--------------------------+-------------------------+---------------------+-------------------+
                                               |
                                               v
-+-----------------------------------------------------------------------------------------------------+
-|                                    AI Foundation Layer                                              |
-|            PromptBuilder  <-->  GeminiProvider  <-->  ResponseParser                                |
-+-----------------------------------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------------------------------------+
+|                                           Storage & AI Layer                                                      |
+|   DocumentContextStore (In-Memory)  <-->  PromptBuilder  <-->  GeminiProvider  <-->  ResponseParser                |
++-------------------------------------------------------------------------------------------------------------------+
 ```
 
 ---
@@ -97,13 +97,49 @@ When a client submits a list of preprocessed clause segments for clause-level ri
 
 ---
 
-## 3. Reusable Schemas
+## 3. Request Invocation Pipeline (`POST /documents/ask`)
+
+When a client asks a question about an uploaded document, execution proceeds strictly through the following steps:
+
+1. **Router (`app/api/routers/qa.py`)**:
+   - Accepts `DocumentQARequest` (`document_id`, `question`).
+   - Delegates request processing to `DocumentQAService`.
+   - Catches domain-specific exceptions (`DocumentContextNotFoundError` → 404 Not Found, `QAGenerationError` → 500 Internal Server Error).
+
+2. **Q&A Service (`app/services/qa.py`)**:
+   - Fetches stored `ClauseSegment` list from `DocumentContextStore` by `document_id`.
+   - Invokes `ClauseRetrievalService.retrieve(question, clauses)` to rank and select relevant clauses.
+   - **Early Exit (No AI Call)**: If no clause meets the minimum relevance threshold (`min_score = 0.6`) — such as when an unrelated question like *"What is the capital of France?"* is asked — the service immediately returns `DocumentQAResponse(answer="...", source_clauses=[], confidence=0.0, cannot_answer=True)` without calling `AIService` or `GeminiProvider`.
+   - **AI Path**: Formats retrieved clauses into `clauses_context` string and formulates payload `{"question": question, "clauses_context": clauses_context}`.
+   - Invokes `AIService.generate(AITask.DOCUMENT_QA, payload, DocumentQAResponse)`.
+
+3. **Clause Retrieval Service (`app/services/retrieval.py`)**:
+   - Operates independently without embeddings or Gemini.
+   - Tokenizes text, filters English stop words, scores clauses by term overlap ratio (`matching_terms / len(question_terms)`), enforces a minimum relevance threshold (`min_score = 0.6`), and ranks top-5 relevant clauses.
+
+
+4. **Prompt Builder (`app/ai/prompt_builder.py`)**:
+   - Reads `app/prompts/document_qa.txt`.
+   - Substitutes `{{question}}` and `{{clauses_context}}`.
+   - Instructs Gemini to answer strictly using the provided context, return used `source_clauses` IDs, and set `cannot_answer: true` if unanswerable.
+
+5. **AI Provider & Response Parser**:
+   - Sends payload to Gemini and parses JSON into validated `DocumentQAResponse`.
+
+---
+
+## 4. Reusable Schemas & Storage
 
 - **`DocumentContext`**: Reusable base schema containing `clauses: list[ClauseSegment]`.
+- **`DocumentUploadResponse`**: Upload response containing `filename`, `page_count`, `character_count`, `clauses`, and `document_id: str | None`.
+- **`DocumentContextStore`**: Modular in-memory store for PII-masked `ClauseSegment` lists, indexed by `document_id`. Prepared for Sprint 9 PostgreSQL migration.
+- **`DocumentQARequest`**: Contains `document_id` (str) and `question` (str, max 2000 chars).
+- **`DocumentQAResponse`**: Contains `answer` (str), `source_clauses` (list[str]), `confidence` (float, 0.0–1.0), and `cannot_answer` (bool).
 - **`DocumentSummaryRequest`**: Inherits from `DocumentContext`.
 - **`DocumentSummaryResponse`**: Contains `summary: str`, `key_points: list[str]`, and optional `document_type: str | None`.
-- **`ClauseAnalysisRequest`**: Inherits from `DocumentContext` (same pattern as `DocumentSummaryRequest`).
+- **`ClauseAnalysisRequest`**: Inherits from `DocumentContext`.
 - **`RiskLevel`**: `StrEnum` with values `low`, `medium`, `high`.
-- **`ClauseRiskResult`**: Contains `clause_id`, `clause_number`, `risk_level` (`RiskLevel`), `explanation`, `recommendation`, and `confidence` (float, 0.0–1.0, validated via `Field(ge=0.0, le=1.0)`). All fields are mandatory.
+- **`ClauseRiskResult`**: Contains `clause_id`, `clause_number`, `risk_level` (`RiskLevel`), `explanation`, `recommendation`, and `confidence` (float, 0.0–1.0).
 - **`ClauseAnalysisAIResponse`**: Internal wrapper `{ results: list[ClauseRiskResult] }` used exclusively by `ResponseParser`.
 - **`ClauseAnalysisResponse`**: Public HTTP response containing `total_clauses: int` and `results: list[ClauseRiskResult]`.
+

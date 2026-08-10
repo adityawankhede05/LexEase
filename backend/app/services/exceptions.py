@@ -29,3 +29,12 @@ class SummaryGenerationError(DocumentError):
 class ClauseAnalysisError(DocumentError):
     """Raised when clause risk analysis fails in the AI service layer."""
     pass
+
+class DocumentContextNotFoundError(DocumentError):
+    """Raised when no stored document context is found for the given document_id."""
+    pass
+
+class QAGenerationError(DocumentError):
+    """Raised when document Q&A generation fails in the AI service layer."""
+    pass
+

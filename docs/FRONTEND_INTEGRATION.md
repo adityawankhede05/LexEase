@@ -203,3 +203,105 @@ For each `ClauseRiskResult`, the frontend can render:
 - The **explanation** paragraph below the clause text.
 - An **actionable recommendation card** (e.g., a callout box) advising the user what to do before signing.
 - A **confidence indicator** (e.g., percentage bar or label) showing the model's certainty.
+
+---
+
+## Sprint 7 – Grounded Document Q&A Workflow
+
+### Q&A Steps
+
+1. **Step 1: Document Upload & Preprocessing**
+   - User uploads a PDF document via `POST /documents/upload`.
+   - Frontend receives `DocumentUploadResponse` containing `clauses: list[ClauseSegment]` and `document_id: string`.
+
+2. **Step 2: Interactive Document Q&A**
+   - User asks questions about the uploaded document in an interactive chat interface.
+   - Frontend posts `{ document_id, question }` to `POST /documents/ask`.
+   - Backend performs lexical relevance retrieval with a minimum score threshold (`min_score = 0.6`). If the question is unrelated to the document (e.g. *"What is the capital of France?"*), the backend returns `cannot_answer: true` immediately **without calling the AI provider**. Otherwise it queries Gemini and returns `DocumentQAResponse` with `answer`, `source_clauses`, `confidence`, and `cannot_answer`.
+
+
+### API Specification
+
+#### Endpoint
+`POST http://localhost:8000/documents/ask`
+
+#### Request Headers
+`Content-Type: application/json`
+
+#### Example Request Body
+```json
+{
+  "document_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "question": "What is the monthly rent amount and when is it due?"
+}
+```
+
+#### Example Response (200 OK)
+```json
+{
+  "answer": "The monthly rent is INR 25,000 and is due on or before the 5th day of every calendar month.",
+  "source_clauses": ["clause_1"],
+  "confidence": 0.95,
+  "cannot_answer": false
+}
+```
+
+#### Example Response (Unanswerable Context)
+```json
+{
+  "answer": "The provided document does not contain relevant information to answer this question.",
+  "source_clauses": [],
+  "confidence": 0.0,
+  "cannot_answer": true
+}
+```
+
+#### Error Responses
+
+| HTTP Status | Condition | Detail |
+|-------------|-----------|--------|
+| 422 | Missing/invalid fields or question > 2000 chars | Validation error payload |
+| 404 | Unknown `document_id` | `"No document context found for document_id: ..."` |
+| 500 | AI generation failure | `"Document Q&A failed: ..."` |
+
+### React / TypeScript Integration Example
+
+```typescript
+import axios from 'axios';
+
+interface DocumentQARequest {
+  document_id: string;
+  question: string;
+}
+
+interface DocumentQAResponse {
+  answer: string;
+  source_clauses: string[];
+  confidence: number;       // 0.0 – 1.0
+  cannot_answer: boolean;
+}
+
+export async function askDocumentQuestion(
+  documentId: string,
+  question: string
+): Promise<DocumentQAResponse> {
+  const response = await axios.post<DocumentQAResponse>(
+    'http://localhost:8000/documents/ask',
+    { document_id: documentId, question }
+  );
+  return response.data;
+}
+```
+
+### Recommended UI Display Pattern
+
+For each Q&A turn in the chat UI:
+
+- Render user message bubbled to the right.
+- Render assistant response bubbled to the left.
+- If `cannot_answer` is `true`: display an informational callout indicating the document has no matching information for this question.
+- If `cannot_answer` is `false`:
+  - Show the **grounded answer**.
+  - Render **source clause chips** (e.g. `Clause 1`) linking or highlighting the matching clause segments in the document viewer.
+  - Show a small **confidence indicator** badge.
+
