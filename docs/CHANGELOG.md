@@ -2,6 +2,23 @@
 
 All notable changes to the LexEase project will be documented in this file.
 
+## [Sprint 8] - Multi-Provider AI Architecture (Groq + OpenRouter + Provider Factory)
+
+### Added
+- Created `GroqProvider` in `app/ai/groq_provider.py` conforming to `BaseAIProvider` using async `httpx` to call Groq's OpenAI-compatible completions endpoint (`https://api.groq.com/openai/v1/chat/completions`) with exponential backoff retries.
+- Created `OpenRouterProvider` in `app/ai/openrouter_provider.py` conforming to `BaseAIProvider` using async `httpx` to call OpenRouter's completions endpoint (`https://openrouter.ai/api/v1/chat/completions`) with exponential backoff retries.
+- Created centralized `ProviderFactory` (`get_ai_provider()`) in `app/ai/provider_factory.py` for dynamic provider resolution based on `settings.AI_PROVIDER` (`groq`, `openrouter`, `gemini`), with domain error handling for unsupported providers.
+- Added configuration settings in `app/core/config.py`: `AI_PROVIDER`, `GROQ_API_KEY`, `GROQ_MODEL`, `GROQ_TIMEOUT`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `OPENROUTER_TIMEOUT` while retaining full backward compatibility for Gemini.
+- Created comprehensive 23-test suite in `tests/test_ai_providers.py` covering OpenRouter (missing key, success, system instruction, 401/403, 429/503 retry, retry exhaustion, empty/malformed, timeout/network errors), Groq (missing key, success, system instruction, 401/403, 429/503 retry, retry exhaustion, empty/malformed, timeout/network errors), and Provider Factory (`gemini`, `groq`, `openrouter`, override argument, unsupported provider error).
+- Updated `DocumentSummaryService`, `ClauseAnalysisService`, and `DocumentQAService` to resolve default provider via `get_ai_provider()` instead of hardcoded `GeminiProvider()`.
+- Updated `pyproject.toml` moving `httpx` to core dependencies.
+- Updated `.env.example` with multi-provider environment variables.
+- Enhanced `ClauseRetrievalService` in `app/services/retrieval.py` with suffix stemming normalization and query framing stop words (`due`, `amount`, `much`, `many`, `tell`, `explain`, `state`, `mention`, `give`, `find`), fixing zero-retrieval false negatives on compound inquiries (e.g. *"What is the monthly rent and when is it due?"*) while strictly preserving the `min_score = 0.6` unrelated question protection.
+- Added dedicated regression tests in `tests/test_qa.py` covering monthly rent and due date retrieval across morphological variations and end-to-end service execution.
+- Updated project documentation across `README.md`, `API.md`, `ARCHITECTURE.md`, `CHANGELOG.md`, `TESTING.md`, `FRONTEND_INTEGRATION.md`, `DEPLOYMENT.md`, and `DATABASE.md`.
+
+---
+
 ## [Sprint 7] - Grounded Document Q&A
 
 ### Added

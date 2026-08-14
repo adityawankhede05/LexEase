@@ -1,7 +1,7 @@
 import logging
 from app.ai.base_provider import BaseAIProvider
 from app.ai.exceptions import AIProviderError, AIResponseValidationError
-from app.ai.gemini_provider import GeminiProvider
+from app.ai.provider_factory import get_ai_provider
 from app.schemas.ai import AITask
 from app.schemas.document import ClauseSegment
 from app.schemas.summary import DocumentSummaryResponse
@@ -17,7 +17,7 @@ class DocumentSummaryService:
     """
     def __init__(self, ai_service: AIService | None = None):
         if ai_service is None:
-            provider: BaseAIProvider = GeminiProvider()
+            provider: BaseAIProvider = get_ai_provider()
             self.ai_service = AIService(provider=provider)
         else:
             self.ai_service = ai_service

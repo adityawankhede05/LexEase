@@ -1,5 +1,13 @@
 # LexEase Database Documentation
 
+## Sprint 8 Status
+
+> [!NOTE]
+> **No database changes were introduced in Sprint 8.**
+> The Multi-Provider AI architecture (`GroqProvider`, `OpenRouterProvider`, `ProviderFactory`) interacts statelessly with external AI APIs using transient HTTP requests. No changes to database schemas, migrations, or models were required.
+
+---
+
 ## Sprint 7 Status
 
 > [!NOTE]

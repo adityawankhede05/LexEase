@@ -34,7 +34,9 @@ class ClauseRetrievalService:
             "what's", "when", "when's", "where", "where's", "which", "while",
             "who", "who's", "whom", "why", "why's", "with", "won't", "would",
             "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your",
-            "yours", "yourself", "yourselves", "shall", "will"
+            "yours", "yourself", "yourselves", "shall", "will",
+            # Common query template and framing terms
+            "due", "amount", "much", "many", "tell", "explain", "state", "mention", "give", "find"
         }
     )
 
@@ -79,6 +81,9 @@ class ClauseRetrievalService:
                 # Store negative index as tie-breaker to preserve document order
                 scored_clauses.append((score, -index, clause))
 
+            if not scored_clauses:
+                continue
+
         if not scored_clauses:
             return []
 
@@ -89,14 +94,49 @@ class ClauseRetrievalService:
 
 
     @classmethod
+    def _stem(cls, word: str) -> str:
+        """Lightweight suffix stripping for common English inflections."""
+        word = word.lower()
+        if len(word) <= 3:
+            return word
+        if word.endswith("sses"):
+            return word[:-2]
+        if word.endswith("ies") and len(word) > 4:
+            return word[:-3] + "y"
+        if word.endswith("s") and not word.endswith("ss") and len(word) > 3:
+            word = word[:-1]
+        if word.endswith("ing") and len(word) > 5:
+            return word[:-3]
+        elif word.endswith("ed") and len(word) > 4:
+            return word[:-2]
+        elif word.endswith("ly") and len(word) > 4:
+            return word[:-2]
+        elif word.endswith("ment") and len(word) > 6:
+            return word[:-4]
+        elif word.endswith("able") and len(word) > 6:
+            return word[:-4]
+        elif word.endswith("tion") and len(word) > 6:
+            return word[:-4]
+        elif word.endswith("al") and len(word) > 4:
+            return word[:-2]
+        return word
+
+    @classmethod
     def _tokenize(cls, text: str) -> set[str]:
-        """Normalizes text to lowercase and splits into alpha-numeric tokens."""
+        """Normalizes text to lowercase and returns both raw and stemmed tokens."""
         if not text:
             return set()
-        return set(re.findall(r"\b[a-z0-9]+\b", text.lower()))
+        raw_tokens = set(re.findall(r"\b[a-z0-9]+\b", text.lower()))
+        tokens = set(raw_tokens)
+        for t in raw_tokens:
+            tokens.add(cls._stem(t))
+        return tokens
 
     @classmethod
     def _tokenize_and_filter(cls, text: str) -> set[str]:
-        """Tokenizes text and filters out common stop words."""
-        tokens = cls._tokenize(text)
-        return {term for term in tokens if term not in cls.STOP_WORDS}
+        """Tokenizes text, filters out stop words, and stems remaining terms."""
+        if not text:
+            return set()
+        raw_tokens = set(re.findall(r"\b[a-z0-9]+\b", text.lower()))
+        filtered = {term for term in raw_tokens if term not in cls.STOP_WORDS}
+        return {cls._stem(term) for term in filtered}

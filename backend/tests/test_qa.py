@@ -149,10 +149,10 @@ def test_retrieval_ranking_order():
     # Clause 2 contains both → score 2/2 = 1.0 >= 0.6 (tied, ordered by document position)
     results = service.retrieve("monthly rent", clauses)
     assert len(results) == 2
-    # Both score 1.0; clause_1 appears first in document, so clause_2 (index 1) has
-    # tie-breaker -1 > clause_1 tie-breaker 0 → clause_2 ranks first
-    assert results[0].clause_id == "clause_2"
-    assert results[1].clause_id == "clause_1"
+    # Both score 1.0; clause_1 appears first in document (index 0), so clause_1 has
+    # tie-breaker -0 > clause_2 tie-breaker -1 → clause_1 ranks first
+    assert results[0].clause_id == "clause_1"
+    assert results[1].clause_id == "clause_2"
 
 
 # ---------------------------------------------------------------------------
@@ -516,4 +516,65 @@ def test_retrieval_genuine_multi_term_match():
     results = service.retrieve("What is the security deposit amount?", clauses)
     assert len(results) == 1
     assert results[0].clause_id == "clause_1"
+
+
+# ---------------------------------------------------------------------------
+# 24. Monthly Rent Due Date Regression Tests
+# ---------------------------------------------------------------------------
+
+def test_retrieval_monthly_rent_due_regression():
+    """ClauseRetrievalService accurately retrieves rent clauses for 'What is the monthly rent and when is it due?'."""
+    service = ClauseRetrievalService()
+    
+    # Variation 1: Clause with 'monthly rent'
+    clauses_1 = [
+        _make_clause(1, "The tenant shall pay monthly rent of INR 25,000 by the 5th of each month."),
+        _make_clause(2, "The landlord may inspect with 24 hours notice."),
+    ]
+    results_1 = service.retrieve("What is the monthly rent and when is it due?", clauses_1)
+    assert len(results_1) >= 1
+    assert results_1[0].clause_id == "clause_1"
+
+    # Variation 2: Clause with 'rent' and 'month' (inflection variation)
+    clauses_2 = [
+        _make_clause(1, "The tenant shall pay rent of INR 25,000 by the 5th of each month."),
+        _make_clause(2, "Notice of 30 days is required for termination."),
+    ]
+    results_2 = service.retrieve("What is the monthly rent and when is it due?", clauses_2)
+    assert len(results_2) >= 1
+    assert results_2[0].clause_id == "clause_1"
+
+
+@pytest.mark.anyio
+async def test_qa_service_monthly_rent_due_end_to_end():
+    """DocumentQAService returns answer and cannot_answer=False for 'What is the monthly rent and when is it due?'."""
+    store = DocumentContextStore()
+    doc_id = store.store([
+        _make_clause(1, "The tenant shall pay monthly rent of INR 25,000 by the 5th of each month."),
+        _make_clause(2, "The premises shall be used for residential purposes only.")
+    ])
+
+    mock_json = json.dumps({
+        "answer": "The monthly rent is INR 25,000 payable on or before the 5th of each month.",
+        "source_clauses": ["clause_1"],
+        "confidence": 0.95,
+        "cannot_answer": False,
+    })
+    mock_provider = MockAIProvider(response_text=mock_json)
+    service = DocumentQAService(
+        ai_service=AIService(provider=mock_provider),
+        store=store,
+    )
+
+    response = await service.answer_question(
+        document_id=doc_id,
+        question="What is the monthly rent and when is it due?"
+    )
+
+    assert isinstance(response, DocumentQAResponse)
+    assert response.cannot_answer is False
+    assert "25,000" in response.answer
+    assert response.source_clauses == ["clause_1"]
+    assert mock_provider.call_count == 1
+
 

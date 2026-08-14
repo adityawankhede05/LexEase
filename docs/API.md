@@ -303,15 +303,18 @@ Response
 
 > These components are internal and **are not exposed as REST APIs.**
 
-Current modules
+Current modules:
 
-- AIService
-- BaseAIProvider
-- GeminiProvider
-- PromptBuilder
-- ResponseParser
+- `AIService` (High-level orchestration for prompt generation, invocation, response parsing)
+- `BaseAIProvider` (Abstract base interface for all AI model providers)
+- `ProviderFactory` (`get_ai_provider()` resolver based on `AI_PROVIDER` config)
+- `GroqProvider` (High-speed OpenAI-compatible chat completions provider via httpx)
+- `OpenRouterProvider` (Multi-model aggregator chat completions provider via httpx)
+- `GeminiProvider` (Google GenAI SDK provider)
+- `PromptBuilder` (Template substitution driven by `AITask` enum)
+- `ResponseParser` (JSON stripping and Pydantic model validation)
 
-These modules will be consumed by future endpoints.
+These modules are consumed by `/documents/summarize`, `/clauses/analyze`, and `/documents/ask`.
 
 ---
 
@@ -666,6 +669,9 @@ Current backend test coverage:
 - AI Foundation Layer
 - Response parsing
 - Gemini provider integration
+- Groq provider integration (missing keys, success, system prompt, 401/403, 429/503 retry, backoff, timeout, malformed)
+- OpenRouter provider integration (missing keys, success, system prompt, 401/403, 429/503 retry, backoff, timeout, malformed)
+- Provider Factory (`gemini`, `groq`, `openrouter`, override, invalid provider error)
 - Document summarization prompt building
 - Whole document summarization service
 - Large document summarization (50+ clauses)
@@ -676,7 +682,7 @@ Current backend test coverage:
 Current Result
 
 ```
-69 tests passed
+94 tests passed
 ```
 
 
@@ -691,7 +697,8 @@ Current Result
 |PDF Parsing|PyMuPDF|
 |Validation|Pydantic|
 |Testing|Pytest|
-|AI Provider|Google Gemini|
+|AI Providers|Groq, OpenRouter, Google Gemini|
+|HTTP Client|httpx|
 |Package Manager|uv|
 |Containerization|Docker|
 |Database|PostgreSQL (Upcoming Integration)|
@@ -709,4 +716,5 @@ Current Result
 |Sprint 4B – Gemini Integration|Completed|
 |Sprint 5 – Whole Document Summarization|Completed|
 |Sprint 6 – Clause Risk Analysis|Completed|
-|Sprint 7 – Grounded Document Q&A|Completed|
+|Sprint 7 – Grounded Document Q&A|Completed|
+|Sprint 8 – Multi-Provider AI Architecture (Groq + OpenRouter + Factory)|Completed|

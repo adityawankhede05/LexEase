@@ -2,44 +2,49 @@
 
 ## Overview
 
-This guide outlines deployment considerations for the LexEase backend and AI summarization service.
+This guide outlines deployment considerations for the LexEase backend and Multi-Provider AI Foundation Layer.
 
 ---
 
-## Sprint 7 Notes
+## Sprint 8 Notes (Multi-Provider AI Architecture)
 
-> [!NOTE]
-> **No new environment variables are required for Sprint 7.**
-> Grounded Document Q&A (`POST /documents/ask`) reuses the existing Gemini configuration (`GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_TEMPERATURE`, `GEMINI_TIMEOUT`, `MAX_RETRIES`).
-> The `ClauseRetrievalService` enforces a minimum relevance score threshold (`min_score = 0.6`). Unrelated questions terminate early without any Gemini API call, reducing API usage and protecting against token cost overruns and `429 RESOURCE_EXHAUSTED` errors.
-> Note that `DocumentContextStore` operates in-memory for Sprint 7; container/server restarts will reset active document contexts until PostgreSQL persistence is integrated in Sprint 9.
-
-
----
-
-## Sprint 6 Notes
-
-
-> [!NOTE]
-> **No new environment variables are required for Sprint 6.**
-> Clause risk analysis (`POST /clauses/analyze`) reuses the existing Gemini configuration (`GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_TEMPERATURE`, `GEMINI_TIMEOUT`, `MAX_RETRIES`) and sends a single batched AI request per endpoint call.
+> [!IMPORTANT]
+> **Provider Switching via Configuration**
+> LexEase now supports three AI providers: `groq`, `openrouter`, and `gemini`.
+> The active provider is determined exclusively by the `AI_PROVIDER` environment variable.
+> If one provider encounters rate limits or quota exhaustion (e.g. Gemini 429 quota exhaustion), switch to `AI_PROVIDER=groq` or `AI_PROVIDER=openrouter` without altering application code or restarting anything other than loading updated environment variables.
 
 ---
 
 ## Environment Configuration
 
-Ensure the following environment variables are set in your production environment or container environment (`docker-compose.yml` / `.env`):
+Ensure the following environment variables are configured in your deployment environment (`.env` or container orchestrator):
 
 ```env
-# Server Config
+# Server Configuration
 PORT=8000
 ALLOWED_ORIGINS=http://localhost:5173,https://yourdomain.com
 
-# Gemini AI Provider Config
-GEMINI_API_KEY=your_production_google_gemini_api_key
+# Active AI Provider: "groq", "openrouter", or "gemini"
+AI_PROVIDER=groq
+
+# Groq Provider Settings
+GROQ_API_KEY=your_production_groq_api_key
+GROQ_MODEL=openai/gpt-oss-120b
+GROQ_TIMEOUT=30.0
+
+# OpenRouter Provider Settings
+OPENROUTER_API_KEY=your_production_openrouter_api_key
+OPENROUTER_MODEL=openrouter/free
+OPENROUTER_TIMEOUT=30.0
+
+# Google Gemini Provider Settings
+GEMINI_API_KEY=your_production_gemini_api_key
 GEMINI_MODEL=gemini-2.0-flash
 GEMINI_TEMPERATURE=0.2
 GEMINI_TIMEOUT=30.0
+
+# Global AI Settings
 MAX_RETRIES=3
 ```
 
@@ -47,10 +52,10 @@ MAX_RETRIES=3
 
 ## Docker Deployment
 
-To deploy via Docker:
+To deploy via Docker Compose:
 
 ```bash
 docker compose up --build -d
 ```
 
-The containerized FastAPI application automatically loads configuration and exposes endpoints on the configured port.
+The containerized FastAPI application automatically reads the `.env` configuration and instantiates the selected provider via `ProviderFactory`.

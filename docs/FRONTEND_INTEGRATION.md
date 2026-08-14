@@ -4,6 +4,13 @@
 
 This document details how the React SPA frontend integrates with the LexEase backend API endpoints.
 
+## Sprint 8 – Multi-Provider AI Architecture
+
+> [!NOTE]
+> **Zero Frontend Changes Required for Sprint 8**
+> The introduction of Groq and OpenRouter AI providers and dynamic provider switching (`AI_PROVIDER`) is entirely internal to the backend AI Foundation Layer.
+> All API contracts (`POST /documents/summarize`, `POST /clauses/analyze`, `POST /documents/ask`), request bodies, and response payloads remain identical and backward-compatible.
+
 ---
 
 ## Sprint 5 – Summarization Workflow

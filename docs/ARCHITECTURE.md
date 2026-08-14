@@ -2,7 +2,7 @@
 
 ## Overview
 
-LexEase is designed around a modular, layered backend architecture built with FastAPI, Pydantic, and Google Gemini API.
+LexEase is designed around a modular, layered backend architecture built with FastAPI, Pydantic, and a Multi-Provider AI Foundation Layer supporting Groq, OpenRouter, and Google Gemini.
 
 ```
 +-------------------------------------------------------------------------------------------------------------------+
@@ -19,116 +19,115 @@ LexEase is designed around a modular, layered backend architecture built with Fa
                                               v
 +-------------------------------------------------------------------------------------------------------------------+
 |                                           Storage & AI Layer                                                      |
-|   DocumentContextStore (In-Memory)  <-->  PromptBuilder  <-->  GeminiProvider  <-->  ResponseParser                |
+|   DocumentContextStore (In-Memory)  <-->  PromptBuilder  <-->  AIService  <-->  ResponseParser                   |
+|                                                                    |                                              |
+|                                                          ProviderFactory                                          |
+|                                                                    |                                              |
+|                                            +-----------------------+-----------------------+                      |
+|                                            |                       |                       |                      |
+|                                     GeminiProvider           GroqProvider          OpenRouterProvider             |
+|                                            |                       |                       |                      |
+|                                       Gemini API                Groq API             OpenRouter API               |
 +-------------------------------------------------------------------------------------------------------------------+
 ```
 
 ---
 
-## 1. Request Invocation Pipeline (`POST /documents/summarize`)
+## 1. Multi-Provider AI Architecture
 
-When a client submits a list of preprocessed clause segments for whole document summarization, execution proceeds strictly through the following steps:
+The AI layer decouples domain services from concrete AI providers using the Dependency Inversion Principle:
+
+- **`BaseAIProvider` (`app/ai/base_provider.py`)**: Abstract base class enforcing the contract:
+  ```python
+  async def generate(prompt: str, system_instruction: str | None = None) -> str
+  ```
+- **`ProviderFactory` (`app/ai/provider_factory.py`)**: Factory function `get_ai_provider()` that instantiates the active provider based on `settings.AI_PROVIDER`:
+  - `AI_PROVIDER=groq` -> `GroqProvider`
+  - `AI_PROVIDER=openrouter` -> `OpenRouterProvider`
+  - `AI_PROVIDER=gemini` -> `GeminiProvider`
+- **`AIService` (`app/services/ai.py`)**: Orchestrates prompt formatting, raw generation via the injected `BaseAIProvider`, and JSON response parsing/validation.
+- **Provider Implementations**:
+  - `GroqProvider` (`app/ai/groq_provider.py`): OpenAI-compatible completions API using async `httpx` with exponential backoff retries.
+  - `OpenRouterProvider` (`app/ai/openrouter_provider.py`): OpenRouter completions API using async `httpx` with exponential backoff retries.
+  - `GeminiProvider` (`app/ai/gemini_provider.py`): Google GenAI SDK integration with exponential backoff retries.
+
+---
+
+## 2. Request Invocation Pipeline (`POST /documents/summarize`)
+
+When a client submits a list of preprocessed clause segments for whole document summarization:
 
 1. **Router (`app/api/routers/summary.py`)**:
-   - Accepts `DocumentSummaryRequest` (inheriting from `DocumentContext`).
+   - Accepts `DocumentSummaryRequest`.
    - Delegates request processing to `DocumentSummaryService`.
-   - Catches domain-specific exceptions (`EmptyClauseListError` → 400 Bad Request, `SummaryGenerationError` → 500 Internal Server Error).
+   - Catches domain-specific exceptions (`EmptyClauseListError` -> 400 Bad Request, `SummaryGenerationError` -> 500 Internal Server Error).
 
 2. **Summary Service (`app/services/summary.py`)**:
    - Validates that `clauses` array is non-empty.
-   - Formats each `ClauseSegment` (including clause numbers if present) and concatenates them into a unified full-document text string.
+   - Formats each `ClauseSegment` and concatenates them into a unified full-document text string.
    - Formulates the payload `{"document_text": full_document_text}`.
-   - Invokes `AIService.generate(AITask.DOCUMENT_SUMMARY, payload, DocumentSummaryResponse)`.
+   - Obtains provider via `get_ai_provider()` and invokes `AIService.generate(AITask.DOCUMENT_SUMMARY, payload, DocumentSummaryResponse)`.
 
 3. **AI Service (`app/services/ai.py`)**:
    - Orchestrates prompt creation via `PromptBuilder`.
-   - Invokes the configured provider (`GeminiProvider` implementing `BaseAIProvider`).
+   - Invokes the active provider (`GroqProvider`, `OpenRouterProvider`, or `GeminiProvider`).
    - Passes raw response string to `ResponseParser`.
 
 4. **Prompt Builder (`app/ai/prompt_builder.py`)**:
-   - Reads `app/prompts/document_summary.txt`.
-   - Substitutes `{{document}}` placeholder with concatenated document text.
-   - Enforces strict JSON prompt formatting instructions.
+   - Reads `app/prompts/document_summary.txt` and substitutes `{{document}}`.
 
-5. **AI Provider (`app/ai/gemini_provider.py`)**:
-   - Communicates asynchronously with the Google Gemini API using structured JSON configuration.
-   - Implements exponential backoff retries for transient errors.
+5. **AI Provider**:
+   - Sends request to the configured AI API asynchronously with retries.
 
 6. **Response Parser (`app/ai/response_parser.py`)**:
-   - Strips backticks/markdown if present.
-   - Parses JSON string and validates against `DocumentSummaryResponse`.
+   - Strips markdown formatting if present and validates against `DocumentSummaryResponse`.
 
 ---
 
-## 2. Request Invocation Pipeline (`POST /clauses/analyze`)
+## 3. Request Invocation Pipeline (`POST /clauses/analyze`)
 
-When a client submits a list of preprocessed clause segments for clause-level risk analysis, execution proceeds strictly through the following steps:
+When a client submits clause segments for clause-level risk analysis:
 
 1. **Router (`app/api/routers/clause_analysis.py`)**:
-   - Accepts `ClauseAnalysisRequest` (inheriting from `DocumentContext`).
+   - Accepts `ClauseAnalysisRequest`.
    - Delegates request processing to `ClauseAnalysisService`.
-   - Catches domain-specific exceptions (`EmptyClauseListError` → 400 Bad Request, `ClauseAnalysisError` → 500 Internal Server Error).
+   - Catches domain-specific exceptions (`EmptyClauseListError` -> 400 Bad Request, `ClauseAnalysisError` -> 500 Internal Server Error).
 
 2. **Clause Analysis Service (`app/services/clause_analysis.py`)**:
    - Validates that `clauses` array is non-empty.
-   - Serializes all `ClauseSegment` objects (`clause_id`, `clause_number`, `text`) into a single JSON array string.
-   - Formulates the payload `{"clauses_json": <json_string>}` — **a single batched request** covering all clauses.
-   - Invokes `AIService.generate(AITask.CLAUSE_ANALYSIS, payload, ClauseAnalysisAIResponse)`.
+   - Serializes all `ClauseSegment` objects into a single JSON array string.
+   - Formulates the payload `{"clauses_json": <json_string>}` — a single batched request covering all clauses.
+   - Obtains provider via `get_ai_provider()` and invokes `AIService.generate(AITask.CLAUSE_ANALYSIS, payload, ClauseAnalysisAIResponse)`.
    - Wraps `ClauseAnalysisAIResponse.results` into `ClauseAnalysisResponse` with `total_clauses`.
 
-3. **AI Service (`app/services/ai.py`)**:
-   - Orchestrates prompt creation via `PromptBuilder`.
-   - Invokes the configured provider (`GeminiProvider`).
-   - Passes raw response string to `ResponseParser`.
-
-4. **Prompt Builder (`app/ai/prompt_builder.py`)**:
-   - Reads `app/prompts/clause_risk.txt`.
-   - Substitutes `{{clauses_json}}` placeholder with the serialized clause array.
-   - Instructs the model to echo `clause_id` and `clause_number` verbatim for deterministic result mapping.
-
-5. **AI Provider (`app/ai/gemini_provider.py`)**:
-   - Communicates asynchronously with the Google Gemini API.
-   - Implements exponential backoff retries for transient errors.
-
-6. **Response Parser (`app/ai/response_parser.py`)**:
-   - Strips backticks/markdown if present.
-   - Parses JSON string and validates against `ClauseAnalysisAIResponse`.
-   - Pydantic automatically rejects any result missing a mandatory field (e.g., `recommendation`).
+3. **Prompt Builder & AI Execution**:
+   - Reads `app/prompts/clause_risk.txt` and substitutes `{{clauses_json}}`.
+   - Calls active AI provider and validates output against `ClauseAnalysisAIResponse`.
 
 ---
 
-## 3. Request Invocation Pipeline (`POST /documents/ask`)
+## 4. Request Invocation Pipeline (`POST /documents/ask`)
 
-When a client asks a question about an uploaded document, execution proceeds strictly through the following steps:
+When a client asks a question about an uploaded document:
 
 1. **Router (`app/api/routers/qa.py`)**:
    - Accepts `DocumentQARequest` (`document_id`, `question`).
    - Delegates request processing to `DocumentQAService`.
-   - Catches domain-specific exceptions (`DocumentContextNotFoundError` → 404 Not Found, `QAGenerationError` → 500 Internal Server Error).
+   - Catches domain-specific exceptions (`DocumentContextNotFoundError` -> 404 Not Found, `QAGenerationError` -> 500 Internal Server Error).
 
 2. **Q&A Service (`app/services/qa.py`)**:
    - Fetches stored `ClauseSegment` list from `DocumentContextStore` by `document_id`.
    - Invokes `ClauseRetrievalService.retrieve(question, clauses)` to rank and select relevant clauses.
-   - **Early Exit (No AI Call)**: If no clause meets the minimum relevance threshold (`min_score = 0.6`) — such as when an unrelated question like *"What is the capital of France?"* is asked — the service immediately returns `DocumentQAResponse(answer="...", source_clauses=[], confidence=0.0, cannot_answer=True)` without calling `AIService` or `GeminiProvider`.
-   - **AI Path**: Formats retrieved clauses into `clauses_context` string and formulates payload `{"question": question, "clauses_context": clauses_context}`.
-   - Invokes `AIService.generate(AITask.DOCUMENT_QA, payload, DocumentQAResponse)`.
+   - **Early Exit (No AI Call)**: If no clause meets the minimum relevance threshold (`min_score = 0.6`), immediately returns `DocumentQAResponse(answer="...", source_clauses=[], confidence=0.0, cannot_answer=True)` without calling `AIService` or the AI provider.
+   - **AI Path**: Formats retrieved clauses into `clauses_context` string and invokes `AIService.generate(AITask.DOCUMENT_QA, payload, DocumentQAResponse)`.
 
 3. **Clause Retrieval Service (`app/services/retrieval.py`)**:
-   - Operates independently without embeddings or Gemini.
-   - Tokenizes text, filters English stop words, scores clauses by term overlap ratio (`matching_terms / len(question_terms)`), enforces a minimum relevance threshold (`min_score = 0.6`), and ranks top-5 relevant clauses.
-
-
-4. **Prompt Builder (`app/ai/prompt_builder.py`)**:
-   - Reads `app/prompts/document_qa.txt`.
-   - Substitutes `{{question}}` and `{{clauses_context}}`.
-   - Instructs Gemini to answer strictly using the provided context, return used `source_clauses` IDs, and set `cannot_answer: true` if unanswerable.
-
-5. **AI Provider & Response Parser**:
-   - Sends payload to Gemini and parses JSON into validated `DocumentQAResponse`.
+   - Operates independently without embeddings or remote APIs.
+   - Tokenizes text, normalizes English suffixes via lightweight stemmer (`monthly` -> `month`, `payable` -> `pay`), filters English and interrogative framing stop words, scores clauses by term overlap ratio (`matching_terms / len(question_terms)`), enforces a minimum relevance threshold (`min_score = 0.6`), and ranks top-5 relevant clauses.
 
 ---
 
-## 4. Reusable Schemas & Storage
+## 5. Reusable Schemas & Storage
 
 - **`DocumentContext`**: Reusable base schema containing `clauses: list[ClauseSegment]`.
 - **`DocumentUploadResponse`**: Upload response containing `filename`, `page_count`, `character_count`, `clauses`, and `document_id: str | None`.
@@ -142,4 +141,3 @@ When a client asks a question about an uploaded document, execution proceeds str
 - **`ClauseRiskResult`**: Contains `clause_id`, `clause_number`, `risk_level` (`RiskLevel`), `explanation`, `recommendation`, and `confidence` (float, 0.0–1.0).
 - **`ClauseAnalysisAIResponse`**: Internal wrapper `{ results: list[ClauseRiskResult] }` used exclusively by `ResponseParser`.
 - **`ClauseAnalysisResponse`**: Public HTTP response containing `total_clauses: int` and `results: list[ClauseRiskResult]`.
-
