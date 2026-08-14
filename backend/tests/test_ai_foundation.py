@@ -23,8 +23,8 @@ class MockAIProvider(BaseAIProvider):
 @pytest.mark.anyio
 async def test_gemini_provider_missing_api_key():
     """Verify that GeminiProvider raises AIProviderError when GEMINI_API_KEY is missing."""
-    provider = GeminiProvider(api_key=None)
     with patch("app.ai.gemini_provider.settings.GEMINI_API_KEY", None):
+        provider = GeminiProvider(api_key=None)
         with pytest.raises(AIProviderError) as exc_info:
             await provider.generate("test prompt")
         assert "GEMINI_API_KEY is not configured" in str(exc_info.value)

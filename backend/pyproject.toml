@@ -11,6 +11,8 @@ dependencies = [
     "pymupdf>=1.28.0",
     "python-multipart>=0.0.32",
     "google-genai>=2.16.0",
+    "openai>=3.0.0",
+    "httpx>=0.28.1",
 ]
 
 [tool.uv]
@@ -18,6 +20,5 @@ package = false
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.1",
     "pytest>=9.1.1",
 ]

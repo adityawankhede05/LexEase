@@ -34,5 +34,51 @@ class PromptBuilder:
                 
             template = template_path.read_text(encoding="utf-8")
             return template.replace("{{clause}}", str(clause_text))
-            
+
+        if task_type == AITask.DOCUMENT_SUMMARY:
+            document_text = payload.get("document_text") or payload.get("document")
+            if not document_text:
+                raise ValueError("Missing required key 'document_text' in payload for document summary task.")
+
+            template_path = PROMPTS_DIR / "document_summary.txt"
+            if not template_path.is_file():
+                raise FileNotFoundError(f"Prompt template file not found at: {template_path}")
+
+            template = template_path.read_text(encoding="utf-8")
+            return template.replace("{{document}}", str(document_text))
+
+        if task_type == AITask.CLAUSE_ANALYSIS:
+            clauses_json = payload.get("clauses_json")
+            if not clauses_json:
+                raise ValueError(
+                    "Missing required key 'clauses_json' in payload for clause analysis task."
+                )
+
+            template_path = PROMPTS_DIR / "clause_risk.txt"
+            if not template_path.is_file():
+                raise FileNotFoundError(f"Prompt template file not found at: {template_path}")
+
+            template = template_path.read_text(encoding="utf-8")
+            return template.replace("{{clauses_json}}", str(clauses_json))
+
+        if task_type == AITask.DOCUMENT_QA:
+            question = payload.get("question")
+            clauses_context = payload.get("clauses_context")
+            if not question:
+                raise ValueError("Missing required key 'question' in payload for document Q&A task.")
+            if not clauses_context:
+                raise ValueError("Missing required key 'clauses_context' in payload for document Q&A task.")
+
+            template_path = PROMPTS_DIR / "document_qa.txt"
+            if not template_path.is_file():
+                raise FileNotFoundError(f"Prompt template file not found at: {template_path}")
+
+            template = template_path.read_text(encoding="utf-8")
+            return (
+                template.replace("{{question}}", str(question)).replace(
+                    "{{clauses_context}}", str(clauses_context)
+                )
+            )
+
         raise ValueError(f"Unsupported AI task: {task_type}")
+
