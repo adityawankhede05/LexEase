@@ -1,0 +1,294 @@
+import React from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import Card from '../components/Card'
+import { mockDocument, mockClauses, mockRisks } from '../data/mockAnalysis'
+
+function Analysis() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const passedState = location.state
+
+  // If no document has been uploaded, display professional empty-state
+  if (!passedState) {
+    return (
+      <div className="max-w-md mx-auto py-12 sm:py-20 text-center">
+        <div className="bg-[#1E293B] border border-slate-800 rounded-2xl p-8 sm:p-10 shadow-xl space-y-6 flex flex-col items-center">
+          {/* Custom Empty State Icon */}
+          <div className="w-16 h-16 rounded-full bg-slate-800/80 border border-slate-700/50 flex items-center justify-center text-[#D4AF37]">
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          
+          <div className="space-y-2">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-[#F8FAFC]">
+              No Document Analyzed
+            </h1>
+            <p className="text-[#94A3B8] text-sm leading-relaxed max-w-sm">
+              Upload a legal document to begin analysis.
+            </p>
+          </div>
+
+          <button
+            onClick={() => navigate('/upload')}
+            className="w-full py-3 rounded-lg font-semibold tracking-wide text-white bg-[#2563EB] hover:bg-[#2563EB]/90 transition-all duration-300 border border-[#2563EB] active:scale-95 shadow-lg shadow-[#2563EB]/10"
+          >
+            Go to Upload
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Resolve document metadata from passed React Router location state
+  const docName = passedState.fileName
+  const docSize = passedState.fileSize
+  const docType = passedState.fileType
+  const docUploadedAt = 'Just now'
+  const docPageCount = 'N/A'
+
+  // Helper to resolve severity badge colors
+  const getSeverityStyle = (severity) => {
+    switch (severity.toLowerCase()) {
+      case 'high':
+        return 'bg-red-500/10 text-red-400 border-red-500/20'
+      case 'medium':
+        return 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+      case 'low':
+        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+      default:
+        return 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+    }
+  }
+
+  return (
+    <div className="space-y-8 py-4 sm:py-6">
+      {/* Top Document Header Section */}
+      <div className="bg-[#1E293B] border border-slate-800 rounded-2xl p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-lg">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-[#2563EB]/10 border border-[#2563EB]/20 flex items-center justify-center text-2xl text-[#2563EB]">
+            📄
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-[#F8FAFC] tracking-tight break-all">
+              {docName}
+            </h1>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[#94A3B8]">
+              <span>Uploaded: {docUploadedAt}</span>
+              <span className="hidden sm:inline text-slate-700">•</span>
+              <span>Size: {docSize}</span>
+              <span className="hidden sm:inline text-slate-700">•</span>
+              <span>Type: {docType}</span>
+              <span className="hidden sm:inline text-slate-700">•</span>
+              <span>Pages: {docPageCount}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            {mockDocument.status}
+          </span>
+        </div>
+      </div>
+
+      {/* Action Buttons Section */}
+      <div className="flex flex-col sm:flex-row items-center justify-start gap-4">
+        <button
+          onClick={() => navigate('/upload')}
+          className="w-full sm:w-auto px-6 py-3 rounded-lg font-semibold tracking-wide text-white bg-[#2563EB] hover:bg-[#2563EB]/90 active:scale-95 transition-all duration-300 border border-[#2563EB] shadow-md shadow-[#2563EB]/10 inline-flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          Analyze Another Document
+        </button>
+        <button
+          onClick={() => navigate('/')}
+          className="w-full sm:w-auto px-6 py-3 rounded-lg font-semibold tracking-wide text-[#94A3B8] hover:text-[#F8FAFC] border border-slate-700 hover:border-slate-600 hover:bg-slate-800/40 active:scale-95 transition-all duration-300 inline-flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          Back to Home
+        </button>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Left Column: Summary and Clauses (2/3 width on desktop) */}
+        <div className="lg:col-span-2 space-y-8">
+          
+          {/* Card 1: Document Summary */}
+          <Card
+            title="Document Summary"
+            subtitle="High-level overview generated by AI"
+          >
+            <div className="space-y-4">
+              <p className="text-base text-[#F8FAFC] leading-relaxed">
+                {mockRisks.summary}
+              </p>
+              <p className="text-sm text-[#94A3B8] leading-relaxed">
+                This document serves as a standard non-disclosure and service provision agreement. It incorporates clauses specifying confidentiality limits, governing jurisdiction localizations, and indemnification guidelines. Understanding these terms is crucial to managing liability and potential litigation exposure.
+              </p>
+            </div>
+          </Card>
+
+          {/* Card 2: Simplified Clauses */}
+          <div>
+            <div className="flex items-center justify-between mb-4 px-1">
+              <div>
+                <h2 className="text-xl font-bold text-[#F8FAFC]">Simplified Clauses</h2>
+                <p className="text-xs text-[#94A3B8]">Breakdown of critical contractual terms</p>
+              </div>
+              <span className="text-xs font-medium px-2 py-1 bg-slate-800 text-slate-400 rounded-md border border-slate-700/50">
+                {mockClauses.length} clauses detected
+              </span>
+            </div>
+
+            <div className="space-y-6">
+              {mockClauses.map((clause) => (
+                <div
+                  key={clause.id}
+                  className="bg-[#1E293B] border border-slate-800 rounded-xl overflow-hidden shadow"
+                >
+                  {/* Clause Card Header */}
+                  <div className="bg-[#1E293B]/40 px-5 py-3 border-b border-slate-800/80 flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">
+                      {clause.number}
+                    </span>
+                    <span className="text-sm font-semibold text-[#F8FAFC]">
+                      {clause.title}
+                    </span>
+                  </div>
+
+                  {/* Clause Card Body */}
+                  <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Original Clause */}
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#94A3B8]">
+                        Original text
+                      </span>
+                      <blockquote className="text-sm text-[#94A3B8]/95 leading-relaxed bg-[#0F172A]/40 p-3.5 rounded-lg border border-slate-800/50 italic">
+                        "{clause.original}"
+                      </blockquote>
+                    </div>
+
+                    {/* Simplified explanation */}
+                    <div className="space-y-2 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#2563EB]">
+                          Simplified Explanation
+                        </span>
+                        <p className="text-sm text-[#F8FAFC] leading-relaxed bg-[#2563EB]/5 p-3.5 rounded-lg border border-[#2563EB]/10 font-medium">
+                          {clause.simplified}
+                        </p>
+                      </div>
+                      <div className="flex justify-end mt-2">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#D4AF37] hover:underline cursor-pointer">
+                          Compare changes
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                          </svg>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Risk Analysis (1/3 width on desktop) */}
+        <div className="space-y-8">
+          
+          {/* Card 3: Risk Analysis Card */}
+          <Card
+            title="Risk Analysis"
+            subtitle="Overall liability assessment"
+          >
+            <div className="space-y-6">
+              {/* Circular Gauge Score */}
+              <div className="flex flex-col items-center justify-center p-4 bg-[#0F172A]/50 rounded-xl border border-slate-800/50">
+                <div className="relative flex items-center justify-center w-36 h-36">
+                  {/* Gauge Background Circle */}
+                  <svg className="absolute w-full h-full -rotate-90">
+                    <circle
+                      cx="72"
+                      cy="72"
+                      r="60"
+                      stroke="#1e293b"
+                      strokeWidth="10"
+                      fill="transparent"
+                    />
+                    {/* Active Gauge Arc */}
+                    <circle
+                      cx="72"
+                      cy="72"
+                      r="60"
+                      stroke="#D4AF37"
+                      strokeWidth="10"
+                      fill="transparent"
+                      strokeDasharray="377"
+                      strokeDashoffset={377 - (377 * mockRisks.score) / 100}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="text-center z-10">
+                    <span className="text-4xl font-extrabold text-[#F8FAFC]">{mockRisks.score}</span>
+                    <span className="text-xs text-[#94A3B8] block font-mono">/ 100</span>
+                  </div>
+                </div>
+                <div className="text-center mt-4">
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${getSeverityStyle(mockRisks.rating)}`}>
+                    {mockRisks.rating} Exposure
+                  </span>
+                </div>
+              </div>
+
+              {/* Specific Risks List */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-[#F8FAFC] uppercase tracking-wider">
+                  Identified Risks
+                </h4>
+
+                <div className="space-y-3">
+                  {mockRisks.items.map((risk) => (
+                    <div
+                      key={risk.id}
+                      className="p-4 rounded-xl bg-[#0F172A]/30 border border-slate-850 hover:border-slate-800 transition-colors"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold text-[#F8FAFC]">
+                          {risk.title}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${getSeverityStyle(risk.severity)}`}>
+                          {risk.severity}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#94A3B8] mt-1.5 leading-relaxed">
+                        {risk.description}
+                      </p>
+                      {risk.remedy && (
+                        <div className="mt-2.5 pt-2 border-t border-slate-800/40 text-[11px]">
+                          <span className="font-semibold text-[#D4AF37]">Recommendation:</span>{' '}
+                          <span className="text-[#94A3B8]">{risk.remedy}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
+export default Analysis
