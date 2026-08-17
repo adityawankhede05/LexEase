@@ -4,7 +4,7 @@ import Home from './pages/Home'
 function App() {
   return (
     <Router>
-      <div className="flex flex-col min-h-screen bg-slate-900 text-slate-100">
+      <div className="flex flex-col min-h-screen bg-legal-bg text-legal-text">
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<Home />} />
