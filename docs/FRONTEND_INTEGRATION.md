@@ -312,3 +312,49 @@ For each Q&A turn in the chat UI:
   - Render **source clause chips** (e.g. `Clause 1`) linking or highlighting the matching clause segments in the document viewer.
   - Show a small **confidence indicator** badge.
 
+---
+
+## Frontend Environment Configuration
+
+The frontend application uses Vite with environment variable support:
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `VITE_API_BASE_URL` | `http://localhost:8000` | Base URL of the LexEase FastAPI backend server |
+
+### Local Development Setup
+
+1. Copy `.env.example` in `frontend/`:
+   ```bash
+   cp frontend/.env.example frontend/.env
+   ```
+2. Install dependencies:
+   ```bash
+   cd frontend
+   npm install
+   ```
+3. Run dev server:
+   ```bash
+   npm run dev
+   ```
+4. Build production bundle:
+   ```bash
+   npm run build
+   ```
+
+### End-to-End Workflow
+
+```
+[ User uploads PDF ] ──> POST /documents/upload ──> document_id & cleaned clauses
+                              │
+               ┌──────────────┴──────────────┐
+               ▼                             ▼
+   POST /documents/summarize       POST /clauses/analyze
+   (Executive summary & bullets)   (Risk classification & advice)
+               │                             │
+               └──────────────┬──────────────┘
+                              ▼
+                   POST /documents/ask
+                   (Grounded Q&A with citations)
+```
+

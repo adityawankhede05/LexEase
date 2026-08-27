@@ -2,10 +2,271 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Additional base styles */
-body {
+@property --accent-position {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 80%;
+}
+
+/* Base legal workspace background & typography */
+:root {
+  --mouse-offset-x: 0px;
+  --mouse-offset-y: 0px;
+}
+
+html,
+body,
+#root {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  padding: 0;
+  min-height: 100vh;
+  background-color: #060A0E;
+  color: #F5F6F8;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Clean Dark Navy Legal Workspace Background */
+.legal-workspace-bg {
+  background-color: #060A0E;
+  background-image:
+    /* Top subtle ambient depth */
+    radial-gradient(1100px circle at 50% -10%, rgba(110, 145, 181, 0.06), transparent 70%);
+  background-size: 100% 100%;
+}
+
+/* LexEase Wordmark Metallic Silver Sheen Animation */
+@keyframes silverSheen {
+  0% {
+    background-position: 180% center;
+  }
+  23% {
+    background-position: -40% center;
+  }
+  100% {
+    background-position: -40% center;
+  }
+}
+
+.lexease-wordmark {
+  background: linear-gradient(
+    115deg,
+    #F5F6F8 0%,
+    #F5F6F8 35%,
+    #8EABC8 50%,
+    #F5F6F8 65%,
+    #F5F6F8 100%
+  );
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #F5F6F8;
+  animation: silverSheen 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  display: inline-block;
+}
+
+/* Hero Glow Text with cursor reactive properties */
+.hero-glow-text {
+  --accent-position: 80%;
+  background: #F5F6F8; /* fallback */
+  background: linear-gradient(
+    90deg,
+    #F5F6F8 0%,
+    #F5F6F8 calc(var(--accent-position) - 25%),
+    #8EABC8 var(--accent-position),
+    #F5F6F8 calc(var(--accent-position) + 25%),
+    #F5F6F8 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  transition: --accent-position 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-glow-text.active {
+  /* Eased horizontal following effect */
+  transition: --accent-position 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Staged Entrance Animations for Legal Workspace Landing */
+@keyframes legalUnfold {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes workflowLineDraw {
+  0% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+.animate-entrance-header {
+  animation: legalUnfold 600ms cubic-bezier(0.16, 1, 0.3, 1) 0ms forwards;
+}
+
+.animate-entrance-hero-title {
+  animation: legalUnfold 650ms cubic-bezier(0.16, 1, 0.3, 1) 350ms forwards;
+  opacity: 0;
+}
+
+.animate-entrance-hero-sub {
+  animation: legalUnfold 650ms cubic-bezier(0.16, 1, 0.3, 1) 700ms forwards;
+  opacity: 0;
+}
+
+.animate-entrance-intake {
+  animation: legalUnfold 650ms cubic-bezier(0.16, 1, 0.3, 1) 1050ms forwards;
+  opacity: 0;
+}
+
+.animate-entrance-workflow-line {
+  animation: workflowLineDraw 600ms cubic-bezier(0.16, 1, 0.3, 1) 1450ms forwards;
+  transform-origin: left center;
+  opacity: 0;
+}
+
+.animate-entrance-step-1 {
+  animation: legalUnfold 600ms cubic-bezier(0.16, 1, 0.3, 1) 1650ms forwards;
+  opacity: 0;
+}
+
+.animate-entrance-step-2 {
+  animation: legalUnfold 600ms cubic-bezier(0.16, 1, 0.3, 1) 1800ms forwards;
+  opacity: 0;
+}
+
+.animate-entrance-step-3 {
+  animation: legalUnfold 600ms cubic-bezier(0.16, 1, 0.3, 1) 1950ms forwards;
+  opacity: 0;
+}
+
+.animate-entrance-disclaimer {
+  animation: legalUnfold 600ms cubic-bezier(0.16, 1, 0.3, 1) 2150ms forwards;
+  opacity: 0;
+}
+
+/* Progress Bar Animation for Document Intake stages */
+@keyframes progressBar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+.animate-progress-bar {
+  animation: progressBar 1.8s infinite linear;
+}
+
+/* Subtle scroll/reveal animation for clause cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.reveal-card {
+  opacity: 0;
+  animation: fadeInUp 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .lexease-wordmark {
+    animation: none !important;
+    background: none !important;
+    -webkit-text-fill-color: #F0F1F2 !important;
+    color: #F0F1F2 !important;
+  }
+
+  .hero-glow-text {
+    animation: none !important;
+    background: none !important;
+    -webkit-text-fill-color: #8EABC8 !important;
+    color: #8EABC8 !important;
+  }
+
+  .reveal-card {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .animate-progress-bar {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .animate-ping {
+    animation: none !important;
+  }
+
+  .legal-workspace-bg {
+    background-image:
+      radial-gradient(1100px circle at 50% -10%, rgba(110, 145, 181, 0.06), transparent 70%) !important;
+    background-position: center center !important;
+  }
+
+  .animate-entrance-header,
+  .animate-entrance-hero-title,
+  .animate-entrance-hero-sub,
+  .animate-entrance-intake,
+  .animate-entrance-workflow-line,
+  .animate-entrance-step-1,
+  .animate-entrance-step-2,
+  .animate-entrance-step-3,
+  .animate-entrance-disclaimer {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Custom scrollbar styling specifically for Grounded Document Q&A conversation panel */
+.qa-thread-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.qa-thread-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.qa-thread-container::-webkit-scrollbar-thumb {
+  background-color: rgba(52, 70, 90, 0.4);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 150ms ease;
+}
+
+.qa-thread-container.scrolling::-webkit-scrollbar-thumb {
+  background-color: rgba(52, 70, 90, 0.85);
+}
+
+.qa-thread-container::-webkit-scrollbar-thumb:hover {
+  background-color: #6E91B5 !important;
+}
+
+/* Firefox scrollbar styling */
+.qa-thread-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(52, 70, 90, 0.5) transparent;
 }
