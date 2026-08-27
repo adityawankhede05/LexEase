@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 from typing import Any
 import httpx
 
@@ -12,11 +13,92 @@ logger = logging.getLogger(__name__)
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 
+def _parse_duration_string(duration_str: str) -> float | None:
+    """Parses duration strings like '17.45s', '500ms', '1m', '17' into seconds."""
+    s = duration_str.strip().lower()
+    if s.endswith("ms"):
+        try:
+            return float(s[:-2]) / 1000.0
+        except ValueError:
+            return None
+    elif s.endswith("s"):
+        try:
+            return float(s[:-1])
+        except ValueError:
+            return None
+    elif s.endswith("m") and not s.endswith("ms"):
+        try:
+            return float(s[:-1]) * 60.0
+        except ValueError:
+            return None
+    else:
+        try:
+            return float(s)
+        except ValueError:
+            return None
+
+
+def parse_retry_after(response: httpx.Response) -> float | None:
+    """
+    Extracts retry delay in seconds from HTTP headers or Groq rate limit error response body.
+    Supports:
+    - 'Retry-After' header (seconds)
+    - 'x-ratelimit-reset-tokens' / 'x-ratelimit-reset-requests' header
+    - Error message regex: 'Please try again in Xs'
+    """
+    # 1. Check 'Retry-After' header
+    retry_after_hdr = response.headers.get("retry-after")
+    if retry_after_hdr:
+        try:
+            val = float(retry_after_hdr)
+            if val >= 0:
+                return val
+        except ValueError:
+            pass
+
+    # 2. Check ratelimit headers
+    for hdr_name in ("x-ratelimit-reset-tokens", "x-ratelimit-reset-requests"):
+        val_str = response.headers.get(hdr_name)
+        if val_str:
+            parsed = _parse_duration_string(val_str)
+            if parsed is not None and parsed >= 0:
+                return parsed
+
+    # 3. Check error message in response body
+    try:
+        data = response.json()
+        error_msg = data.get("error", {}).get("message", "")
+    except Exception:
+        error_msg = response.text or ""
+
+    if error_msg:
+        # Match e.g. "Please try again in 17.45s", "try again in 17s", "try again in 500ms"
+        match = re.search(
+            r"try again in (\d+(?:\.\d+)?)\s*(ms|s|m|seconds?|minutes?)?",
+            error_msg,
+            re.IGNORECASE,
+        )
+        if match:
+            try:
+                num = float(match.group(1))
+                unit = (match.group(2) or "s").lower()
+                if unit.startswith("ms"):
+                    return num / 1000.0
+                elif unit.startswith("m") and not unit.startswith("ms"):
+                    return num * 60.0
+                else:
+                    return num
+            except ValueError:
+                pass
+
+    return None
+
+
 class GroqProvider(BaseAIProvider):
     """
     Groq AI provider implementation conforming to BaseAIProvider.
     Uses async httpx client to communicate with Groq OpenAI-compatible chat completions endpoint.
-    Implements retry with exponential backoff for rate limits and transient errors.
+    Implements retry with exponential backoff and provider-specified delay parsing for rate limits (429).
     """
 
     def __init__(
@@ -66,6 +148,7 @@ class GroqProvider(BaseAIProvider):
         last_exception: Exception | None = None
 
         for attempt in range(1, max_retries + 1):
+            retry_delay: float = 2 ** (attempt - 1)
             try:
                 async with httpx.AsyncClient(timeout=self.timeout) as client:
                     response = await client.post(
@@ -98,6 +181,13 @@ class GroqProvider(BaseAIProvider):
                     logger.warning(
                         f"Groq API transient error ({response.status_code}) on attempt {attempt}/{max_retries}."
                     )
+                    if response.status_code == 429:
+                        parsed_delay = parse_retry_after(response)
+                        if parsed_delay is not None and parsed_delay > 0:
+                            retry_delay = parsed_delay
+                            logger.info(
+                                f"Parsed Groq 429 retry delay: {retry_delay:.2f}s."
+                            )
                 else:
                     raise AIProviderError(
                         f"Groq API error with status {response.status_code}: {response.text}"
@@ -116,8 +206,8 @@ class GroqProvider(BaseAIProvider):
                 logger.warning(f"Unexpected error calling Groq API (attempt {attempt}/{max_retries}): {e}")
 
             if attempt < max_retries:
-                backoff = 2 ** (attempt - 1)
-                await asyncio.sleep(backoff)
+                logger.info(f"Retrying Groq API call in {retry_delay:.2f}s (attempt {attempt}/{max_retries})...")
+                await asyncio.sleep(retry_delay)
 
         raise AIProviderError(
             f"GroqProvider failed after {max_retries} attempts: {str(last_exception)}"

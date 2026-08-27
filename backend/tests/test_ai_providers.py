@@ -4,6 +4,7 @@ import httpx
 import pytest
 
 from app.ai.exceptions import AIProviderError
+from app.ai.cerebras_provider import CerebrasProvider
 from app.ai.gemini_provider import GeminiProvider
 from app.ai.groq_provider import GroqProvider
 from app.ai.openrouter_provider import OpenRouterProvider
@@ -322,10 +323,12 @@ async def test_groq_401_403_handling():
 
 @pytest.mark.anyio
 async def test_groq_429_retry():
-    """Verify GroqProvider retries on 429 rate limit and succeeds on retry."""
+    """Verify GroqProvider retries on 429 rate limit and succeeds on retry with default backoff."""
     mock_rate_limit = MagicMock(spec=httpx.Response)
     mock_rate_limit.status_code = 429
     mock_rate_limit.text = "Rate limit reached"
+    mock_rate_limit.headers = {}
+    mock_rate_limit.json.return_value = {"error": {"message": "Rate limit reached"}}
 
     mock_success = MagicMock(spec=httpx.Response)
     mock_success.status_code = 200
@@ -345,7 +348,97 @@ async def test_groq_429_retry():
 
         assert result == "Groq success after retry"
         assert mock_client.post.call_count == 2
-        mock_sleep.assert_called_once_with(1)
+        mock_sleep.assert_called_once_with(1.0)
+
+
+@pytest.mark.anyio
+async def test_groq_429_parsed_retry_delay_from_body():
+    """Verify GroqProvider extracts and sleeps for provider-specified retry delay from error message."""
+    mock_rate_limit = MagicMock(spec=httpx.Response)
+    mock_rate_limit.status_code = 429
+    mock_rate_limit.headers = {}
+    error_message = (
+        "Rate limit reached for model `openai/gpt-oss-120b` on tokens per minute (TPM): "
+        "Limit 8000, Used 7460, Requested 2819. Please try again in 17.5s. Visit https://..."
+    )
+    mock_rate_limit.text = error_message
+    mock_rate_limit.json.return_value = {"error": {"message": error_message}}
+
+    mock_success = MagicMock(spec=httpx.Response)
+    mock_success.status_code = 200
+    mock_success.json.return_value = {
+        "choices": [{"message": {"content": "Groq success after 17.5s delay"}}]
+    }
+
+    mock_client = AsyncMock()
+    mock_client.post.side_effect = [mock_rate_limit, mock_success]
+
+    provider = GroqProvider(api_key="test-key")
+
+    with patch("httpx.AsyncClient") as mock_client_cls, \
+         patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
+        result = await provider.generate("Test prompt")
+
+        assert result == "Groq success after 17.5s delay"
+        assert mock_client.post.call_count == 2
+        mock_sleep.assert_called_once_with(17.5)
+
+
+@pytest.mark.anyio
+async def test_groq_429_parsed_retry_delay_from_headers():
+    """Verify GroqProvider extracts and sleeps for delay specified in Retry-After header."""
+    mock_rate_limit = MagicMock(spec=httpx.Response)
+    mock_rate_limit.status_code = 429
+    mock_rate_limit.headers = {"retry-after": "15"}
+    mock_rate_limit.text = "Rate limit reached"
+    mock_rate_limit.json.return_value = {"error": {"message": "Rate limit reached"}}
+
+    mock_success = MagicMock(spec=httpx.Response)
+    mock_success.status_code = 200
+    mock_success.json.return_value = {
+        "choices": [{"message": {"content": "Groq success after header delay"}}]
+    }
+
+    mock_client = AsyncMock()
+    mock_client.post.side_effect = [mock_rate_limit, mock_success]
+
+    provider = GroqProvider(api_key="test-key")
+
+    with patch("httpx.AsyncClient") as mock_client_cls, \
+         patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
+        result = await provider.generate("Test prompt")
+
+        assert result == "Groq success after header delay"
+        assert mock_client.post.call_count == 2
+        mock_sleep.assert_called_once_with(15.0)
+
+
+@pytest.mark.anyio
+async def test_groq_429_retry_exhaustion():
+    """Verify GroqProvider raises AIProviderError after exhausting MAX_RETRIES on repeated 429s."""
+    mock_rate_limit = MagicMock(spec=httpx.Response)
+    mock_rate_limit.status_code = 429
+    mock_rate_limit.headers = {"retry-after": "5"}
+    mock_rate_limit.text = "Rate limit reached"
+    mock_rate_limit.json.return_value = {"error": {"message": "Rate limit reached"}}
+
+    mock_client = AsyncMock()
+    mock_client.post.return_value = mock_rate_limit
+
+    provider = GroqProvider(api_key="test-key")
+
+    with patch("httpx.AsyncClient") as mock_client_cls, \
+         patch("app.ai.groq_provider.settings.MAX_RETRIES", 3), \
+         patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
+        with pytest.raises(AIProviderError) as exc_info:
+            await provider.generate("Test prompt")
+
+        assert "failed after 3 attempts" in str(exc_info.value)
+        assert mock_client.post.call_count == 3
+        assert mock_sleep.call_count == 2
 
 
 @pytest.mark.anyio
@@ -476,4 +569,215 @@ def test_provider_factory_invalid_provider_raises_error():
         with pytest.raises(AIProviderError) as exc_info:
             get_ai_provider()
         assert "Unsupported AI provider: 'unsupported_provider'" in str(exc_info.value)
-        assert "'gemini', 'groq', 'openrouter'" in str(exc_info.value)
+        assert "'gemini', 'groq', 'openrouter', 'cerebras'" in str(exc_info.value)
+
+
+# ===========================================================================
+# 5. CEREBRAS PROVIDER TESTS
+# ===========================================================================
+
+@pytest.mark.anyio
+async def test_cerebras_missing_api_key():
+    """Verify CerebrasProvider raises AIProviderError when API key is missing."""
+    with patch("app.ai.cerebras_provider.settings.CEREBRAS_API_KEY", None):
+        provider = CerebrasProvider(api_key=None)
+        with pytest.raises(AIProviderError) as exc_info:
+            await provider.generate("Test prompt")
+        assert "CEREBRAS_API_KEY is not configured" in str(exc_info.value)
+
+
+@pytest.mark.anyio
+async def test_cerebras_successful_response():
+    """Verify CerebrasProvider makes correct HTTP request and returns parsed content string."""
+    mock_response = MagicMock(spec=httpx.Response)
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "choices": [
+            {
+                "message": {
+                    "role": "assistant",
+                    "content": '{"summary": "Test plain English summary."}'
+                }
+            }
+        ]
+    }
+
+    mock_client = AsyncMock()
+    mock_client.post.return_value = mock_response
+
+    provider = CerebrasProvider(api_key="test-cerebras-key", model="llama-3.3-70b")
+
+    with patch("httpx.AsyncClient") as mock_client_cls:
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
+        result = await provider.generate("Summarize this clause.")
+
+    assert result == '{"summary": "Test plain English summary."}'
+    call_kwargs = mock_client.post.call_args
+    assert call_kwargs.args[0] == "https://api.cerebras.ai/v1/chat/completions"
+    sent_payload = call_kwargs.kwargs["json"]
+    assert sent_payload["model"] == "llama-3.3-70b"
+    assert sent_payload["messages"][-1]["role"] == "user"
+    assert sent_payload["messages"][-1]["content"] == "Summarize this clause."
+    auth_header = call_kwargs.kwargs["headers"]["Authorization"]
+    assert "test-cerebras-key" in auth_header
+
+
+@pytest.mark.anyio
+async def test_cerebras_system_instruction():
+    """Verify CerebrasProvider sends system instruction as a system-role message."""
+    mock_response = MagicMock(spec=httpx.Response)
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "choices": [{"message": {"content": "Response with system context"}}]
+    }
+
+    mock_client = AsyncMock()
+    mock_client.post.return_value = mock_response
+
+    provider = CerebrasProvider(api_key="test-key")
+
+    with patch("httpx.AsyncClient") as mock_client_cls:
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
+        result = await provider.generate(
+            "Analyze this clause.", system_instruction="You are a legal expert."
+        )
+
+    assert result == "Response with system context"
+    sent_messages = mock_client.post.call_args.kwargs["json"]["messages"]
+    assert sent_messages[0]["role"] == "system"
+    assert sent_messages[0]["content"] == "You are a legal expert."
+    assert sent_messages[1]["role"] == "user"
+
+
+@pytest.mark.anyio
+async def test_cerebras_401_raises_immediately():
+    """Verify CerebrasProvider raises AIProviderError immediately on 401 without retrying."""
+    mock_response = MagicMock(spec=httpx.Response)
+    mock_response.status_code = 401
+    mock_response.text = "Unauthorized"
+
+    mock_client = AsyncMock()
+    mock_client.post.return_value = mock_response
+
+    provider = CerebrasProvider(api_key="bad-key")
+
+    with patch("httpx.AsyncClient") as mock_client_cls, \
+         patch("asyncio.sleep", new_callable=AsyncMock):
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
+        with pytest.raises(AIProviderError) as exc_info:
+            await provider.generate("Test prompt")
+
+        assert "401" in str(exc_info.value)
+        assert mock_client.post.call_count == 1
+
+
+@pytest.mark.anyio
+async def test_cerebras_403_raises_immediately():
+    """Verify CerebrasProvider raises AIProviderError immediately on 403 without retrying."""
+    mock_response = MagicMock(spec=httpx.Response)
+    mock_response.status_code = 403
+    mock_response.text = "Forbidden"
+
+    mock_client = AsyncMock()
+    mock_client.post.return_value = mock_response
+
+    provider = CerebrasProvider(api_key="test-key")
+
+    with patch("httpx.AsyncClient") as mock_client_cls, \
+         patch("asyncio.sleep", new_callable=AsyncMock):
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
+        with pytest.raises(AIProviderError) as exc_info:
+            await provider.generate("Test prompt")
+
+        assert "403" in str(exc_info.value)
+        assert mock_client.post.call_count == 1
+
+
+@pytest.mark.anyio
+async def test_cerebras_429_retries_and_succeeds():
+    """Verify CerebrasProvider retries on 429 and succeeds on subsequent attempt."""
+    mock_rate_limit = MagicMock(spec=httpx.Response)
+    mock_rate_limit.status_code = 429
+    mock_rate_limit.text = "Rate limit reached"
+
+    mock_success = MagicMock(spec=httpx.Response)
+    mock_success.status_code = 200
+    mock_success.json.return_value = {
+        "choices": [{"message": {"content": "Success after 429"}}]
+    }
+
+    mock_client = AsyncMock()
+    mock_client.post.side_effect = [mock_rate_limit, mock_success]
+
+    provider = CerebrasProvider(api_key="test-key")
+
+    with patch("httpx.AsyncClient") as mock_client_cls, \
+         patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
+        result = await provider.generate("Test prompt")
+
+        assert result == "Success after 429"
+        assert mock_client.post.call_count == 2
+        mock_sleep.assert_called_once_with(1.0)
+
+
+@pytest.mark.anyio
+async def test_cerebras_503_retries_and_succeeds():
+    """Verify CerebrasProvider retries on transient 503 and succeeds on retry."""
+    mock_error = MagicMock(spec=httpx.Response)
+    mock_error.status_code = 503
+    mock_error.text = "Service Unavailable"
+
+    mock_success = MagicMock(spec=httpx.Response)
+    mock_success.status_code = 200
+    mock_success.json.return_value = {
+        "choices": [{"message": {"content": "Success after 503"}}]
+    }
+
+    mock_client = AsyncMock()
+    mock_client.post.side_effect = [mock_error, mock_success]
+
+    provider = CerebrasProvider(api_key="test-key")
+
+    with patch("httpx.AsyncClient") as mock_client_cls, \
+         patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
+        result = await provider.generate("Test prompt")
+
+        assert result == "Success after 503"
+        assert mock_client.post.call_count == 2
+        mock_sleep.assert_called_once()
+
+
+@pytest.mark.anyio
+async def test_cerebras_malformed_response():
+    """Verify CerebrasProvider raises AIProviderError when choices array is empty."""
+    mock_response = MagicMock(spec=httpx.Response)
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"choices": []}
+
+    mock_client = AsyncMock()
+    mock_client.post.return_value = mock_response
+
+    provider = CerebrasProvider(api_key="test-key")
+
+    with patch("httpx.AsyncClient") as mock_client_cls:
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
+        with pytest.raises(AIProviderError) as exc_info:
+            await provider.generate("Test prompt")
+
+        assert "malformed" in str(exc_info.value)
+
+
+def test_provider_factory_selects_cerebras():
+    """Verify get_ai_provider() instantiates CerebrasProvider when AI_PROVIDER=cerebras."""
+    with patch("app.ai.provider_factory.settings.AI_PROVIDER", "cerebras"):
+        provider = get_ai_provider()
+        assert isinstance(provider, CerebrasProvider)
+
+
+def test_provider_factory_cerebras_override_argument():
+    """Verify get_ai_provider('cerebras') overrides any other AI_PROVIDER setting."""
+    with patch("app.ai.provider_factory.settings.AI_PROVIDER", "gemini"):
+        provider = get_ai_provider("cerebras")
+        assert isinstance(provider, CerebrasProvider)

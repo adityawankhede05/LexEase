@@ -13,7 +13,7 @@ class Settings(BaseModel):
     
     ALLOWED_ORIGINS: list[str] = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
     
-    # Active AI Provider: "gemini", "groq", "openrouter"
+    # Active AI Provider: "gemini", "groq", "openrouter", "cerebras"
     AI_PROVIDER: str = os.getenv("AI_PROVIDER", "gemini").lower()
     
     # Gemini AI Provider Configuration
@@ -26,6 +26,7 @@ class Settings(BaseModel):
     GROQ_API_KEY: str | None = os.getenv("GROQ_API_KEY")
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
     GROQ_TIMEOUT: float = float(os.getenv("GROQ_TIMEOUT", "30.0"))
+    GROQ_REQUEST_DELAY: float = float(os.getenv("GROQ_REQUEST_DELAY", "2.0"))
     
     # OpenRouter AI Provider Configuration
     OPENROUTER_API_KEY: str | None = os.getenv("OPENROUTER_API_KEY")
@@ -36,5 +37,10 @@ class Settings(BaseModel):
     MAX_RETRIES: int = int(os.getenv("MAX_RETRIES", "3"))
     DATABASE_URL: str | None = os.getenv("DATABASE_URL")
     PORT: int = int(os.getenv("PORT", "8000"))
+
+    # Cerebras AI Provider Configuration
+    CEREBRAS_API_KEY: str | None = os.getenv("CEREBRAS_API_KEY")
+    CEREBRAS_MODEL: str = os.getenv("CEREBRAS_MODEL", "llama-3.3-70b")
+    CEREBRAS_TIMEOUT: float = float(os.getenv("CEREBRAS_TIMEOUT", "30.0"))
 
 settings = Settings()

@@ -17,7 +17,7 @@ from app.schemas.clause_analysis import (
 )
 from app.schemas.document import ClauseSegment
 from app.services.ai import AIService
-from app.services.clause_analysis import ClauseAnalysisService
+from app.services.clause_analysis import ClauseAnalysisService, estimate_tokens
 from app.services.exceptions import ClauseAnalysisError, EmptyClauseListError
 from app.main import app
 
@@ -34,10 +34,56 @@ class MockAIProvider(BaseAIProvider):
     def __init__(self, response_text: str = ""):
         self.response_text = response_text
         self.last_prompt: str | None = None
+        self.call_count: int = 0
+        self.prompts: list[str] = []
 
     async def generate(self, prompt: str, system_instruction: str | None = None) -> str:
         self.last_prompt = prompt
+        self.prompts.append(prompt)
+        self.call_count += 1
         return self.response_text
+
+
+class DynamicClauseMockAIProvider(BaseAIProvider):
+    """
+    Mock provider that parses input prompt, extracts clause IDs, and returns valid
+    ClauseAnalysisAIResponse JSON with corresponding results.
+    """
+
+    def __init__(self):
+        self.call_count: int = 0
+        self.last_prompt: str | None = None
+        self.prompts: list[str] = []
+
+    async def generate(self, prompt: str, system_instruction: str | None = None) -> str:
+        self.call_count += 1
+        self.last_prompt = prompt
+        self.prompts.append(prompt)
+
+        results = []
+        marker = "Clauses to Analyze (JSON array):"
+        if marker in prompt:
+            json_part = prompt.split(marker)[-1].strip()
+            try:
+                clauses_data = json.loads(json_part)
+                for item in clauses_data:
+                    results.append(
+                        _make_result_dict(
+                            clause_id=item.get("clause_id", "c"),
+                            clause_number=item.get("clause_number"),
+                            risk_level="medium",
+                            explanation=f"Analysis for {item.get('clause_id')}",
+                            recommendation="Review this clause carefully.",
+                            confidence=0.85,
+                        )
+                    )
+            except Exception:
+                pass
+
+        if not results:
+            results.append(_make_result_dict())
+
+        return json.dumps({"results": results})
 
 
 def _make_clause(idx: int = 1) -> ClauseSegment:
@@ -401,3 +447,163 @@ def test_clause_risk_result_missing_recommendation():
             confidence=0.88,
         )
     assert "recommendation" in str(exc_info.value)
+
+
+# ---------------------------------------------------------------------------
+# 16. Chunking — small document triggers exactly one AI call
+# ---------------------------------------------------------------------------
+
+@pytest.mark.anyio
+async def test_clause_analysis_small_document_single_call():
+    """Small document fitting into token budget triggers exactly 1 AI call."""
+    mock_provider = DynamicClauseMockAIProvider()
+    service = ClauseAnalysisService(
+        ai_service=AIService(provider=mock_provider),
+        max_chunk_tokens=3500,
+        chunk_delay=0.0,
+    )
+
+    clauses = [_make_clause(i) for i in range(1, 4)]
+    response = await service.analyze_clauses(clauses)
+
+    assert isinstance(response, ClauseAnalysisResponse)
+    assert response.total_clauses == 3
+    assert len(response.results) == 3
+    assert mock_provider.call_count == 1
+
+
+# ---------------------------------------------------------------------------
+# 17. Chunking — large document triggers multiple chunked AI calls
+# ---------------------------------------------------------------------------
+
+@pytest.mark.anyio
+async def test_clause_analysis_large_document_multiple_chunks():
+    """Large document exceeding chunk token budget triggers multiple chunked AI calls."""
+    mock_provider = DynamicClauseMockAIProvider()
+    # Set small chunk token budget to force multiple chunks
+    service = ClauseAnalysisService(
+        ai_service=AIService(provider=mock_provider),
+        max_chunk_tokens=80,
+        chunk_delay=0.0,
+    )
+
+    clauses = [_make_clause(i) for i in range(1, 11)]
+    response = await service.analyze_clauses(clauses)
+
+    assert isinstance(response, ClauseAnalysisResponse)
+    assert response.total_clauses == 10
+    assert len(response.results) == 10
+    assert mock_provider.call_count > 1
+
+
+# ---------------------------------------------------------------------------
+# 18. Chunking — no prompt exceeds the configured token budget
+# ---------------------------------------------------------------------------
+
+@pytest.mark.anyio
+async def test_clause_analysis_no_request_exceeds_token_budget():
+    """No single chunk prompt sent to AI provider exceeds the safe token budget."""
+    mock_provider = DynamicClauseMockAIProvider()
+    service = ClauseAnalysisService(
+        ai_service=AIService(provider=mock_provider),
+        max_chunk_tokens=3500,
+        chunk_delay=0.0,
+    )
+
+    # 100 clauses (~25,000+ characters)
+    clauses = [
+        ClauseSegment(
+            clause_id=f"clause_{i}",
+            clause_number=f"SEC-{i}",
+            text=f"The Contractor agrees to provide comprehensive support services pursuant to Schedule {i}. "
+                 f"All service level agreements regarding uptime, bug remediation, and quality standards "
+                 f"specified in Exhibit {i} shall strictly apply with penalties for non-performance.",
+        )
+        for i in range(1, 101)
+    ]
+
+    response = await service.analyze_clauses(clauses)
+
+    assert isinstance(response, ClauseAnalysisResponse)
+    assert response.total_clauses == 100
+    assert len(response.results) == 100
+    assert mock_provider.call_count > 1
+
+    # Assert every prompt generated satisfies <= 5000 tokens
+    for idx, prompt in enumerate(mock_provider.prompts, 1):
+        estimated = estimate_tokens(prompt)
+        assert estimated <= 5000, f"Prompt {idx} exceeded token limit with {estimated} estimated tokens"
+
+
+# ---------------------------------------------------------------------------
+# 19. Chunking — original clause order and all results are preserved
+# ---------------------------------------------------------------------------
+
+@pytest.mark.anyio
+async def test_clause_analysis_order_and_all_results_preserved():
+    """All clause results are preserved in their exact original input sequence."""
+    mock_provider = DynamicClauseMockAIProvider()
+    service = ClauseAnalysisService(
+        ai_service=AIService(provider=mock_provider),
+        max_chunk_tokens=60,
+        chunk_delay=0.0,
+    )
+
+    clauses = [_make_clause(i) for i in range(1, 16)]
+    response = await service.analyze_clauses(clauses)
+
+    assert response.total_clauses == 15
+    returned_ids = [r.clause_id for r in response.results]
+    expected_ids = [f"clause_{i}" for i in range(1, 16)]
+    assert returned_ids == expected_ids
+
+
+# ---------------------------------------------------------------------------
+# 20. Pacing — chunk pacing delay occurs between chunks
+# ---------------------------------------------------------------------------
+
+@pytest.mark.anyio
+async def test_clause_analysis_chunk_pacing():
+    """ClauseAnalysisService pauses with chunk_delay between chunks."""
+    mock_provider = DynamicClauseMockAIProvider()
+    service = ClauseAnalysisService(
+        ai_service=AIService(provider=mock_provider),
+        max_chunk_tokens=60,
+        chunk_delay=2.5,
+    )
+
+    clauses = [_make_clause(i) for i in range(1, 7)]
+
+    with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        response = await service.analyze_clauses(clauses)
+
+        assert isinstance(response, ClauseAnalysisResponse)
+        assert mock_provider.call_count > 1
+        # Pacing sleep should occur exactly (chunks - 1) times
+        assert mock_sleep.call_count == mock_provider.call_count - 1
+        for call in mock_sleep.call_args_list:
+            assert call.args[0] == 2.5
+
+
+# ---------------------------------------------------------------------------
+# 21. Pacing — no delay for single-chunk document
+# ---------------------------------------------------------------------------
+
+@pytest.mark.anyio
+async def test_clause_analysis_single_chunk_no_pacing():
+    """Single-chunk document does not trigger any asyncio.sleep pacing delay."""
+    mock_provider = DynamicClauseMockAIProvider()
+    service = ClauseAnalysisService(
+        ai_service=AIService(provider=mock_provider),
+        max_chunk_tokens=3500,
+        chunk_delay=5.0,
+    )
+
+    clauses = [_make_clause(1)]
+
+    with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        response = await service.analyze_clauses(clauses)
+
+        assert isinstance(response, ClauseAnalysisResponse)
+        assert mock_provider.call_count == 1
+        mock_sleep.assert_not_called()

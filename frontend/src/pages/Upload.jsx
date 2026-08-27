@@ -1,11 +1,13 @@
 import React, { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Card from '../components/Card'
+import { uploadDocument } from '../api/client'
 
 function Upload() {
   const [selectedFile, setSelectedFile] = useState(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [uploadError, setUploadError] = useState(null)
   const fileInputRef = useRef(null)
   const navigate = useNavigate()
 
@@ -57,24 +59,34 @@ function Upload() {
     }
   }
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!selectedFile || loading) return
     setLoading(true)
-    
+    setUploadError(null)
+
     // Calculate size string in KB to pass in state
     const sizeInKB = (selectedFile.size / 1024).toFixed(1) + ' KB'
-    
-    // Simulate 2-second document analysis delay prior to dashboard navigation
-    setTimeout(() => {
-      setLoading(false)
+
+    try {
+      const data = await uploadDocument(selectedFile)
       navigate('/analysis', {
         state: {
+          document_id: data.document_id,
+          clauses: data.clauses ?? [],
           fileName: selectedFile.name,
           fileSize: sizeInKB,
-          fileType: selectedFile.type || 'application/pdf'
+          fileType: selectedFile.type || 'application/pdf',
         }
       })
-    }, 2000)
+    } catch (err) {
+      const message =
+        err?.response?.data?.detail ??
+        err?.response?.data?.message ??
+        err?.message ??
+        'Upload failed. Please try again.'
+      setUploadError(message)
+      setLoading(false)
+    }
   }
 
   return (
@@ -168,6 +180,16 @@ function Upload() {
           </div>
         </div>
 
+        {/* Upload Error Banner */}
+        {uploadError && (
+          <div className="mt-4 flex items-start gap-3 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3">
+            <svg className="mt-0.5 h-4 w-4 shrink-0 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-sm text-red-400 leading-relaxed">{uploadError}</p>
+          </div>
+        )}
+
         {/* Submit Section */}
         <div className="mt-6 flex justify-end">
           <button
@@ -187,7 +209,7 @@ function Upload() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                Analyzing document...
+                Uploading document...
               </>
             ) : (
               <>
