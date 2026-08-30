@@ -1,4 +1,5 @@
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -8,6 +9,7 @@ class RiskReconciler:
         """
         Reconciles the local ML model's predictions and high-risk safety warning
         with Groq's contextual analysis using a deterministic rule with Groq priority.
+        Outputs user-friendly, non-technical plain English explanations and recommendations.
         
         Args:
             local_risk: dict containing local risk_score, risk_level, high_risk_warning, requires_contextual_review
@@ -17,8 +19,8 @@ class RiskReconciler:
             dict containing:
               - final_risk_level: "low", "medium", "high"
               - final_risk_score: float (0.0 to 100.0)
-              - explanation: str
-              - recommendation: str
+              - explanation: str (formatted in user-friendly What this means / Why it matters)
+              - recommendation: str (formatted in user-friendly Recommendation before signing)
               - local_ml_contribution: dict (scores/labels of local model)
               - groq_contribution: dict
         """
@@ -26,14 +28,51 @@ class RiskReconciler:
         local_score = local_risk["risk_score"]
         has_warning = local_risk["high_risk_warning"]
         
-        # If Groq was not queried or is unavailable, default entirely to the local ML model fallback
+        # Helper to generate static user-facing text when Groq is unavailable
+        def get_fallback_texts(level: str) -> tuple[str, str]:
+            if level == "high":
+                exp = (
+                    "What this means:\n"
+                    "This clause imposes significant liabilities, waivers, or strict obligations.\n\n"
+                    "Why it matters:\n"
+                    "This clause is flagged as high-risk because it may create severe liability or lock you into one-sided obligations."
+                )
+                rec = (
+                    "Recommendation before signing:\n"
+                    "We strongly recommend renegotiating these terms or reviewing them with a legal advisor before signing."
+                )
+            elif level == "medium":
+                exp = (
+                    "What this means:\n"
+                    "This clause sets forth specific obligations or restrictions.\n\n"
+                    "Why it matters:\n"
+                    "This clause is flagged as moderate-risk due to potential one-sided conditions or restrictions."
+                )
+                rec = (
+                    "Recommendation before signing:\n"
+                    "Consider negotiating more balanced terms or clarifying the obligations."
+                )
+            else:
+                exp = (
+                    "What this means:\n"
+                    "This clause outlines standard contract parameters.\n\n"
+                    "Why it matters:\n"
+                    "This clause appears reasonable and standard for agreements of this type."
+                )
+                rec = (
+                    "Recommendation before signing:\n"
+                    "You can generally accept this clause as written."
+                )
+            return exp, rec
+
+        # If Groq was not queried or is unavailable, use standard user-friendly fallback
         if groq_risk is None or "API Offline" in groq_risk.get("reasons", []):
-            reconcile_note = "[Reconciliation] Groq is unavailable. Using local ML fallback."
+            fallback_exp, fallback_rec = get_fallback_texts(local_level)
             return {
                 "final_risk_level": local_level,
                 "final_risk_score": local_score,
-                "explanation": f"{reconcile_note}\nEvaluated locally by LexEase hybrid filter (LLM routing skipped).",
-                "recommendation": "No remediation required." if local_level == "low" else "Recommend reviewing local risk indicators.",
+                "explanation": fallback_exp,
+                "recommendation": fallback_rec,
                 "local_ml_contribution": {
                     "score": round(local_score, 2),
                     "level": local_level,
@@ -45,46 +84,28 @@ class RiskReconciler:
         groq_level = (groq_risk.get("risk_label") or groq_risk.get("final_risk")).lower()
         groq_score = groq_risk.get("risk_score")
         if groq_score is None:
-            # Fallback mapping if risk_score not present in raw Groq response
             map_score = {"low": 25.0, "medium": 50.0, "high": 75.0}
             groq_score = map_score.get(groq_level, 25.0)
             
         groq_conf = groq_risk.get("confidence", 1.0)
         
-        # Reconciliation Logic (Groq Priority):
-        reconciliation_notes = []
+        # Reconciliation Logic:
         final_level = groq_level
+        escalated = False
         
         if groq_level == "high":
-            # A. Groq is HIGH: never downgrade it
             final_level = "high"
-            reconciliation_notes.append("Groq identified severe contractual risks.")
-            
         elif groq_level == "medium":
-            # B. Groq is MEDIUM: escalate to HIGH only if has_warning or score >= 80
             if has_warning or local_score >= 80.0:
                 final_level = "high"
-                reconciliation_notes.append("Escalated to HIGH: Local safety signal is strong enough to escalate.")
-            else:
-                reconciliation_notes.append("Groq identified moderate risks; local model agrees within safety bounds.")
-                
+                escalated = True
         elif groq_level == "low":
-            # C. Groq is LOW:
             if has_warning and local_score >= 90.0:
-                # Exceptional local safety escalation to HIGH
                 final_level = "high"
-                reconciliation_notes.append("Exceptional local safety escalation due to an extremely strong risk signal.")
+                escalated = True
             elif has_warning and local_score >= 70.0:
-                # Escalate to MEDIUM
                 final_level = "medium"
-                reconciliation_notes.append("Groq assessed the clause as low risk, but the local safety model detected a strong risk signal, so the result was conservatively escalated to MEDIUM.")
-            else:
-                # Trust Groq's LOW
-                final_level = "low"
-                if local_level == "high":
-                    reconciliation_notes.append("Groq is the primary contextual assessment and local signal was not strong enough to override it.")
-                else:
-                    reconciliation_notes.append("Groq and local model both confirm terms are standard and low-risk.")
+                escalated = True
                     
         # Calculate final continuous risk score (80% Groq + 20% Local)
         final_score = 0.8 * groq_score + 0.2 * local_score
@@ -97,25 +118,61 @@ class RiskReconciler:
         elif final_level == "high":
             final_score = max(60.0, final_score)
             
-        # Construct explanation combining Groq reasons & reconciliation notes
-        explanation_parts = []
-        if reconciliation_notes:
-            explanation_parts.append(f"[Reconciliation] {' '.join(reconciliation_notes)}")
+        # Extract explanation & recommendation from Groq
+        raw_explanation = groq_risk.get("explanation") or ""
+        raw_recommendation = groq_risk.get("recommendation") or groq_risk.get("recommended_action") or ""
         
-        reasons_list = groq_risk.get("reasons", [])
-        if reasons_list:
-            explanation_parts.append("Analysis: " + " ".join(reasons_list))
+        # Clean any debug strings, [Reconciliation], local model, etc. from raw texts
+        def clean_technical_jargon(text: str) -> str:
+            # Remove [Reconciliation], model names, and references to local safety model
+            text = re.sub(r"\[Reconciliation\]", "", text, flags=re.IGNORECASE)
+            text = re.sub(r"local safety model", "risk verification checks", text, flags=re.IGNORECASE)
+            text = re.sub(r"local model", "risk verification checks", text, flags=re.IGNORECASE)
+            text = re.sub(r"safety warning", "risk indicator", text, flags=re.IGNORECASE)
+            text = re.sub(r"Groq assessed", "Analysis indicated", text, flags=re.IGNORECASE)
+            text = re.sub(r"Groq", "The system", text, flags=re.IGNORECASE)
+            return text.strip()
+            
+        raw_explanation = clean_technical_jargon(raw_explanation)
+        raw_recommendation = clean_technical_jargon(raw_recommendation)
+        
+        # Ensure correct structured layout: What this means / Why it matters
+        wtm = "This clause outlines the contract parameters."
+        wim = f"This clause appears reasonable and standard for agreements of this type."
+        
+        # Try to parse the sections from raw_explanation if they exist
+        if "what this means:" in raw_explanation.lower() and "why it matters:" in raw_explanation.lower():
+            parts = re.split(r"why it matters:", raw_explanation, flags=re.IGNORECASE)
+            wtm_part = parts[0].replace("What this means:", "", 1).strip()
+            wim_part = parts[1].strip()
+            if wtm_part:
+                wtm = wtm_part
+            if wim_part:
+                wim = wim_part
+        elif "analysis:" in raw_explanation.lower():
+            wtm = raw_explanation.split("Analysis:", 1)[0].strip()
+            wim = raw_explanation.split("Analysis:", 1)[1].strip()
         else:
-            explanation_parts.append(groq_risk.get("explanation", ""))
+            wtm = "This clause outlines typical contractual terms."
+            wim = raw_explanation
             
-        issues_list = groq_risk.get("issues", [])
-        if issues_list:
-            explanation_parts.append("Issues identified: " + ", ".join(issues_list))
+        # Parse recommendation prefix if present
+        rec_val = raw_recommendation
+        if "recommendation before signing:" in rec_val.lower():
+            rec_val = re.split(r"recommendation before signing:", rec_val, flags=re.IGNORECASE)[1].strip()
             
-        final_explanation = "\n".join(explanation_parts)
-        
-        # Recommendation
-        final_rec = groq_risk.get("recommended_action") or groq_risk.get("recommendation") or "No remediation required."
+        # Update Why it matters and Recommendation dynamically if escalated
+        if escalated:
+            if final_level == "high":
+                wim = "Our risk verification checks flagged this clause as high-risk due to potential severe liabilities or one-sided obligations."
+                rec_val = "We strongly recommend negotiating this clause to add protective caps/notice periods, or consulting a legal advisor before signing."
+            elif final_level == "medium":
+                wim = "Our risk verification checks flagged this clause as moderate-risk due to potential one-sided restrictions or obligations."
+                rec_val = "Request to clarify the wording, insert a reasonable limit, or balance the obligation before signing."
+
+        # Re-assemble formatted strings
+        final_explanation = f"What this means:\n{wtm}\n\nWhy it matters:\n{wim}"
+        final_rec = f"Recommendation before signing:\n{rec_val}"
         
         return {
             "final_risk_level": final_level,
