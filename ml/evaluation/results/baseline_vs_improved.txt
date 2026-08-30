@@ -1,0 +1,44 @@
+================================================================================
+LEXEASE MODEL PERFORMANCE COMPARISON REPORT: BASELINE VS EXP 2 VS EXP 3
+================================================================================
+
+--- METRIC COMPARISON ---
++------------------------------------+----------------+----------------+----------------+
+| Metric                             | Baseline Model | Exp 2 (w=2/.5) | Exp 3 (w=1/1)  |
++------------------------------------+----------------+----------------+----------------+
+| Clause Type Accuracy               | 87.0899%       | 86.0317%       | 86.6667%       |
+| Clause Type Macro F1               | 74.6192%       | 78.9620%       | 79.4460%       |
+| Clause Type Weighted F1           | 86.3814%       | 86.3250%       | 86.7685%       |
+| Risk Level Accuracy                | 94.2857%       | 87.8307%       | 93.8624%       |
+| Risk Level Macro F1                | 94.3555%       | 87.9031%       | 93.9145%       |
+| Risk Level Weighted F1             | 94.2964%       | 87.8386%       | 93.8666%       |
++------------------------------------+----------------+----------------+----------------+
+
+--- MINORITY CLASS PERFORMANCE (F1-Score) ---
+Class Name                               | Base F1 | Exp 2 F1 | Exp 3 F1 | Support 
+--------------------------------------------------------------------------------
+Irrevocable Or Perpetual License         | 0.00%   | 20.00%   | 25.00%   | 4       
+Non-Transferable License                 | 0.00%   | 33.33%   | 37.50%   | 7       
+Notice Period To Terminate Renewal       | 0.00%   | 50.00%   | 50.00%   | 3       
+Unlimited/All-You-Can-Eat-License        | 0.00%   | 66.67%   | 66.67%   | 1       
+No-Solicit Of Customers                  | 22.22%  | 44.44%   | 22.22%   | 4       
+Competitive Restriction Exception        | 42.86%  | 57.14%   | 63.16%   | 9       
+Affiliate License-Licensee               | 33.33%  | 57.14%   | 57.14%   | 3       
+Effective Date                           | 57.14%  | 50.00%   | 57.14%   | 8       
+Third Party Beneficiary                  | 80.00%  | 80.00%   | 80.00%   | 3       
+Change Of Control                        | 71.11%  | 65.31%   | 72.34%   | 23      
+
+--- SEMANTIC ERROR CASES CHECK ---
+Case Description                         | Actual Class              | Base Pred       | Exp 2 Pred      | Exp 3 Pred     
+-----------------------------------------------------------------------------------------------------------------------------
+Source Code Escrow -> Audit Rights       | Source Code Escrow        | Audit Rights    | Audit Rights    | Audit Rights   
+Non-Compete -> Change Of Control         | Non-Compete               | Termination F... | Non-Disparage... | Non-Disparage...
+Warranty Duration -> Cap On Liability    | Warranty Duration         | Cap On Liabil... | Cap On Liabil... | Cap On Liabil...
+Ip Ownership Assignment -> Rofr/Rofo/Rofn | Ip Ownership Assignment   | Rofr/Rofo/Rofn  | Rofr/Rofo/Rofn  | Rofr/Rofo/Rofn 
+Rofr/Rofo/Rofn -> Change Of Control      | Rofr/Rofo/Rofn            | Exclusivity     | Exclusivity     | Competitive R...
+
+--- CONCLUSION ---
+1. Clause Type Macro F1 in Exp 3 (79.45%) is higher than Baseline (74.62%), but slightly lower than Exp 2 (78.96%).
+2. Risk Level Accuracy in Exp 3 (93.86%) successfully recovered to match the baseline (94.29%), compared to the degraded performance in Exp 2 (87.83%).
+3. Minority class performance: Exp 3 shows positive gains compared to Baseline, while preserving high Risk Level accuracy.
+4. Recommendation: Exp 3 is the most balanced overall model since it preserves risk classification performance while improving rare clause category recognition.

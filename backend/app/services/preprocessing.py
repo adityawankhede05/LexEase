@@ -50,10 +50,43 @@ class PreprocessingService:
         return text
 
     @classmethod
+    def is_non_substantive_title(cls, clause_num: str | None, text: str, index: int) -> bool:
+        """
+        Determines if a segment is a non-substantive document title/heading rather than a preamble or clause.
+        """
+        if clause_num is not None:
+            return False
+            
+        stripped = text.strip()
+        if not stripped:
+            return False
+            
+        # 1. Length check: Titles are usually short (under 120 characters)
+        if len(stripped) >= 120:
+            return False
+            
+        # 2. Punctuation check: Substantive preambles or sentences end with punctuation (like a period).
+        # Document titles are noun phrases and do not end with periods.
+        if stripped[-1] in (".", "!", "?"):
+            return False
+            
+        # 3. Keyword check: Titles contain common agreement/document keywords
+        title_keywords = {
+            "agreement", "contract", "deed", "memorandum", "nda", "lease", 
+            "affidavit", "policy", "details", "terms", "conditions"
+        }
+        words = set(re.findall(r"\b[a-z0-9]+\b", stripped.lower()))
+        if any(kw in words for kw in title_keywords):
+            return True
+            
+        return False
+
+    @classmethod
     def segment_clauses(cls, text: str) -> list[ClauseSegment]:
         """
         Splits text on paragraph/clause boundaries, applies PII masking, 
         and returns a list of ClauseSegment Pydantic models.
+        Excludes non-substantive document titles/headings from the clause list.
         """
         if not text:
             return []
@@ -90,17 +123,40 @@ class PreprocessingService:
             if raw_segment:
                 segments.append((current_clause_num, raw_segment))
 
-        # Instantiate ClauseSegment objects after masking
+        # Instantiate ClauseSegment objects after masking, filtering out titles
         clause_segments: list[ClauseSegment] = []
-        for index, (clause_num, raw_text) in enumerate(segments, start=1):
+        clause_index = 1
+        for index, (clause_num, raw_text) in enumerate(segments):
+            # Special check for the first segment (index 0) which may contain the title
+            if index == 0 and clause_num is None:
+                # Split the text by double newlines or single newlines to check for a title line
+                paragraphs = [p.strip() for p in raw_text.split("\n\n") if p.strip()]
+                if not paragraphs:
+                    paragraphs = [p.strip() for p in raw_text.split("\n") if p.strip()]
+                
+                if paragraphs:
+                    first_paragraph = paragraphs[0]
+                    if cls.is_non_substantive_title(clause_num, first_paragraph, 0):
+                        # Yes! The first paragraph is a title.
+                        # Discard it and join the rest of the paragraphs as the preamble
+                        remaining_text = "\n\n".join(paragraphs[1:])
+                        if not remaining_text.strip():
+                            continue
+                        raw_text = remaining_text
+            
+            # Recheck if the remaining text is a title
+            if cls.is_non_substantive_title(clause_num, raw_text, index):
+                continue
+
             # Ensure mask_pii is applied before constructing ClauseSegment
             masked_text = cls.mask_pii(raw_text)
             clause_segments.append(
                 ClauseSegment(
-                    clause_id=f"clause_{index}",
+                    clause_id=f"clause_{clause_index}",
                     clause_number=clause_num,
                     text=masked_text
                 )
             )
+            clause_index += 1
 
         return clause_segments

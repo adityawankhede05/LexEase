@@ -180,3 +180,29 @@ def test_upload_and_preprocess_integration():
     assert "[AADHAAR]" in clauses[2]["text"]
     assert "9876-5432-1098" not in clauses[2]["text"]
 
+
+def test_document_title_exclusion():
+    """Verify that a non-substantive document title like 'Residential Rental Agreement' is excluded from segments."""
+    text = (
+        "Residential Rental Agreement\n\n"
+        "This is a legal preamble.\n\n"
+        "1. Monthly Rent.\n"
+        "Tenant shall pay monthly rent of INR 25,000.\n\n"
+        "2. Repairs.\n"
+        "Tenant shall maintain ordinary repairs."
+    )
+    clauses = PreprocessingService.segment_clauses(text)
+    
+    # "Residential Rental Agreement" should be filtered out
+    # "This is a legal preamble." has trailing period, so it is kept as a preamble.
+    # The two numbered clauses are kept.
+    # Total clauses should be 3 (Preamble + Rent + Repairs).
+    assert len(clauses) == 3
+    assert clauses[0].clause_id == "clause_1"
+    assert clauses[0].text == "This is a legal preamble."
+    assert clauses[1].clause_id == "clause_2"
+    assert "Monthly Rent" in clauses[1].text
+    assert clauses[2].clause_id == "clause_3"
+    assert "Repairs" in clauses[2].text
+
+

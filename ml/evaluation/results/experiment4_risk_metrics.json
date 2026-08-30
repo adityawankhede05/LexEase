@@ -1,0 +1,16 @@
+{
+    "test_accuracy": 0.9619047619047619,
+    "test_macro_f1": 0.9604037021232967,
+    "test_weighted_f1": 0.96189524278511,
+    "validation_accuracy": 0.28,
+    "validation_macro_f1": 0.29737455526929213,
+    "validation_weighted_f1": 0.23096282664703718,
+    "comparison": {
+        "exp3_accuracy": 0.28,
+        "exp3_macro_f1": 0.29426448213653106,
+        "api_accuracy": 0.52,
+        "api_macro_f1": 0.4161965791317373,
+        "exp4_accuracy": 0.28,
+        "exp4_macro_f1": 0.29737455526929213
+    }
+}

@@ -1,0 +1,8 @@
+# Configuration file for LexEase Experiment 5 Risk Classifier Model
+model_name: "nlpaueb/legal-bert-base-uncased"
+max_len: 256
+batch_size: 16
+learning_rate: 2.0e-5
+epochs: 5
+seed: 42
+output_dir: "models/experiment5_model"

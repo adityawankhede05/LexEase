@@ -1,0 +1,73 @@
+clause_text,clause_type,risk_level,source,contrastive_group_id
+"Licensor hereby grants to Licensee a non-exclusive, revocable, non-sublicensable license to use the Software solely for internal business testing.",License Grant,low,synthetic_contrastive,lg_g1
+"Licensor hereby grants to Licensee a non-exclusive, irrevocable, sublicensable license to use the Software in its daily business operations.",License Grant,medium,synthetic_contrastive,lg_g1
+"Licensor hereby grants to Licensee an exclusive, perpetual, irrevocable, sublicensable, worldwide license to modify, distribute, and exploit the Software.",License Grant,high,synthetic_contrastive,lg_g1
+"Subject to the terms and conditions, Provider grants Client a limited, personal, non-exclusive license to access the platform.",License Grant,low,synthetic_contrastive,lg_g2
+"Subject to the terms and conditions, Provider grants Client a non-exclusive, worldwide, transferable license to use and run the platform.",License Grant,medium,synthetic_contrastive,lg_g2
+"Provider hereby grants Customer a sole, exclusive, perpetual, irrevocable, royalty-free license to use, copy, and modify the source code.",License Grant,high,synthetic_contrastive,lg_g2
+"Each party's liability under this Agreement shall be limited to direct damages and shall not exceed USD 100,000.",Cap On Liability,low,synthetic_contrastive,cap_g1
+Each party's aggregate liability under this Agreement shall be limited to the total fees paid by Client in the preceding 12 months.,Cap On Liability,medium,synthetic_contrastive,cap_g1
+"Supplier's total aggregate liability under this Agreement for any and all claims shall be strictly capped at USD 1,000.",Cap On Liability,high,synthetic_contrastive,cap_g1
+"Except for breach of confidentiality, neither party's liability shall exceed two times the annual subscription fee.",Cap On Liability,low,synthetic_contrastive,cap_g2
+"Except for breach of confidentiality and IP indemnity, each party's liability is capped at the total contract value.",Cap On Liability,medium,synthetic_contrastive,cap_g2
+Customer's right to recover damages under this Agreement is limited to a maximum refund of the last monthly service fee paid.,Cap On Liability,high,synthetic_contrastive,cap_g2
+Licensee shall have the exclusive right to distribute the Product solely within the state of Oregon.,Exclusivity,low,synthetic_contrastive,ex_g1
+Licensor agrees not to license the Product to any direct competitor of Licensee listed in Exhibit B during the term.,Exclusivity,medium,synthetic_contrastive,ex_g1
+"Supplier shall not sell, license, or distribute the Product to any third party anywhere in the world during the term of this Agreement.",Exclusivity,high,synthetic_contrastive,ex_g1
+"Provider agrees that for a period of six months, it will not offer the custom software to other local retail stores.",Exclusivity,low,synthetic_contrastive,ex_g2
+Provider covenants that it shall not develop similar software for any of Customer's primary competitors.,Exclusivity,medium,synthetic_contrastive,ex_g2
+Supplier covenants that it will work exclusively with Customer and will not enter into supply agreements with any other buyer.,Exclusivity,high,synthetic_contrastive,ex_g2
+This Agreement shall become effective on the date on which it has been signed by both parties.,Effective Date,low,synthetic_contrastive,ed_g1
+"The Effective Date of this Agreement shall be January 1, 2025, regardless of the date of actual signature.",Effective Date,medium,synthetic_contrastive,ed_g1
+"This Agreement shall be retroactively effective from the date three years prior to the date of execution, applying to all past transactions.",Effective Date,high,synthetic_contrastive,ed_g1
+The terms of this Agreement shall take effect upon the successful launch of the beta platform.,Effective Date,low,synthetic_contrastive,ed_g2
+This Agreement shall be effective as of the date of the first commercial purchase order placed by Customer.,Effective Date,medium,synthetic_contrastive,ed_g2
+"This Agreement shall retroactively take effect from January 1, 2020, and Customer assumes all liabilities from that date forward.",Effective Date,high,synthetic_contrastive,ed_g2
+This Agreement shall expire automatically upon the successful completion of the services detailed in Exhibit A.,Expiration Date,low,synthetic_contrastive,exd_g1
+This Agreement shall expire five (5) years from the Effective Date.,Expiration Date,medium,synthetic_contrastive,exd_g1
+This Agreement shall remain in full force and effect indefinitely until terminated by either party under the conditions of Section 9.,Expiration Date,high,synthetic_contrastive,exd_g1
+This Agreement shall expire upon the final delivery and acceptance of all milestone deliverables.,Expiration Date,low,synthetic_contrastive,exd_g2
+"This Agreement shall expire exactly three (3) years from the execution date, unless renewed by mutual agreement.",Expiration Date,medium,synthetic_contrastive,exd_g2
+"This Agreement shall not expire and shall remain in effect in perpetuity, binding all successors and assigns.",Expiration Date,high,synthetic_contrastive,exd_g2
+"Developer hereby assigns to Client all right, title, and interest in and to the custom deliverables, excluding Developer's pre-existing IP.",Ip Ownership Assignment,low,synthetic_contrastive,ip_g1
+"Developer hereby assigns all right, title, and interest in and to the custom software deliverables to the Client.",Ip Ownership Assignment,medium,synthetic_contrastive,ip_g1
+"Developer hereby assigns to Client all right, title, and interest in and to all software, tools, and ideas conceived by Developer during the term.",Ip Ownership Assignment,high,synthetic_contrastive,ip_g1
+Consultant assigns to Company all intellectual property rights in the written reports created specifically for Company under this project.,Ip Ownership Assignment,low,synthetic_contrastive,ip_g2
+Consultant hereby assigns to Company all patents and copyrights developed during the performance of the consulting services.,Ip Ownership Assignment,medium,synthetic_contrastive,ip_g2
+"Consultant assigns to Company all right, title, and interest in all works, designs, patents, and software created by Consultant during the term.",Ip Ownership Assignment,high,synthetic_contrastive,ip_g2
+Each party covenants not to sue the other party for any patent infringement claims regarding the specific deliverables provided.,Covenant Not To Sue,medium,synthetic_contrastive,cov_g1
+Licensee covenants not to sue Licensor or any of its affiliates or customers for any intellectual property infringement claims whatsoever.,Covenant Not To Sue,high,synthetic_contrastive,cov_g1
+"Client covenants not to sue Developer for any bugs, defects, or service interruptions encountered in the software during the warranty term.",Covenant Not To Sue,medium,synthetic_contrastive,cov_g2
+Purchaser hereby covenants never to sue Seller or its affiliates for any environmental liabilities associated with the property.,Covenant Not To Sue,high,synthetic_contrastive,cov_g2
+This Agreement may be renewed for successive one-year terms upon the mutual written agreement of both parties at least 30 days prior to expiration.,Renewal Term,low,synthetic_contrastive,ren_g1
+This Agreement shall automatically renew for additional one-year terms unless either party gives notice of non-renewal at least 60 days prior.,Renewal Term,medium,synthetic_contrastive,ren_g1
+This Agreement shall automatically renew indefinitely for additional five-year terms with a mandatory 15% price increase per renewal.,Renewal Term,high,synthetic_contrastive,ren_g1
+Client shall have the option to renew this Agreement for one additional term of twelve months by providing written notice.,Renewal Term,low,synthetic_contrastive,ren_g2
+This Agreement shall automatically renew for successive terms of two years unless written notice of non-renewal is given 90 days prior.,Renewal Term,medium,synthetic_contrastive,ren_g2
+"This Agreement shall automatically renew for successive five-year terms, with fees adjustment based on the maximum CPI inflation rate.",Renewal Term,high,synthetic_contrastive,ren_g2
+Tenant shall have a Right of First Offer to purchase the Property if Landlord decides to sell it during the lease term.,Rofr/Rofo/Rofn,medium,synthetic_contrastive,ro_g1
+Purchaser shall have a perpetual Right of First Refusal to acquire all assets of the Seller before any sale to a third party.,Rofr/Rofo/Rofn,high,synthetic_contrastive,ro_g1
+"Tenant shall have a Right of First Refusal to lease any adjacent office space, provided Tenant is not in default.",Rofr/Rofo/Rofn,medium,synthetic_contrastive,ro_g2
+Partner shall have a Right of First Refusal to purchase any shares offered for sale by the other Partner before they are sold to outsiders.,Rofr/Rofo/Rofn,high,synthetic_contrastive,ro_g2
+"Developer shall deposit the source code of the Software with a recognized escrow agent, to be released to Client only in the event of Developer's bankruptcy.",Source Code Escrow,medium,synthetic_contrastive,sc_g1
+Developer shall deliver the complete source code and technical documentation of the Software directly to Client's repositories on a weekly basis.,Source Code Escrow,high,synthetic_contrastive,sc_g1
+"Developer shall deposit the source code of the Software with an escrow agent within 30 days of release, to be updated quarterly.",Source Code Escrow,medium,synthetic_contrastive,sc_g2
+Developer agrees to store the source code of the Software in an open repository accessible to Client at all times.,Source Code Escrow,high,synthetic_contrastive,sc_g2
+"Licensee's affiliates shall have the right to use the licensed software, subject to the same terms and conditions as Licensee.",Affiliate License-Licensee,low,synthetic_contrastive,aff_lee_g1
+"Licensee's affiliates may use the software, provided they sign a joinder agreement agreeing to be bound by this Agreement.",Affiliate License-Licensee,medium,synthetic_contrastive,aff_lee_g1
+"Licensee's affiliates may use the software without limitation, and Licensee shall be jointly and severally liable for all affiliate actions.",Affiliate License-Licensee,high,synthetic_contrastive,aff_lee_g1
+Licensor's affiliates may perform obligations under this Agreement on behalf of Licensor.,Affiliate License-Licensor,low,synthetic_contrastive,aff_lor_g1
+"Licensor's affiliates are authorized to grant licenses under this Agreement, subject to Licensor's written authorization.",Affiliate License-Licensor,medium,synthetic_contrastive,aff_lor_g1
+Licensor's affiliates may enforce all rights and licenses granted to Licensor under this Agreement directly against Licensee.,Affiliate License-Licensor,high,synthetic_contrastive,aff_lor_g1
+Nothing in this Agreement shall prevent either party from purchasing standard commercial software from competing vendors.,Competitive Restriction Exception,low,synthetic_contrastive,comp_g1
+"The competitive restrictions shall not apply to any affiliate acquired through merger, provided the affiliate is operated independently.",Competitive Restriction Exception,medium,synthetic_contrastive,comp_g1
+The competitive restrictions shall not apply to any activity conducted by either party that represents less than 5% of its gross revenues.,Competitive Restriction Exception,high,synthetic_contrastive,comp_g1
+Each party agrees not to make any disparaging remarks about the other party's products in public marketing materials.,Non-Disparagement,medium,synthetic_contrastive,disp_g1
+"Employee covenants that they will never make any negative, disparaging, or critical statements about the Company or its executives.",Non-Disparagement,high,synthetic_contrastive,disp_g1
+"The license granted herein is non-transferable, except in connection with a merger or sale of all or substantially all assets.",Non-Transferable License,medium,synthetic_contrastive,tran_g1
+"This license is strictly personal, non-transferable, and may not be transferred, assigned, or sublicensed under any circumstances.",Non-Transferable License,high,synthetic_contrastive,tran_g1
+The notice period required to terminate or prevent automatic renewal of this Agreement shall be thirty (30) days.,Notice Period To Terminate Renewal,medium,synthetic_contrastive,not_g1
+The notice period required to terminate or prevent automatic renewal of this Agreement shall be one hundred and eighty (180) days.,Notice Period To Terminate Renewal,high,synthetic_contrastive,not_g1
+Licensee may extend the license to its direct subsidiaries with prior written notification to Licensor.,Affiliate License-Licensee,low,synthetic_contrastive,aff_lee_g2
+"Licensee may extend the license to any affiliate, provided that the total user count across all affiliates does not exceed the limit.",Affiliate License-Licensee,medium,synthetic_contrastive,aff_lee_g2
+"Affiliates of Licensee shall have full, unrestricted access to the licensed platform, and Licensor waives all audit rights over them.",Affiliate License-Licensee,high,synthetic_contrastive,aff_lee_g2

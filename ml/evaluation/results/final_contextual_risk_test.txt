@@ -1,0 +1,55 @@
+========================================================================================
+FINAL CONTEXTUAL RISK SEPARATION TEST REPORT
+========================================================================================
+
+Category: Termination
+  Safer (LOW) Wording:  Either party may terminate this agreement at any time by providing at least 30 days prior written notice to the other party.
+    Score: 70.09% | Level: HIGH
+  Riskier (HIGH) Wording: Company may terminate this agreement immediately at any time without notice and without payment of any pending dues.
+    Score: 70.22% | Level: HIGH
+  Risk Separation Margin: 0.12 points | Result: FAIL
+----------------------------------------------------------------------------------------
+Category: Indemnity
+  Safer (LOW) Wording:  Vendor shall indemnify the Company for direct losses arising from breach of contract, capped at the total contract value.
+    Score: 60.62% | Level: HIGH
+  Riskier (HIGH) Wording: Vendor shall indemnify Company for all losses, damages, costs and expenses of any nature whatsoever without any cap or limit.
+    Score: 58.21% | Level: MEDIUM
+  Risk Separation Margin: -2.4 points | Result: FAIL
+----------------------------------------------------------------------------------------
+Category: Confidentiality
+  Safer (LOW) Wording:  The receiving party shall keep all confidential information secret for a period of 3 years following the termination of this Agreement.
+    Score: 56.87% | Level: MEDIUM
+  Riskier (HIGH) Wording: The receiving party shall keep all information confidential forever under penalty of immediate liquidated damages of 50 lakhs.
+    Score: 50.64% | Level: MEDIUM
+  Risk Separation Margin: -6.23 points | Result: FAIL
+----------------------------------------------------------------------------------------
+Category: Liability
+  Safer (LOW) Wording:  Except for fraud or willful misconduct, either party's maximum aggregate liability shall be limited to the total fees paid under this contract.
+    Score: 55.01% | Level: MEDIUM
+  Riskier (HIGH) Wording: Neither party limits its liability for any breach under this Agreement, exposing both parties to unlimited exposure.
+    Score: 61.06% | Level: HIGH
+  Risk Separation Margin: 6.05 points | Result: PASS
+----------------------------------------------------------------------------------------
+Category: Non-compete
+  Safer (LOW) Wording:  During the term of employment, the Employee shall not work for any direct competitor of the Employer.
+    Score: 66.56% | Level: HIGH
+  Riskier (HIGH) Wording: Employee shall not compete in any capacity anywhere in India for 3 years after termination.
+    Score: 65.96% | Level: HIGH
+  Risk Separation Margin: -0.6 points | Result: FAIL
+----------------------------------------------------------------------------------------
+Category: Payment/Penalty
+  Safer (LOW) Wording:  Payments shall be made within 45 days of receipt of a valid invoice, in compliance with the MSMED Act, 2006.
+    Score: 43.98% | Level: MEDIUM
+  Riskier (HIGH) Wording: Company may withhold payment at its sole discretion if it is dissatisfied with work quality, without any interest on late payments.
+    Score: 57.23% | Level: MEDIUM
+  Risk Separation Margin: 13.25 points | Result: PASS
+----------------------------------------------------------------------------------------
+Category: Deposit/Lease
+  Safer (LOW) Wording:  The security deposit shall be refundable in full within 30 days of vacating the premises, subject only to actual physical damage.
+    Score: 55.85% | Level: MEDIUM
+  Riskier (HIGH) Wording: The security deposit is non-refundable and shall be forfeited in full if the Tenant terminates before the 24-month lock-in period.
+    Score: 66.67% | Level: HIGH
+  Risk Separation Margin: 10.82 points | Result: PASS
+----------------------------------------------------------------------------------------
+
+Final Verdict: FAIL (Passed 3 out of 7 tests)

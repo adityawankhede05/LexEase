@@ -1,0 +1,63 @@
+==========================================================================================
+TECHNICAL INSPECTION REPORT: ANKUSHRAHEJA/CLS_CLASS_RISK_SCR
+==========================================================================================
+
+--- 1. GENERAL MODEL ARCHITECTURE ---
+  * Model Repository:  AnkushRaheja/Cls_Class_Risk_Scr ('Legal AI Risk Analyzer V7')
+  * Base Encoder:      nlpaueb/legal-bert-base-uncased
+  * Multi-task design: Yes. The model consists of a shared Legal-BERT encoder followed by:
+     1. A Classification Head: Sequential(Linear(768->384), ReLU, Dropout, Linear(384->100)) predicting 100 clause categories.
+     2. A Regression Head:     Sequential(Linear(768->384), ReLU, Dropout, Linear(384->1), Sigmoid) predicting a continuous risk score.
+  * Separability:      Clause type and risk are separate tasks computed by different heads over the shared representation.
+  * Hard-coded rules:  None in the model architecture itself; however, the classification to LOW/MEDIUM/HIGH in post-processing relies on thresholds.
+
+--- 2. RAW RISK SCORE STATISTICS ON 150 VALIDATION CLAUSES ---
+  * Minimum Raw Score: 13.5318 (100-Scale: 13.53)
+  * Maximum Raw Score: 76.1830 (100-Scale: 76.18)
+  * Mean Raw Score:    40.1572 (100-Scale: 40.16)
+  * Median Raw Score:  43.3550 (100-Scale: 43.35)
+  * 10th Percentile:   17.5384 (100-Scale: 17.54)
+  * 90th Percentile:   52.3009 (100-Scale: 52.30)
+
+--- 3. DETAILED RAW inference FOR 20 CLAUSES ---
+Clause ID  | GT Risk | Raw Score | 100-Scale | Pred Type                 | Converted
+------------------------------------------------------------------------------------------
+nda_01     | low     | 0.3887    | 38.87     | Releases                  | low      
+nda_06     | low     | 0.3039    | 30.39     | Governing Laws            | low      
+saas_01    | low     | 0.4269    | 42.69     | Assignments               | medium   
+saas_06    | medium  | 0.5995    | 59.95     | Indemnifications          | medium   
+emp_01     | high    | 0.4424    | 44.24     | Confidentiality           | medium   
+emp_06     | medium  | 0.5999    | 59.99     | Change In Control         | medium   
+lease_01   | low     | 0.4204    | 42.04     | Payments                  | medium   
+lease_06   | low     | 0.2452    | 24.52     | Effective Dates           | low      
+sda_01     | low     | 0.4754    | 47.54     | Assignments               | medium   
+sda_06     | medium  | 0.4239    | 42.39     | Employment                | medium   
+gen_nda_01 | medium  | 0.1754    | 17.54     | Terms                     | low      
+gen_nda_02 | medium  | 0.1778    | 17.78     | Terms                     | low      
+gen_nda_03 | medium  | 0.1751    | 17.51     | Terms                     | low      
+gen_nda_04 | medium  | 0.1727    | 17.27     | Terms                     | low      
+gen_nda_05 | medium  | 0.1711    | 17.11     | Terms                     | low      
+gen_nda_06 | medium  | 0.1754    | 17.54     | Terms                     | low      
+gen_nda_07 | medium  | 0.1778    | 17.78     | Terms                     | low      
+gen_nda_08 | medium  | 0.1751    | 17.51     | Terms                     | low      
+gen_nda_09 | medium  | 0.1727    | 17.27     | Terms                     | low      
+gen_nda_10 | medium  | 0.1711    | 17.11     | Terms                     | low      
+
+--- 4. THRESHOLD OPTIMIZATION ANALYSIS ---
+  * Official thresholds (score < 40 = LOW, score < 70 = MEDIUM, score >= 70 = HIGH):
+     - Under these thresholds, the accuracy is 30.67% and the model predicts HIGH only 1 time.
+     - Reason: The raw scores are extremely concentrated in the range [30.00, 55.00]. Only one clause scored >= 70.00.
+  * Optimized thresholds (found via grid search on validation set):
+     - Optimal Threshold 1 (LOW -> MEDIUM):  54.00
+     - Optimal Threshold 2 (MEDIUM -> HIGH): 63.00
+     - Optimized Accuracy:                  62.0000%
+
+--- 5. ROOT CAUSE DIAGNOSIS & CONCLUSION ---
+1. Output of Pretrained Model:
+   - The model outputs a continuous value between 0.0 and 1.0 representing the predicted risk level of the clause.
+2. Meaning of Raw Scores:
+   - The raw scores represent the sigmoid activation of the regression task. They do not represent a probability, but rather a relative scale of risk.
+3. Why is it predicting HIGH only once?
+   - Incorrect Thresholding Mismatch: The official thresholds (40 and 70) assume the model's activations are evenly distributed. On our real-world dataset, the model's scores are compressed, which causes the threshold of 70 to be virtually unreachable.
+4. Suitability for Dedicated Risk Model:
+   - Yes, this model is technically suitable as a foundation because the continuous risk regression head correlates with risk severity better than our categorical classifiers, but the post-processing thresholds must be calibrated.

@@ -1,0 +1,208 @@
+==========================================================================================
+INDIAN RISK DATASET VERIFICATION REPORT
+Dataset Investigated: Legal Indian Contract Clauses Dataset (Kaggle)
+Author: Sanket Gadekar
+Kaggle URL: https://www.kaggle.com/datasets/sanketgadekar/legal-indian-contract-clauses-dataset
+Date Verified: 2026-08-29
+==========================================================================================
+
+--- 1. DOWNLOAD ATTEMPT STATUS ---
+
+The dataset page was successfully located and accessed at the correct URL.
+Automated download was NOT POSSIBLE without a Kaggle API key / account authentication.
+
+Confirmed facts from Kaggle page metadata (JSON-LD schema embedded in HTML):
+  Dataset name:      Legal Indian Contract Clauses Dataset
+  Creator:           Sanket Gadekar (kaggle.com/sanketgadekar)
+  Published:         2025-08-03
+  File format:       ZIP archive containing CSV
+  File size:         864,060 bytes (~864 KB)
+  License:           UNKNOWN (not specified by the creator)
+  Views:             1,914
+  Downloads:         384
+  Comments:          0
+  Is free to access: Yes (requires Kaggle login)
+  Download requires: Kaggle account authentication
+
+Kaggle API key status: NOT CONFIGURED on this machine (no ~/.kaggle/kaggle.json)
+
+Blocker: The dataset cannot be downloaded programmatically without either:
+  (A) A Kaggle API token placed at C:\Users\Sourish Bhandakkar\.kaggle\kaggle.json
+  (B) Manual browser download by the user from the Kaggle website
+
+
+--- 2. WHAT WE KNOW FROM PUBLIC METADATA ---
+
+From the confirmed JSON-LD metadata and consistent cross-referenced search results:
+
+Columns confirmed to exist:
+  clause_text   — raw legal clause text
+  clause_type   — e.g. Termination, Confidentiality, Arbitration
+  risk_level    — Low, Medium, or High
+
+Risk labels: YES — Low / Medium / High confirmed from multiple independent sources
+
+File size analysis:
+  864 KB ZIP. Assuming plain-text CSV with average clause length of 200 chars:
+  Estimated row count: ~5,000–15,000 rows (cannot confirm exactly without download)
+  Search results cited "approximately 9,400 clauses" as a common reference —
+  this is plausible for an 864 KB file.
+
+Description from Kaggle page:
+  "This dataset contains a curated collection of Indian legal contract clauses,
+   each annotated with its clause type (e.g., Termination, Confidentiality,
+   Arbitration) and its corresponding risk level (Low, Medium, High)."
+
+Disclaimer on page:
+  "This dataset is for educational and research purposes only. It does not
+   constitute legal advice or replace professional legal review. The risk labels
+   are based on heuristic or expert judgment and may not reflect actual legal outcomes."
+
+
+--- 3. UNVERIFIED CLAIMS (CANNOT CONFIRM WITHOUT DOWNLOAD) ---
+
+The following questions CANNOT be answered without downloading the actual CSV:
+
+  □ Whether the same clause type appears with multiple risk levels (contextual variation)
+  □ Whether clauses are real documents or synthetic/template-generated text
+  □ Exact domain coverage (Rental, Employment, Property, NDA, Loan, Service etc.)
+  □ Whether there are duplicates or near-identical template variations
+  □ Exact row count and class distribution
+  □ Whether text diversity is sufficient for contextual risk learning
+
+A Kaggle search result cited "~9,400 clauses" but this could refer to a combined
+dataset (Kaggle dataset + other sources) used in a research paper, not this dataset alone.
+
+
+--- 4. LICENCE CONCERN ---
+
+The dataset licence is listed as "Unknown" on Kaggle.
+This is a SIGNIFICANT concern for a final-year project.
+
+An "Unknown" licence means:
+  - The creator has not specified redistribution or modification rights
+  - Using the data in a project or publication without explicit permission carries risk
+  - The data may be copyrighted by default under Indian copyright law
+
+Recommendation:
+  Contact the creator (Sanket Gadekar) via Kaggle to confirm the licence
+  before using the dataset in a submitted final-year project.
+  If licence is not confirmed as CC0, CC BY, or MIT-equivalent, the dataset
+  should not be used as a primary training source for a published project.
+
+
+--- 5. COMPARISON AGAINST EXISTING PROJECT DATA ---
+
+Existing datasets in ml/data/:
+
++------------------------------------+-------+----------------------------------+
+| Dataset                            | Rows  | Risk Labels                      |
++------------------------------------+-------+----------------------------------+
+| train.csv                          | 7,557 | YES (Low/Med/High) — Corporate   |
+| validation.csv                     | 945   | YES — Corporate (DO NOT use)     |
+| experiment5_contrastive_train.csv  | 72    | YES — Synthetic corporate        |
+| experiment8_indian_clause_dataset  | 1,300 | NO risk labels                   |
+| final_risk_dataset.csv             | 1,362 | YES — Mixed, 1050 real + synth   |
+| validation_clauses.csv (150 real)  | 150   | YES — HELD OUT (must not train)  |
++------------------------------------+-------+----------------------------------+
+
+If the Kaggle dataset contains ~9,400 risk-labelled Indian clauses:
+  → It would be 4× larger than our corporate train.csv Indian portion
+  → It would potentially cover domains not in our training set
+  → BUT licence and quality are still unverified
+
+If the Kaggle dataset contains ~1,000–2,000 clauses:
+  → It may not add enough new Indian-domain examples to justify licence risk
+  → The unknown licence makes it less valuable than anticipated
+
+
+--- 6. DOWNLOAD INSTRUCTIONS FOR MANUAL VERIFICATION ---
+
+To download this dataset manually (required before any training):
+
+Method A — Browser Download (fastest):
+  1. Open: https://www.kaggle.com/datasets/sanketgadekar/legal-indian-contract-clauses-dataset
+  2. Log in with a Kaggle account (free registration)
+  3. Click the "Download" button
+  4. Extract the ZIP file
+  5. Place the CSV at: ml/data/external_indian_risk/legal_contract_clauses.csv
+
+Method B — Kaggle API (automated):
+  1. Go to: https://www.kaggle.com/settings → Account → Create New Token
+  2. Save kaggle.json to: C:\Users\Sourish Bhandakkar\.kaggle\kaggle.json
+  3. Run:
+     ml\.venv\Scripts\python -c "
+     import kaggle
+     kaggle.api.authenticate()
+     kaggle.api.dataset_download_files(
+         'sanketgadekar/legal-indian-contract-clauses-dataset',
+         path='ml/data/external_indian_risk/',
+         unzip=True
+     )
+     "
+  4. Inspect with: ml\.venv\Scripts\python ml/data/external_indian_risk/inspect_dataset.py
+
+After downloading, run this quick inspection:
+
+  import pandas as pd
+  df = pd.read_csv('ml/data/external_indian_risk/legal_contract_clauses.csv')
+  print('Rows:', len(df))
+  print('Columns:', list(df.columns))
+  print('Risk levels:', df['risk_level'].value_counts())
+  print('Clause types:', df['clause_type'].value_counts())
+  ct_risk = df.groupby('clause_type')['risk_level'].apply(set)
+  print('Types with >1 risk level:', ct_risk[ct_risk.apply(len)>1])
+
+
+--- 7. FINAL DECISION ---
+
+NOT READY
+
+REASON:
+  The Kaggle dataset (sanketgadekar/legal-indian-contract-clauses-dataset) is the
+  most promising Indian-domain risk-labelled source found, but it CANNOT be verified
+  or used without:
+
+  1. DOWNLOAD BLOCKED: No Kaggle credentials configured. The dataset cannot be
+     downloaded automatically. Manual browser download by the user is required.
+
+  2. LICENCE UNKNOWN: The dataset licence is listed as "Unknown" on Kaggle.
+     This must be resolved before the data can be used in a submitted project.
+
+  3. QUALITY UNVERIFIED: Without seeing the actual data, we cannot confirm:
+     - Whether the same clause type appears at multiple risk levels
+     - Whether clause texts are real vs synthetic number-variation templates
+     - Exact domain coverage (Rental, Property, Loan etc.)
+
+  4. SIZE UNCERTAIN: File size suggests 5,000–15,000 rows, but this includes
+     the possibility that it is entirely corporate/generic clauses with no
+     genuine rental, employment, or property-specific wording.
+
+
+--- 8. RECOMMENDED NEXT STEP ---
+
+IMMEDIATE ACTION (5 minutes):
+  Download the dataset manually via browser from:
+  https://www.kaggle.com/datasets/sanketgadekar/legal-indian-contract-clauses-dataset
+
+  Save to: ml/data/external_indian_risk/legal_contract_clauses.csv
+  Then re-run verification with the actual CSV to get a definitive answer.
+
+IF DOWNLOAD IS NOT POSSIBLE OR LICENCE IS UNACCEPTABLE:
+  Proceed to Source #2: d-riti/Dataset-For-Indian-legal-knowledge-base (Hugging Face)
+  This source has a clear hosting on HuggingFace, no licence concerns,
+  and includes genuine Indian contract clause texts (though risk labels
+  must be manually added).
+
+  Load command:
+    from datasets import load_dataset
+    ds = load_dataset("d-riti/Dataset-For-Indian-legal-knowledge-base")
+
+  After loading, use the Nikhil-AI-Labs/legal-contract-classifier-best model
+  to auto-generate candidate risk labels, then manually verify ~200 critical
+  examples (particularly LOW vs HIGH variants of the same clause type).
+
+==========================================================================================
+NOTE: ml/data/external_indian_risk/ directory has been created and is ready to
+receive the downloaded CSV when the user completes the manual download.
+==========================================================================================

@@ -1,0 +1,94 @@
+================================================================================
+LEXEASE MULTI-TASK Legal-BERT MODEL ERROR ANALYSIS REPORT
+================================================================================
+
+--- OVERALL FINDINGS ---
+Inference Device used: cuda
+Test size: 945 clauses
+Clause Type Error Rate: 122/945 (Acc: 87.0899%)
+Risk Level Error Rate: 54/945 (Acc: 94.2857%)
+
+--- CLAUSE TYPE WEAKNESSES ---
+Classes with lowest accuracy (Support < 20 often makes metrics volatile):
+  - Irrevocable Or Perpetual License: Acc = 0.00%, Support = 4 (Incorrect = 4)
+  - Non-Transferable License: Acc = 0.00%, Support = 7 (Incorrect = 7)
+  - Notice Period To Terminate Renewal: Acc = 0.00%, Support = 3 (Incorrect = 3)
+  - Unlimited/All-You-Can-Eat-License: Acc = 0.00%, Support = 1 (Incorrect = 1)
+  - No-Solicit Of Customers: Acc = 25.00%, Support = 4 (Incorrect = 3)
+  - Competitive Restriction Exception: Acc = 33.33%, Support = 9 (Incorrect = 6)
+  - Affiliate License-Licensee: Acc = 33.33%, Support = 3 (Incorrect = 2)
+  - Effective Date: Acc = 50.00%, Support = 8 (Incorrect = 4)
+  - Third Party Beneficiary: Acc = 66.67%, Support = 3 (Incorrect = 1)
+  - Change Of Control: Acc = 69.57%, Support = 23 (Incorrect = 7)
+
+Most common clause_type confusion pairs (Actual -> Predicted):
+  - License Grant -> Ip Ownership Assignment: 5 occurrences
+  - Effective Date -> Expiration Date: 4 occurrences
+  - Post-Termination Services -> Rofr/Rofo/Rofn: 4 occurrences
+  - Cap On Liability -> Uncapped Liability: 4 occurrences
+  - Non-Transferable License -> Anti-Assignment: 3 occurrences
+  - Minimum Commitment -> Revenue/Profit Sharing: 3 occurrences
+  - Change Of Control -> Anti-Assignment: 3 occurrences
+  - Non-Transferable License -> License Grant: 3 occurrences
+  - No-Solicit Of Customers -> Non-Compete: 3 occurrences
+  - Anti-Assignment -> Change Of Control: 3 occurrences
+
+--- RISK LEVEL WEAKNESSES ---
+Misclassified Cases by Actual Level:
+  - Actual LOW misclassified:    13 cases (out of 186)
+  - Actual MEDIUM misclassified: 22 cases (out of 334)
+  - Actual HIGH misclassified:   19 cases (out of 425)
+
+Hierarchy / Adjacency Analysis:
+  - Adjacent Errors (LOW <-> MEDIUM, MEDIUM <-> HIGH): 51 / 54 (94.44%)
+  - Non-Adjacent Errors (LOW <-> HIGH): 3 / 54 (5.56%)
+
+--- HIGH CONFIDENCE INCORRECT PREDICTIONS ---
+Top 5 High-Confidence Wrong Clause Type Predictions (>90% conf):
+  - Clause: "Bank of America shall notify Supplier of the dates on which any such verification will be conducted, and the results the..."
+    Actual: Source Code Escrow | Predicted: Audit Rights | Conf: 0.9861
+  - Clause: "DIALOG will have the right to terminate this Agreement immediately upon the issuance of written notice to ENERGOUS (A) i..."
+    Actual: Non-Compete | Predicted: Change Of Control | Conf: 0.9838
+  - Clause: "COMPANY'S SOLE AND EXCLUSIVE LIABILITY FOR THE WARRANTY PROVIDED IN SUBPARAGRAH (A) HEREOF SHALL BE TO CORRECT THE TECHN..."
+    Actual: Warranty Duration | Predicted: Cap On Liability | Conf: 0.9825
+  - Clause: "BII shall have the first right to prosecute and maintain patent rights within the Other Improvements, at its expense, pr..."
+    Actual: Ip Ownership Assignment | Predicted: Rofr/Rofo/Rofn | Conf: 0.9801
+  - Clause: "Notwithstanding anything to the contrary in this Agreement, Medica shall neither enter into an agreement to nor shall co..."
+    Actual: Rofr/Rofo/Rofn | Predicted: Change Of Control | Conf: 0.9757
+
+Top 5 High-Confidence Wrong Risk Level Predictions (>90% conf):
+  - Clause: "fully replace Shipper's original volume commitment as submitted in its Capacity Request Form in Exhibit C, Shipper will ..."
+    Actual: high | Predicted: medium | Conf: 0.9986
+  - Clause: "Upon the death of the Employee, proceeds shall be paid in one sum to the Owner, its successors or assigns, to the extent..."
+    Actual: low | Predicted: medium | Conf: 0.9955
+  - Clause: "Each Party shall permit an independent certified public accounting firm selected by the auditing Party and reasonably ac..."
+    Actual: high | Predicted: medium | Conf: 0.9918
+  - Clause: "Services performed under this Agreement from Consultant's work done for any other companies for whom Consultant is provi..."
+    Actual: high | Predicted: medium | Conf: 0.9898
+  - Clause: "ACTION FIRST ARISING, EVEN IF IT IS A CONTINUOUS ONE, OR IN THE          AGGREGATE, WITH RESPECT OF ALL CLAIMS ARISING O..."
+    Actual: high | Predicted: medium | Conf: 0.9844
+
+--- COMPARISON OF 10 INFERENCE SAMPLES ---
+From manual test report inspection, we highlight suspicious predictions:
+  1. Category: Indemnity
+     Input: "The Seller shall indemnify, defend, and hold harmless the Buyer from and against any claims..."
+     Prediction: Cap On Liability (Confidence: 0.4847) <-- SUSPICIOUS MISMATCH
+     Note: Indictment/defense features of Indemnity misclassified as a Liability limitation.
+  2. Category: Force Majeure
+     Input: "Neither party shall be responsible for any delay or failure... acts of God, war..."
+     Prediction: Cap On Liability (Confidence: 0.9526) <-- SUSPICIOUS HIGH-CONFIDENCE MISMATCH
+     Note: Force Majeure exemption patterns misidentified as a Cap On Liability. The model makes a very high-confidence wrong prediction here.
+  3. Category: Termination
+     Input: "Either party may terminate this agreement immediately if the other party breaches..."
+     Prediction: Termination For Convenience (Confidence: 0.4377) <-- SUSPICIOUS MISMATCH
+     Note: Mutual default termination (for cause) misclassified as termination for convenience.
+
+--- POSSIBLE CAUSES ---
+1. Class Imbalance: There are 41 clause types in the dataset. Some low-frequency classes (like 'No-Solicit Of Customers', support=4, or 'Notice Period To Terminate Renewal', support=3) have extremely poor representation, causing the model to default to higher-frequency sibling classes.
+2. Overlapping Vocabulary: Clauses for 'Indemnity', 'Cap On Liability', and 'Force Majeure' share high-overlap vocabulary keywords (e.g., 'shall not be responsible', 'hold harmless', 'claims', 'liability'). Legal-BERT encodes these representations closely, resulting in heads confusing these adjacent topics.
+3. Static Learning Weights: Using static 1.0 weights for both classification losses might cause the model to favor optimization of the simpler risk classification task (3 classes, ~94% accuracy) over the harder clause type task (41 classes, ~87% accuracy).
+
+--- RECOMMENDED NEXT ML IMPROVEMENT ---
+1. Loss Weight Tuning: Implement dynamic loss weight adjustment (e.g. GradNorm or Uncertainty Weighting) or adjust loss weights (e.g. w_clause = 2.0, w_risk = 0.5) to focus encoder updates on the harder clause type task.
+2. Targeted Data Augmentation: Perform synthetic generation (e.g. back-translation or prompt-based text generation) for the tail classes (support < 10) to balance the clause type distribution.
+3. Hierarchical Routing: Refine the head structure so that the model first outputs clause type, which is then concatenated with encoder features as context for the risk level classification head, rather than running both heads completely in parallel.

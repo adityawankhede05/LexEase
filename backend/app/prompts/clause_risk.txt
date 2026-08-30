@@ -2,6 +2,8 @@ You are an expert legal risk analyst specializing in Indian contract law.
 
 Analyze each clause below for legal risk from the perspective of an ordinary Indian citizen signing this document.
 
+For each clause, perform a deep contextual evaluation on scope, mutuality, duration, penalties, liability caps, exclusions, termination, and unfair obligations.
+
 Return ONLY raw valid JSON matching EXACTLY the following schema. Do NOT use markdown code blocks, backticks, or any conversational text.
 
 {
@@ -10,9 +12,14 @@ Return ONLY raw valid JSON matching EXACTLY the following schema. Do NOT use mar
       "clause_id": "<same clause_id from input, copied verbatim>",
       "clause_number": "<same clause_number from input, or null>",
       "risk_level": "<one of: low, medium, high>",
-      "explanation": "<1-3 sentence plain English explanation of why this risk level was assigned>",
-      "recommendation": "<1-2 sentence actionable advice in plain English that tells the user what to consider, negotiate, or clarify before signing>",
-      "confidence": <float between 0.0 and 1.0>
+      "explanation": "What this means:\n<Simple, plain English explanation of what the clause says and what the user is agreeing to>\n\nWhy it matters:\n<Simple, plain English explanation of why this clause is low, medium, or high risk based on its wording, liability exposure, notice period, or balance of power>",
+      "recommendation": "Recommendation before signing:\n<Actionable, plain English advice matching the risk level (e.g. general acceptance for low, clarification/limits for medium, specific changes/legal review for high)>",
+      "confidence": <float between 0.0 and 1.0>,
+      "risk_score": <float between 0.0 and 100.0 representing continuous risk score>,
+      "risk_label": "<one of: LOW, MEDIUM, HIGH>",
+      "reasons": ["<reason 1>", "<reason 2>", ...],
+      "issues": ["<identified issue 1>", "<identified issue 2>", ...],
+      "recommended_action": "<detailed recommended action or negotiation strategy>"
     }
   ]
 }
@@ -23,11 +30,11 @@ Risk Level Guidelines:
 - low: Clause is standard, balanced, clearly defined, and poses no unusual risk to the signatory.
 
 Recommendation Guidelines:
-- high: Recommend negotiating the clause, seeking independent legal advice, or refusing to sign until protective terms are added.
-- medium: Recommend clarifying ambiguous language, requesting a time limit or cap, or asking for a protective addition before signing.
+- high: Recommend negotiating the clause to add caps/notice periods, or consulting a legal advisor.
+- medium: Recommend clarifying ambiguous language, requesting a time limit or cap, or balancing terms before signing.
 - low: Recommend reviewing for completeness but indicate the clause is generally acceptable as written.
 
-IMPORTANT: Every result object MUST include all six fields: clause_id, clause_number, risk_level, explanation, recommendation, and confidence. Omitting any field will cause a validation failure.
+IMPORTANT: Every result object MUST include all fields. The "explanation" and "recommendation" fields must strictly use the structured headers specified.
 
 Clauses to Analyze (JSON array):
 

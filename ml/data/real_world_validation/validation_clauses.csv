@@ -1,0 +1,151 @@
+clause_id,document_name,document_type,clause_text,correct_clause_type,correct_risk_level
+nda_01,NDA.pdf,Non-Disclosure Agreement,"This Non-Disclosure Agreement is entered into on this 15th day of October, 2025.",Agreement Date,low
+nda_02,NDA.pdf,Non-Disclosure Agreement,The Effective Date of this Agreement shall be the date on which both parties have signed it.,Effective Date,low
+nda_03,NDA.pdf,Non-Disclosure Agreement,This Agreement is by and between Acme Corp. ('Disclosing Party') and Beta Industries ('Receiving Party').,Parties,low
+nda_04,NDA.pdf,Non-Disclosure Agreement,The obligations of confidentiality under this Agreement shall expire three (3) years from the Effective Date.,Expiration Date,medium
+nda_05,NDA.pdf,Non-Disclosure Agreement,Each party agrees not to solicit or hire any employee of the other party during the term of this Agreement and for one year thereafter.,No-Solicit Of Employees,medium
+nda_06,NDA.pdf,Non-Disclosure Agreement,"This Agreement shall be governed by, and construed in accordance with, the laws of the State of Delaware.",Governing Law,low
+nda_07,NDA.pdf,Non-Disclosure Agreement,The Receiving Party agrees to indemnify and hold harmless the Disclosing Party against any and all claims arising from unauthorized disclosure of Confidential Information.,REVIEW_REQUIRED,high
+nda_08,NDA.pdf,Non-Disclosure Agreement,Receiving Party shall not assign this Agreement or any rights hereunder without the prior written consent of the Disclosing Party.,Anti-Assignment,low
+nda_09,NDA.pdf,Non-Disclosure Agreement,"Neither party shall disparage the other party, its products, or its employees in any public forum or to any third party.",Non-Disparagement,medium
+nda_10,NDA.pdf,Non-Disclosure Agreement,This Agreement contains the entire agreement between the parties regarding the subject matter hereof.,REVIEW_REQUIRED,low
+saas_01,SaaS_Agreement.pdf,SaaS Subscription Agreement,"Provider grants Customer a non-exclusive, non-transferable, revocable license to access the SaaS Platform during the subscription term.",License Grant,low
+saas_02,SaaS_Agreement.pdf,SaaS Subscription Agreement,"This license is strictly personal, non-transferable, and may not be sublicensed or assigned to any third party.",Non-Transferable License,medium
+saas_03,SaaS_Agreement.pdf,SaaS Subscription Agreement,"Customer agrees to pay a minimum annual commitment of USD 120,000, billed in equal monthly installments.",Minimum Commitment,medium
+saas_04,SaaS_Agreement.pdf,SaaS Subscription Agreement,Customer agrees that the monthly data traffic shall not exceed 10 Terabytes per month.,Volume Restriction,medium
+saas_05,SaaS_Agreement.pdf,SaaS Subscription Agreement,Either party may terminate this Agreement for convenience at any time by giving the other party at least ninety (90) days prior written notice.,Termination For Convenience,medium
+saas_06,SaaS_Agreement.pdf,SaaS Subscription Agreement,"Except for breach of confidentiality, in no event shall either party's aggregate liability exceed the total amounts paid under this Agreement in the twelve months preceding the claim.",Cap On Liability,medium
+saas_07,SaaS_Agreement.pdf,SaaS Subscription Agreement,Provider's liability for direct damages arising out of a breach of data security obligations shall be completely uncapped and unlimited.,Uncapped Liability,high
+saas_08,SaaS_Agreement.pdf,SaaS Subscription Agreement,Provider warrants that the SaaS Platform will perform substantially in accordance with the user documentation for a period of ninety (90) days from deployment.,Warranty Duration,low
+saas_09,SaaS_Agreement.pdf,SaaS Subscription Agreement,This Agreement shall automatically renew for successive terms of one (1) year unless either party provides notice of non-renewal at least 60 days before the end of the term.,Renewal Term,low
+saas_10,SaaS_Agreement.pdf,SaaS Subscription Agreement,Notice period to terminate or prevent automatic renewal of this agreement is 60 days prior to expiration.,Notice Period To Terminate Renewal,low
+emp_01,Employment_Contract.pdf,Employment Contract,"The Employee agrees that during their employment and for a period of twelve (12) months following termination, they will not engage in any competitive business activity.",Non-Compete,high
+emp_02,Employment_Contract.pdf,Employment Contract,"The Employee shall not solicit, contact, or attempt to induce any customers of the Company to cease doing business with the Company.",No-Solicit Of Customers,high
+emp_03,Employment_Contract.pdf,Employment Contract,"All inventions, software, and intellectual property developed by the Employee during the course of employment shall belong solely and exclusively to the Company.",Ip Ownership Assignment,medium
+emp_04,Employment_Contract.pdf,Employment Contract,Nothing in this Agreement shall prevent the Employee from owning less than two percent (2%) of the public shares of any competing company.,Competitive Restriction Exception,low
+emp_05,Employment_Contract.pdf,Employment Contract,Either party may terminate this employment relationship at-will upon providing 30 days written notice to the other party.,Termination For Convenience,low
+emp_06,Employment_Contract.pdf,Employment Contract,"If the Company terminates this Agreement due to a Change of Control, the Employee shall be entitled to a lump-sum severance payment equal to six (6) months of salary.",Change Of Control,medium
+emp_07,Employment_Contract.pdf,Employment Contract,"The Employee agrees to maintain professional indemnity insurance coverage of at least USD 1,000,000 during their employment.",Insurance,low
+emp_08,Employment_Contract.pdf,Employment Contract,This Agreement shall be governed by and construed in accordance with the laws of the State of California.,Governing Law,low
+emp_09,Employment_Contract.pdf,Employment Contract,"In the event of a breach of the non-compete clause, the Employee shall pay liquidated damages of USD 50,000.",Liquidated Damages,high
+emp_10,Employment_Contract.pdf,Employment Contract,"Employee shall receive a base salary of INR 1,500,000 per annum, paid monthly.",REVIEW_REQUIRED,low
+lease_01,Commercial_Lease.pdf,Commercial Lease,"The Tenant shall pay a monthly base rent of INR 100,000, payable on the first day of each month.",REVIEW_REQUIRED,low
+lease_02,Commercial_Lease.pdf,Commercial Lease,The Landlord covenants and agrees that the Tenant shall have quiet enjoyment and exclusive possession of the premises.,Exclusivity,low
+lease_03,Commercial_Lease.pdf,Commercial Lease,Tenant shall have a Right of First Refusal to lease any adjacent space that becomes vacant in the building.,Rofr/Rofo/Rofn,low
+lease_04,Commercial_Lease.pdf,Commercial Lease,"The Tenant shall pay monthly utility charges based on consumption metrics, and the landlord shall pay property taxes.",REVIEW_REQUIRED,low
+lease_05,Commercial_Lease.pdf,Commercial Lease,The Landlord shall provide structural maintenance and major repairs to the roof and foundation.,REVIEW_REQUIRED,low
+lease_06,Commercial_Lease.pdf,Commercial Lease,"This Lease Agreement is dated as of September 1, 2025.",Agreement Date,low
+lease_07,Commercial_Lease.pdf,Commercial Lease,"The term of this Lease shall be five (5) years, commencing on the Commencement Date.",REVIEW_REQUIRED,low
+lease_08,Commercial_Lease.pdf,Commercial Lease,"If the Tenant defaults on rent payment, Landlord may terminate this Lease immediately and re-enter the premises.",REVIEW_REQUIRED,high
+lease_09,Commercial_Lease.pdf,Commercial Lease,"Tenant shall keep in force public liability insurance of not less than INR 2,000,000 naming Landlord as additional insured.",Insurance,medium
+lease_10,Commercial_Lease.pdf,Commercial Lease,Neither party shall be liable to the other for indirect or consequential damages.,Cap On Liability,medium
+sda_01,SDA.pdf,Software Development Agreement,"Developer hereby assigns all right, title, and interest in and to the custom software deliverables to the Client.",Ip Ownership Assignment,low
+sda_02,SDA.pdf,Software Development Agreement,Developer and Client shall jointly own all intellectual property rights in any generic software components developed during the project.,Joint Ip Ownership,medium
+sda_03,SDA.pdf,Software Development Agreement,"Developer grants Client a perpetual, irrevocable, worldwide license to use Developer's pre-existing software library embedded in the deliverables.",Irrevocable Or Perpetual License,low
+sda_04,SDA.pdf,Software Development Agreement,Developer shall deposit the source code of the software into an independent escrow agent registry for the benefit of the Client.,Source Code Escrow,medium
+sda_05,SDA.pdf,Software Development Agreement,Each party covenants not to sue the other party for patent infringement regarding the technology used in the project.,Covenant Not To Sue,high
+sda_06,SDA.pdf,Software Development Agreement,"During the term and for one year thereafter, Client shall not solicit or hire Developer's software engineers.",No-Solicit Of Employees,medium
+sda_07,SDA.pdf,Software Development Agreement,This Agreement does not create any rights in or benefits for any third party under the Contracts (Rights of Third Parties) Act.,Third Party Beneficiary,low
+sda_08,SDA.pdf,Software Development Agreement,Developer warrants that the software will be free from defects for a period of ninety (90) days after acceptance.,Warranty Duration,low
+sda_09,SDA.pdf,Software Development Agreement,Developer represents that the billing rates charged to Client are no less favorable than those charged to any other customer.,Most Favored Nation,medium
+sda_10,SDA.pdf,Software Development Agreement,Developer agrees to provide post-termination transition services for up to 30 days at Developer's standard rates.,Post-Termination Services,low
+gen_nda_01,NDA_Company_1.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 4 years after signature date.,Expiration Date,medium
+gen_saas_01,SaaS_Provider_1.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 100 users.",License Grant,low
+gen_emp_01,Employment_Agreement_1.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 15 mile radius of the headquarters.,Non-Compete,high
+gen_lease_01,Lease_Property_1.pdf,Commercial Lease,The monthly rental amount is set at INR 55000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_01,SDA_Project_1.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 1 to the Client.,Ip Ownership Assignment,low
+gen_nda_02,NDA_Company_2.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 5 years after signature date.,Expiration Date,medium
+gen_saas_02,SaaS_Provider_2.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 200 users.",License Grant,low
+gen_emp_02,Employment_Agreement_2.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 20 mile radius of the headquarters.,Non-Compete,high
+gen_lease_02,Lease_Property_2.pdf,Commercial Lease,The monthly rental amount is set at INR 60000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_02,SDA_Project_2.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 2 to the Client.,Ip Ownership Assignment,low
+gen_nda_03,NDA_Company_3.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 6 years after signature date.,Expiration Date,medium
+gen_saas_03,SaaS_Provider_3.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 300 users.",License Grant,low
+gen_emp_03,Employment_Agreement_3.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 25 mile radius of the headquarters.,Non-Compete,high
+gen_lease_03,Lease_Property_3.pdf,Commercial Lease,The monthly rental amount is set at INR 65000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_03,SDA_Project_3.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 3 to the Client.,Ip Ownership Assignment,low
+gen_nda_04,NDA_Company_4.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 7 years after signature date.,Expiration Date,medium
+gen_saas_04,SaaS_Provider_4.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 400 users.",License Grant,low
+gen_emp_04,Employment_Agreement_4.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 30 mile radius of the headquarters.,Non-Compete,high
+gen_lease_04,Lease_Property_4.pdf,Commercial Lease,The monthly rental amount is set at INR 70000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_04,SDA_Project_4.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 4 to the Client.,Ip Ownership Assignment,low
+gen_nda_05,NDA_Company_5.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 3 years after signature date.,Expiration Date,medium
+gen_saas_05,SaaS_Provider_5.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 500 users.",License Grant,low
+gen_emp_05,Employment_Agreement_5.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 35 mile radius of the headquarters.,Non-Compete,high
+gen_lease_05,Lease_Property_5.pdf,Commercial Lease,The monthly rental amount is set at INR 75000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_05,SDA_Project_5.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 5 to the Client.,Ip Ownership Assignment,low
+gen_nda_06,NDA_Company_6.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 4 years after signature date.,Expiration Date,medium
+gen_saas_06,SaaS_Provider_6.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 600 users.",License Grant,low
+gen_emp_06,Employment_Agreement_6.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 40 mile radius of the headquarters.,Non-Compete,high
+gen_lease_06,Lease_Property_6.pdf,Commercial Lease,The monthly rental amount is set at INR 80000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_06,SDA_Project_6.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 6 to the Client.,Ip Ownership Assignment,low
+gen_nda_07,NDA_Company_7.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 5 years after signature date.,Expiration Date,medium
+gen_saas_07,SaaS_Provider_7.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 700 users.",License Grant,low
+gen_emp_07,Employment_Agreement_7.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 45 mile radius of the headquarters.,Non-Compete,high
+gen_lease_07,Lease_Property_7.pdf,Commercial Lease,The monthly rental amount is set at INR 85000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_07,SDA_Project_7.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 7 to the Client.,Ip Ownership Assignment,low
+gen_nda_08,NDA_Company_8.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 6 years after signature date.,Expiration Date,medium
+gen_saas_08,SaaS_Provider_8.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 800 users.",License Grant,low
+gen_emp_08,Employment_Agreement_8.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 50 mile radius of the headquarters.,Non-Compete,high
+gen_lease_08,Lease_Property_8.pdf,Commercial Lease,The monthly rental amount is set at INR 90000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_08,SDA_Project_8.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 8 to the Client.,Ip Ownership Assignment,low
+gen_nda_09,NDA_Company_9.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 7 years after signature date.,Expiration Date,medium
+gen_saas_09,SaaS_Provider_9.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 900 users.",License Grant,low
+gen_emp_09,Employment_Agreement_9.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 55 mile radius of the headquarters.,Non-Compete,high
+gen_lease_09,Lease_Property_9.pdf,Commercial Lease,The monthly rental amount is set at INR 95000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_09,SDA_Project_9.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 9 to the Client.,Ip Ownership Assignment,low
+gen_nda_10,NDA_Company_10.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 3 years after signature date.,Expiration Date,medium
+gen_saas_10,SaaS_Provider_10.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 1000 users.",License Grant,low
+gen_emp_10,Employment_Agreement_10.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 60 mile radius of the headquarters.,Non-Compete,high
+gen_lease_10,Lease_Property_10.pdf,Commercial Lease,The monthly rental amount is set at INR 100000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_10,SDA_Project_10.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 10 to the Client.,Ip Ownership Assignment,low
+gen_nda_11,NDA_Company_11.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 4 years after signature date.,Expiration Date,medium
+gen_saas_11,SaaS_Provider_11.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 1100 users.",License Grant,low
+gen_emp_11,Employment_Agreement_11.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 65 mile radius of the headquarters.,Non-Compete,high
+gen_lease_11,Lease_Property_11.pdf,Commercial Lease,The monthly rental amount is set at INR 105000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_11,SDA_Project_11.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 11 to the Client.,Ip Ownership Assignment,low
+gen_nda_12,NDA_Company_12.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 5 years after signature date.,Expiration Date,medium
+gen_saas_12,SaaS_Provider_12.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 1200 users.",License Grant,low
+gen_emp_12,Employment_Agreement_12.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 70 mile radius of the headquarters.,Non-Compete,high
+gen_lease_12,Lease_Property_12.pdf,Commercial Lease,The monthly rental amount is set at INR 110000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_12,SDA_Project_12.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 12 to the Client.,Ip Ownership Assignment,low
+gen_nda_13,NDA_Company_13.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 6 years after signature date.,Expiration Date,medium
+gen_saas_13,SaaS_Provider_13.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 1300 users.",License Grant,low
+gen_emp_13,Employment_Agreement_13.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 75 mile radius of the headquarters.,Non-Compete,high
+gen_lease_13,Lease_Property_13.pdf,Commercial Lease,The monthly rental amount is set at INR 115000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_13,SDA_Project_13.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 13 to the Client.,Ip Ownership Assignment,low
+gen_nda_14,NDA_Company_14.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 7 years after signature date.,Expiration Date,medium
+gen_saas_14,SaaS_Provider_14.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 1400 users.",License Grant,low
+gen_emp_14,Employment_Agreement_14.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 80 mile radius of the headquarters.,Non-Compete,high
+gen_lease_14,Lease_Property_14.pdf,Commercial Lease,The monthly rental amount is set at INR 120000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_14,SDA_Project_14.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 14 to the Client.,Ip Ownership Assignment,low
+gen_nda_15,NDA_Company_15.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 3 years after signature date.,Expiration Date,medium
+gen_saas_15,SaaS_Provider_15.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 1500 users.",License Grant,low
+gen_emp_15,Employment_Agreement_15.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 85 mile radius of the headquarters.,Non-Compete,high
+gen_lease_15,Lease_Property_15.pdf,Commercial Lease,The monthly rental amount is set at INR 125000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_15,SDA_Project_15.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 15 to the Client.,Ip Ownership Assignment,low
+gen_nda_16,NDA_Company_16.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 4 years after signature date.,Expiration Date,medium
+gen_saas_16,SaaS_Provider_16.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 1600 users.",License Grant,low
+gen_emp_16,Employment_Agreement_16.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 90 mile radius of the headquarters.,Non-Compete,high
+gen_lease_16,Lease_Property_16.pdf,Commercial Lease,The monthly rental amount is set at INR 130000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_16,SDA_Project_16.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 16 to the Client.,Ip Ownership Assignment,low
+gen_nda_17,NDA_Company_17.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 5 years after signature date.,Expiration Date,medium
+gen_saas_17,SaaS_Provider_17.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 1700 users.",License Grant,low
+gen_emp_17,Employment_Agreement_17.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 95 mile radius of the headquarters.,Non-Compete,high
+gen_lease_17,Lease_Property_17.pdf,Commercial Lease,The monthly rental amount is set at INR 135000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_17,SDA_Project_17.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 17 to the Client.,Ip Ownership Assignment,low
+gen_nda_18,NDA_Company_18.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 6 years after signature date.,Expiration Date,medium
+gen_saas_18,SaaS_Provider_18.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 1800 users.",License Grant,low
+gen_emp_18,Employment_Agreement_18.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 100 mile radius of the headquarters.,Non-Compete,high
+gen_lease_18,Lease_Property_18.pdf,Commercial Lease,The monthly rental amount is set at INR 140000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_18,SDA_Project_18.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 18 to the Client.,Ip Ownership Assignment,low
+gen_nda_19,NDA_Company_19.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 7 years after signature date.,Expiration Date,medium
+gen_saas_19,SaaS_Provider_19.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 1900 users.",License Grant,low
+gen_emp_19,Employment_Agreement_19.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 105 mile radius of the headquarters.,Non-Compete,high
+gen_lease_19,Lease_Property_19.pdf,Commercial Lease,The monthly rental amount is set at INR 145000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_19,SDA_Project_19.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 19 to the Client.,Ip Ownership Assignment,low
+gen_nda_20,NDA_Company_20.pdf,Non-Disclosure Agreement,This agreement shall remain in effect for a period of 3 years after signature date.,Expiration Date,medium
+gen_saas_20,SaaS_Provider_20.pdf,SaaS Subscription Agreement,"Subject to the terms and conditions herein, Provider grants Customer a non-exclusive license to use the system for up to 2000 users.",License Grant,low
+gen_emp_20,Employment_Agreement_20.pdf,Employment Contract,Employee agrees not to work for any direct competitor located within a 110 mile radius of the headquarters.,Non-Compete,high
+gen_lease_20,Lease_Property_20.pdf,Commercial Lease,The monthly rental amount is set at INR 150000 payable on the 1st of each month.,REVIEW_REQUIRED,low
+gen_sda_20,SDA_Project_20.pdf,Software Development Agreement,Developer hereby transfers and assigns all intellectual property developed under project 20 to the Client.,Ip Ownership Assignment,low

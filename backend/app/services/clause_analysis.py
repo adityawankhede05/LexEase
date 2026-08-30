@@ -1,6 +1,8 @@
 import asyncio
 import json
 import logging
+import os
+import sys
 from typing import Sequence
 from app.ai.base_provider import BaseAIProvider
 from app.ai.exceptions import AIProviderError, AIResponseValidationError
@@ -11,6 +13,7 @@ from app.schemas.clause_analysis import (
     ClauseAnalysisAIResponse,
     ClauseAnalysisResponse,
     ClauseRiskResult,
+    RiskLevel,
 )
 from app.schemas.document import ClauseSegment
 from app.services.ai import AIService
@@ -50,12 +53,56 @@ def _serialize_clauses(clauses: Sequence[ClauseSegment]) -> str:
 class ClauseAnalysisService:
     """
     Service responsible for orchestrating clause-level legal risk analysis.
-
-    Implements token-budget-aware chunking and inter-chunk pacing to prevent
-    rate limit (TPM 413/429) errors on large documents. Results from all chunks
-    are aggregated sequentially in Python to maintain original clause order without
-    requiring an expensive secondary AI reduction call.
+    Integrates the local ML models (domain detector, clause classifier, risk safety signal)
+    with Groq contextual analysis and token-safe chunking/pacing.
     """
+
+    # Class-level lazy singletons for local ML models
+    _device = None
+    _domain_detector = None
+    _clause_classifier = None
+    _risk_engine = None
+    _router = None
+
+    @classmethod
+    def _init_models(cls):
+        """Initializes the local ML singletons once if available."""
+        if cls._clause_classifier is None:
+            logger.info("Initializing local ML models for hybrid pipeline...")
+            current_file = os.path.abspath(__file__)
+            # backend/app/services/clause_analysis.py -> project root
+            project_root = os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
+            )
+            if project_root not in sys.path:
+                sys.path.insert(0, project_root)
+
+            try:
+                import torch
+                from ml.final_pipeline.domain_detector import LegalDomainDetector
+                from ml.final_pipeline.clause_classifier import HierarchicalClauseClassifier
+                from ml.final_pipeline.risk_engine import LegalRiskEngine
+                from ml.final_pipeline.hybrid_router import HybridRiskRouter
+
+                cls._device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                cls._domain_detector = LegalDomainDetector()
+                
+                try:
+                    cls._clause_classifier = HierarchicalClauseClassifier(cls._device)
+                except Exception as e:
+                    logger.warning(f"Could not load HierarchicalClauseClassifier ({e}), using default fallback.")
+                    cls._clause_classifier = None
+
+                try:
+                    cls._risk_engine = LegalRiskEngine(cls._device)
+                except Exception as e:
+                    logger.warning(f"Could not load LegalRiskEngine ({e}), using default fallback.")
+                    cls._risk_engine = None
+
+                cls._router = HybridRiskRouter()
+                logger.info(f"Local ML models initialized (device: {cls._device}).")
+            except Exception as e:
+                logger.warning(f"Local ML pipeline initialization failed ({e}). Proceeding with Groq fallback routing.")
 
     def __init__(
         self,
@@ -106,53 +153,71 @@ class ClauseAnalysisService:
         self, clauses: list[ClauseSegment]
     ) -> ClauseAnalysisResponse:
         """
-        Analyzes a list of clause segments for legal risk.
-        Uses a single request for small documents, and sequential chunked requests
-        with pacing for documents exceeding the chunk token budget.
-
-        Args:
-            clauses: List of ClauseSegment objects to analyze.
-
-        Returns:
-            ClauseAnalysisResponse containing total_clauses and a list of
-            ClauseRiskResult objects, one per input clause in original order.
-
-        Raises:
-            EmptyClauseListError: If the clauses list is empty.
-            ClauseAnalysisError: If AI generation or schema validation fails.
+        Analyzes a list of clause segments using the hybrid local ML + Groq pipeline.
+        Only clauses requiring contextual evaluation are routed to Groq.
+        Preserves token-safe chunking and pacing for routed clauses.
         """
         if not clauses:
             raise EmptyClauseListError(
                 "Clause list cannot be empty for clause risk analysis."
             )
 
-        chunks = self._chunk_clauses(clauses)
-        if not chunks:
-            raise EmptyClauseListError("No content available to analyze.")
+        # 1. Initialize local ML models
+        self._init_models()
+        from ml.final_pipeline.reconciler import RiskReconciler
 
-        try:
-            # Case 1: Small document - fits into a single chunk (no pacing delay needed)
-            if len(chunks) == 1:
-                clauses_json_str = _serialize_clauses(chunks[0])
-                payload = {"clauses_json": clauses_json_str}
-                ai_response: ClauseAnalysisAIResponse = await self.ai_service.generate(
-                    task_type=AITask.CLAUSE_ANALYSIS,
-                    payload=payload,
-                    response_schema=ClauseAnalysisAIResponse,
+        # Combine text to detect overall document domain
+        combined_text = "\n\n".join([c.text for c in clauses])
+        domain = "Corporate/Commercial"
+        if self._domain_detector:
+            domain = self._domain_detector.detect_domain(combined_text)
+        logger.info(f"Detected document domain: {domain}")
+
+        # 2. Local Clause Classification and Risk Scoring
+        local_results = {}
+        clauses_to_route = []
+
+        for clause in clauses:
+            if self._clause_classifier:
+                clause_type, confidence = self._clause_classifier.classify_clause(clause.text, domain)
+            else:
+                clause_type, confidence = "UNKNOWN/OTHER", 0.0
+
+            if self._risk_engine:
+                local_risk = self._risk_engine.predict_risk(clause.text)
+            else:
+                local_risk = {
+                    "risk_score": 50.0,
+                    "risk_level": "medium",
+                    "high_risk_warning": False,
+                    "requires_contextual_review": True,
+                }
+
+            local_results[clause.clause_id] = {
+                "clause_type": clause_type,
+                "confidence": confidence,
+                "local_risk": local_risk,
+            }
+
+            # Determine routing
+            if self._router:
+                should_route = self._router.should_route_to_groq(
+                    domain, clause_type, confidence, local_risk
                 )
-                return ClauseAnalysisResponse(
-                    total_clauses=len(ai_response.results),
-                    results=ai_response.results,
-                )
+            else:
+                should_route = True
 
-            # Case 2: Large document - Sequential chunked processing with pacing
-            logger.info(
-                f"Clause analysis spans {len(clauses)} clauses across {len(chunks)} chunks. "
-                f"Processing sequentially with {self.chunk_delay}s pacing."
-            )
+            if should_route:
+                clauses_to_route.append(clause)
 
-            all_results: list[ClauseRiskResult] = []
+        logger.info(
+            f"Hybrid Router: Routing {len(clauses_to_route)}/{len(clauses)} clauses to Groq for contextual analysis."
+        )
 
+        # 3. Call Groq for routed clauses with token-safe chunking and pacing
+        groq_results = {}
+        if clauses_to_route:
+            chunks = self._chunk_clauses(clauses_to_route)
             for chunk_index, chunk in enumerate(chunks, 1):
                 if chunk_index > 1 and self.chunk_delay > 0:
                     logger.debug(
@@ -160,25 +225,64 @@ class ClauseAnalysisService:
                     )
                     await asyncio.sleep(self.chunk_delay)
 
-                logger.debug(
-                    f"Analyzing chunk {chunk_index}/{len(chunks)} ({len(chunk)} clauses)"
-                )
                 clauses_json_str = _serialize_clauses(chunk)
                 payload = {"clauses_json": clauses_json_str}
-                ai_response: ClauseAnalysisAIResponse = await self.ai_service.generate(
-                    task_type=AITask.CLAUSE_ANALYSIS,
-                    payload=payload,
-                    response_schema=ClauseAnalysisAIResponse,
-                )
-                all_results.extend(ai_response.results)
 
-            return ClauseAnalysisResponse(
-                total_clauses=len(all_results),
-                results=all_results,
+                try:
+                    ai_response: ClauseAnalysisAIResponse = await self.ai_service.generate(
+                        task_type=AITask.CLAUSE_ANALYSIS,
+                        payload=payload,
+                        response_schema=ClauseAnalysisAIResponse,
+                    )
+                    for res in ai_response.results:
+                        groq_results[res.clause_id] = {
+                            "final_risk": res.risk_level.lower(),
+                            "explanation": res.explanation,
+                            "recommendation": res.recommendation,
+                            "confidence": getattr(res, "confidence", 1.0),
+                            "risk_score": getattr(res, "risk_score", None),
+                            "risk_label": getattr(res, "risk_label", None),
+                            "reasons": getattr(res, "reasons", []),
+                            "issues": getattr(res, "issues", []),
+                            "recommended_action": getattr(res, "recommended_action", None),
+                        }
+                except (AIProviderError, AIResponseValidationError, ValueError) as e:
+                    logger.error(
+                        f"Groq query failed for chunk {chunk_index}: {e}. Falling back to local risk values."
+                    )
+
+        # 4. Reconciliation and Output Formatting
+        final_results = []
+        for clause in clauses:
+            local_data = local_results[clause.clause_id]
+            groq_res = groq_results.get(clause.clause_id)
+
+            reconciled = RiskReconciler.reconcile(local_data["local_risk"], groq_res)
+
+            final_level_str = reconciled["final_risk_level"].lower()
+            if final_level_str == "high":
+                final_level = RiskLevel.HIGH
+            elif final_level_str == "medium":
+                final_level = RiskLevel.MEDIUM
+            else:
+                final_level = RiskLevel.LOW
+
+            result = ClauseRiskResult(
+                clause_id=clause.clause_id,
+                clause_number=clause.clause_number,
+                risk_level=final_level,
+                explanation=reconciled["explanation"],
+                recommendation=reconciled["recommendation"],
+                confidence=groq_res.get("confidence", 1.0) if groq_res else 1.0,
+                risk_score=reconciled["final_risk_score"],
+                risk_label=reconciled["final_risk_level"].upper(),
+                reasons=groq_res.get("reasons", []) if groq_res else [],
+                issues=groq_res.get("issues", []) if groq_res else [],
+                recommended_action=reconciled["recommendation"],
             )
+            final_results.append(result)
 
-        except (AIProviderError, AIResponseValidationError, ValueError) as e:
-            logger.error(f"Failed to analyze clauses: {e}")
-            raise ClauseAnalysisError(
-                f"Clause risk analysis failed: {str(e)}"
-            ) from e
+        return ClauseAnalysisResponse(
+            total_clauses=len(final_results),
+            results=final_results,
+        )

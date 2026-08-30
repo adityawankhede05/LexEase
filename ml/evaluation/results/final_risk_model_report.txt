@@ -1,0 +1,43 @@
+========================================================================================
+FINAL RISK MODEL REAL-WORLD EVALUATION REPORT (150 CLAUSES)
+========================================================================================
+
+Overall Accuracy:  42.67%
+Overall Macro F1:  41.78%
+HIGH-risk Recall:  92.59%
+
+Class-level Metrics:
+  LOW    -> Precision: 1.0000, Recall: 0.0805, F1: 0.1489 (Support: 87)
+  MEDIUM -> Precision: 0.4638, Recall: 0.8889, F1: 0.6095 (Support: 36)
+  HIGH   -> Precision: 0.3378, Recall: 0.9259, F1: 0.4950 (Support: 27)
+
+Confusion Matrix:
+          | Pred Low | Pred Med | Pred High
+---------------------------------------------
+Act Low   | 7        | 35       | 45      
+Act Med   | 0        | 32       | 4       
+Act High  | 0        | 2        | 25      
+
+Prediction Distribution vs Ground Truth:
+  LOW    -> Pred: 7    (GT: 87)
+  MEDIUM -> Pred: 69   (GT: 36)
+  HIGH   -> Pred: 74   (GT: 27)
+
+Per-Domain Performance:
+  Commercial Lease                    -> Accuracy: 16.67%, Macro F1: 42.53% (Support: 30)
+  Employment Contract                 -> Accuracy: 83.33%, Macro F1: 54.17% (Support: 30)
+  Non-Disclosure Agreement            -> Accuracy: 86.67%, Macro F1: 57.87% (Support: 30)
+  SaaS Subscription Agreement         -> Accuracy: 13.33%, Macro F1: 20.85% (Support: 30)
+  Software Development Agreement      -> Accuracy: 13.33%, Macro F1: 22.22% (Support: 30)
+
+========================================================================================
+COMPARATIVE PERFORMANCE TABLE
+========================================================================================
+Model / Pipeline                       | Accuracy   | Macro F1   | HIGH Recall
+------------------------------------------------------------------------------
+Experiment 3 (Legal-BERT Multi-Task)   | 28.00%     | 29.43%     | 78.50%     
+Pretrained OOF Baseline                | 58.67%     | 36.35%     | 11.11%     
+Experiment 6A (Fine-Tuned Risk)        | 42.67%     | 42.79%     | 96.30%     
+Groq API-Based Baseline                | 52.00%     | 41.62%     | 96.30%     
+Previous final_risk_model              | 37.33%     | 37.68%     | 96.30%     
+New FINAL RISK MODEL (this run)        | 42.67%     | 41.78%     | 92.59%
