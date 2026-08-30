@@ -6,6 +6,7 @@ LexEase is a web application designed to help ordinary Indian citizens understan
 
 *   `/backend` - FastAPI backend application using Python 3.11, `uv` package manager, Multi-Provider AI Foundation Layer (Groq, OpenRouter, Gemini), and structured JSON parsing.
 *   `/frontend` - React SPA frontend built with Vite, TailwindCSS, React Router, and Axios.
+*   `/ml` - Classical ML baseline for legal clause risk classification containing training pipelines, serialized model binaries, inference helpers, and a hybrid rule-based Legal Risk Engine.
 *   `/docs` - Comprehensive API, Architecture, Testing, and Deployment documentation.
 *   `docker-compose.yml` - Multi-container setup for local development.
 
@@ -122,4 +123,19 @@ Prerequisites: Node.js (v18+).
 3. Run the Vite development server:
    ```bash
    npm run dev
+   ```
+
+#### Machine Learning (ML) Setup
+
+1. Install Python ML requirements:
+   ```bash
+   python -m pip install -r ml/requirements.txt
+   ```
+2. Run model training pipeline to train the risk classifier and save it:
+   ```bash
+   python ml/training/train.py
+   ```
+3. Test the hybrid Legal Risk Engine:
+   ```bash
+   python -m ml.risk_engine.engine
    ```

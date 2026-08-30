@@ -1,0 +1,77 @@
+======================================================================
+LEXEASE LEGAL-BERT TRANSFORMER INFERENCE TEST REPORT
+======================================================================
+Inference Device: CUDA (GPU: RTX 3050)
+Number of test clauses: 10
+======================================================================
+
+Test Case 1 | Category: Liability
+  Input Clause:  "Neither party shall be liable to the other for any indirect, incidental, special, or consequential damages arising out of this agreement."
+  Predicted Type: Cap On Liability (Confidence: 0.9855)
+  Predicted Risk: HIGH (Confidence: 0.9949)
+  Joint Conf:     0.9804
+  Fallback Used:  False
+----------------------------------------------------------------------
+Test Case 2 | Category: Indemnity
+  Input Clause:  "The Seller shall indemnify, defend, and hold harmless the Buyer from and against any claims, losses, or expenses resulting from third-party IP infringement."
+  Predicted Type: Cap On Liability (Confidence: 0.4847)
+  Predicted Risk: HIGH (Confidence: 0.8795)
+  Joint Conf:     0.4263
+  Fallback Used:  False
+----------------------------------------------------------------------
+Test Case 3 | Category: Termination
+  Input Clause:  "Either party may terminate this agreement immediately if the other party breaches any material term and fails to cure such breach within 15 days."
+  Predicted Type: Termination For Convenience (Confidence: 0.4377)
+  Predicted Risk: HIGH (Confidence: 0.9991)
+  Joint Conf:     0.4374
+  Fallback Used:  False
+----------------------------------------------------------------------
+Test Case 4 | Category: Governing Law
+  Input Clause:  "This agreement shall be governed by, and construed in accordance with, the laws of India, and the courts of Mumbai shall have exclusive jurisdiction."
+  Predicted Type: Governing Law (Confidence: 0.9607)
+  Predicted Risk: HIGH (Confidence: 0.9931)
+  Joint Conf:     0.9541
+  Fallback Used:  False
+----------------------------------------------------------------------
+Test Case 5 | Category: License/IP
+  Input Clause:  "Licensor hereby grants Licensee a non-exclusive, non-transferable, revocable license to use the Software solely for internal business operations."
+  Predicted Type: License Grant (Confidence: 0.9424)
+  Predicted Risk: HIGH (Confidence: 0.9937)
+  Joint Conf:     0.9365
+  Fallback Used:  False
+----------------------------------------------------------------------
+Test Case 6 | Category: Non-Compete/Non-Solicit
+  Input Clause:  "The Employee shall not, for a period of 2 years post-termination, engage in any competitive business activity or solicit any clients of the Employer."
+  Predicted Type: Non-Compete (Confidence: 0.8000)
+  Predicted Risk: HIGH (Confidence: 0.9930)
+  Joint Conf:     0.7944
+  Fallback Used:  False
+----------------------------------------------------------------------
+Test Case 7 | Category: Payment/Minimum Commitment
+  Input Clause:  "The Client agrees to pay the service provider a minimum monthly commitment of INR 50,000 for the duration of the service contract."
+  Predicted Type: Minimum Commitment (Confidence: 0.9855)
+  Predicted Risk: MEDIUM (Confidence: 0.9919)
+  Joint Conf:     0.9775
+  Fallback Used:  False
+----------------------------------------------------------------------
+Test Case 8 | Category: Warranty
+  Input Clause:  "The Developer warrants that the software deliverables will perform substantially in accordance with the specifications for a period of 90 days."
+  Predicted Type: Warranty Duration (Confidence: 0.9742)
+  Predicted Risk: MEDIUM (Confidence: 0.9926)
+  Joint Conf:     0.9669
+  Fallback Used:  False
+----------------------------------------------------------------------
+Test Case 9 | Category: Assignment/Change of Control
+  Input Clause:  "Neither party may assign or transfer its rights under this agreement to any third party without the prior written consent of the other party."
+  Predicted Type: Anti-Assignment (Confidence: 0.9899)
+  Predicted Risk: HIGH (Confidence: 0.9950)
+  Joint Conf:     0.9849
+  Fallback Used:  False
+----------------------------------------------------------------------
+Test Case 10 | Category: Force Majeure
+  Input Clause:  "Neither party shall be responsible for any delay or failure in performance resulting from acts beyond their reasonable control, including acts of God, war, or epidemics."
+  Predicted Type: Cap On Liability (Confidence: 0.9526)
+  Predicted Risk: HIGH (Confidence: 0.7010)
+  Joint Conf:     0.6678
+  Fallback Used:  False
+----------------------------------------------------------------------

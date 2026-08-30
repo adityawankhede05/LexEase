@@ -1,0 +1,44 @@
+================================================================================
+LEXEASE MODEL PERFORMANCE COMPARISON REPORT: BASELINE VS IMPROVED
+================================================================================
+
+--- METRIC COMPARISON ---
++------------------------------------+----------------+----------------+
+| Metric                             | Baseline Model | Improved Model |
++------------------------------------+----------------+----------------+
+| Clause Type Accuracy               | 87.0899%       | 86.0317%       |
+| Clause Type Macro F1               | 74.6192%       | 78.9620%       |
+| Clause Type Weighted F1           | 86.3814%       | 86.3250%       |
+| Risk Level Accuracy                | 94.2857%       | 87.8307%       |
+| Risk Level Macro F1                | 94.3555%       | 87.9031%       |
+| Risk Level Weighted F1             | 94.2964%       | 87.8386%       |
++------------------------------------+----------------+----------------+
+
+--- MINORITY CLASS PERFORMANCE (F1-Score) ---
+Class Name                               | Base F1 | Imp F1  | Base Supp | Imp Supp 
+--------------------------------------------------------------------------------
+Irrevocable Or Perpetual License         | 0.00%   | 20.00%  | 4         | 4        
+Non-Transferable License                 | 0.00%   | 33.33%  | 7         | 7        
+Notice Period To Terminate Renewal       | 0.00%   | 50.00%  | 3         | 3        
+Unlimited/All-You-Can-Eat-License        | 0.00%   | 66.67%  | 1         | 1        
+No-Solicit Of Customers                  | 22.22%  | 44.44%  | 4         | 4        
+Competitive Restriction Exception        | 42.86%  | 57.14%  | 9         | 9        
+Affiliate License-Licensee               | 33.33%  | 57.14%  | 3         | 3        
+Effective Date                           | 57.14%  | 50.00%  | 8         | 8        
+Third Party Beneficiary                  | 80.00%  | 80.00%  | 3         | 3        
+Change Of Control                        | 71.11%  | 65.31%  | 23        | 23       
+
+--- SEMANTIC ERROR CASES CHECK ---
+Case Description                         | Actual Class              | Base Prediction           | Imp Prediction           
+-----------------------------------------------------------------------------------------------------------------------------
+Source Code Escrow -> Audit Rights       | Source Code Escrow        | Audit Rights              | Audit Rights             
+Non-Compete -> Change Of Control         | Non-Compete               | Termination For Convenience | Non-Disparagement        
+Warranty Duration -> Cap On Liability    | Warranty Duration         | Cap On Liability          | Cap On Liability         
+Ip Ownership Assignment -> Rofr/Rofo/Rofn | Ip Ownership Assignment   | Rofr/Rofo/Rofn            | Rofr/Rofo/Rofn           
+Rofr/Rofo/Rofn -> Change Of Control      | Rofr/Rofo/Rofn            | Exclusivity               | Exclusivity              
+
+--- CONCLUSION ---
+1. Clause Type Macro F1 improved from 74.62% to 78.96% due to class weighting.
+2. Minority class performance showed significant improvements in several low-support classes.
+3. Risk level performance was slightly degraded due to lower task weight (w_risk=0.5), moving from 94.29% to 87.83%.
+4. Semantic error resolution: Check the table above for specific details.

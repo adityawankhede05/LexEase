@@ -1,0 +1,318 @@
+==========================================================================================
+INDIAN LEGAL DATA SOURCES AUDIT
+Date: 2026-08-29
+Purpose: Identify publicly available real Indian legal clause data for risk model training
+==========================================================================================
+
+IMPORTANT NOTE ON EVALUATION METHODOLOGY
+------------------------------------------
+All sources below were evaluated against our specific need:
+  - Real Indian legal agreement clauses (not court judgments)
+  - Multiple domains: Rental, Employment, NDA, Property, Loan, Service, Commercial
+  - Risk labels (LOW / MEDIUM / HIGH) already present OR manually annotatable
+  - Genuinely diverse clause wording, not template repetition
+
+Caveat: Some sources described by multiple search results may not be fully verified
+as genuine human-labelled datasets. Where a source was consistently cited but could
+not be directly confirmed (no direct URL access available), this is noted explicitly.
+
+
+==========================================================================================
+SOURCE 1 — Legal Indian Contract Clauses Dataset (Kaggle)
+==========================================================================================
+
+Name:            Legal Indian Contract Clauses Dataset
+URL:             https://www.kaggle.com/datasets/legal-indian-contract-clauses-dataset
+                 (exact slug may vary — search Kaggle for "Legal Indian Contract Clauses")
+Platform:        Kaggle
+File format:     CSV (legal_contract_clauses.csv)
+Licence:         Research and educational use (check specific Kaggle licence terms)
+
+Reported contents:
+  - Indian legal contract clauses annotated with:
+      clause_type (e.g. Termination, Confidentiality, Arbitration)
+      risk_level  (Low, Medium, High)
+  - Multiple Indian legal domains represented
+  - Designed for ML clause classification and risk prediction training
+
+Estimated size:  Not confirmed — multiple search results describe it as "curated"
+                 (likely hundreds to low thousands of rows)
+
+Domains covered: Termination, Confidentiality, Arbitration, and other common clause types
+                 Domains include commercial, employment, NDA — exact rental/property
+                 coverage not confirmed.
+
+Existing risk labels: YES — Low / Medium / High already annotated
+Annotation quality:   Heuristic/expert-labelled (not legal-practitioner validated)
+Manual re-annotation: Likely not required — labels already present
+Indian domain:        YES — explicitly for Indian agreements
+
+Suitability for project:
+  HIGH — This is the most directly relevant source.
+  If the dataset genuinely contains risk-labelled Indian contract clauses with wording
+  diversity, it would directly address the data gap identified in the audit.
+
+Concerns:
+  - Some sources note labels are "based on heuristic or expert judgment" — quality
+    must be manually verified before use.
+  - Clause wording diversity (same clause type, different risk) has not been confirmed.
+  - Size is not confirmed — could be too small to be useful alone.
+
+Action required:
+  1. Download and inspect the CSV immediately (free Kaggle account required).
+  2. Check: does the same clause type appear with multiple risk levels?
+  3. Verify domain coverage includes Rental, Employment, NDA, Property.
+  4. Check text diversity — if LOW and HIGH examples of the same clause type look
+     almost identical, this data has the same problem as our synthetic data.
+
+
+==========================================================================================
+SOURCE 2 — d-riti/Dataset-For-Indian-legal-knowledge-base (Hugging Face)
+==========================================================================================
+
+Name:            Dataset for Indian Legal Knowledge Base
+URL:             https://huggingface.co/datasets/d-riti/Dataset-For-Indian-legal-knowledge-base
+Platform:        Hugging Face
+Licence:         Not explicitly stated — check repository for licence card
+Format:          Structured JSON / Parquet
+
+Reported contents:
+  - Bilingual (English + Hindi) corpus
+  - Indian Contract Act, 1872 reference material
+  - Contract templates: NDA, Employment Agreement, Vendor/Supply Agreement
+  - Clause examples: Non-Compete, Termination, Confidentiality, Indemnity,
+                     IP Assignment, Arbitration
+  - "Good vs. Bad" clause examples for contract quality analysis
+
+Domains covered: NDA, Employment, Vendor/Supply, Commercial — good Indian domain coverage
+                 Rental/Property/Loan domain coverage NOT confirmed
+
+Existing risk labels: NO — this is primarily a knowledge base / RAG corpus
+                      Risk labels would need to be manually added.
+
+Manual re-annotation required: YES — for risk (LOW/MEDIUM/HIGH) labelling
+                                The "good vs. bad" examples could serve as a proxy
+                                for LOW/HIGH risk if the distinction is explicit.
+
+Suitability for project:
+  MEDIUM — Excellent source of genuine Indian legal clause text across relevant domains,
+  but does NOT come with ready risk labels.
+  Requires manual annotation effort (~40–60 hours for 600 clauses).
+  Best used as a SOURCE OF CLAUSE TEXT, not as a ready-to-train risk dataset.
+
+Action required:
+  1. Load the dataset from Hugging Face using the `datasets` library:
+     from datasets import load_dataset
+     ds = load_dataset("d-riti/Dataset-For-Indian-legal-knowledge-base")
+  2. Identify the "good vs. bad" clause examples — these are effectively LOW vs HIGH.
+  3. Extract clause texts and manually add risk_level labels.
+  4. Focus on NDA, Employment, and Vendor clause sections.
+
+
+==========================================================================================
+SOURCE 3 — Nikhil-AI-Labs/legal-contract-classifier-best (Hugging Face)
+==========================================================================================
+
+Name:            Legal Contract Clause Classifier (Training Dataset)
+URL:             https://huggingface.co/Nikhil-AI-Labs/legal-contract-classifier-best
+Platform:        Hugging Face
+Note:            This is a MODEL page, not a dataset page.
+                 The training data behind the model may be accessible separately.
+
+Reported model details:
+  - Ensemble of Legal-BERT-Base + DeBERTa-v3-Base
+  - Trained to classify clauses as: Safe/Standard (Low), Unilateral Termination (Medium),
+    Non-Compete (Medium-High), Unlimited Liability (High)
+  - Reported accuracy: 97.74%
+
+Risk classification categories:
+  Low:         Balanced, reasonable standard terms
+  Medium:      One-sided termination, restricted scope
+  High:        Unlimited liability, excessive penalties, perpetual obligations
+
+Existing risk labels: YES (model output = risk level)
+Indian domain:        Uncertain — this may be primarily US/UK corporate contracts
+Manual annotation:    Could use this model as an automatic weak labeller on Indian texts
+
+Suitability for project:
+  MEDIUM-LOW for direct data use. The model itself is not Indian-domain specific.
+  USEFUL as a weak automatic labeller: run this model over Indian contract PDFs to
+  generate candidate risk labels that are then manually verified.
+
+Action required:
+  1. Check if training dataset is published separately.
+  2. If not, use this model as an automatic annotator on Indian legal texts from
+     Source 2 (d-riti) to generate candidate risk labels.
+
+
+==========================================================================================
+SOURCE 4 — law-ai/InLegalBERT + Associated Fine-Tuning Datasets (Hugging Face)
+==========================================================================================
+
+Name:            InLegalBERT Pre-trained Model and Fine-Tuning Datasets
+URL:             https://huggingface.co/law-ai/InLegalBERT
+                 https://github.com/Law-AI-IIT-Kharagpur (associated datasets)
+Platform:        Hugging Face / GitHub
+Licence:         Academic/Research use
+
+Reported contents:
+  - Pre-trained on millions of Indian Supreme Court and High Court documents (1950–2019)
+  - Associated fine-tuning datasets: ILSI (Indian Legal Statute Identification),
+    ISS (Indian Statute Summarisation), ILDC (judgment prediction)
+
+Domains covered: Indian court judgments — NOT contracts/agreements
+Existing risk labels: NO — judgment prediction (upheld/overturned), not clause risk
+Indian domain:        YES — strongly Indian
+
+Suitability for project:
+  LOW as a DATA source for risk model training.
+  HIGH as a BASE MODEL — InLegalBERT would be a better clause encoder than
+  legal-bert-base-uncased for Indian legal text.
+  If the final risk model is to be retrained, InLegalBERT (law-ai/InLegalBERT) should
+  replace nlpaueb/legal-bert-base-uncased as the encoder.
+
+Action required:
+  Use as encoder base for the final risk model rather than as a data source.
+  Load with: AutoModel.from_pretrained("law-ai/InLegalBERT")
+
+
+==========================================================================================
+SOURCE 5 — Vaquill-AI/open-india-law (GitHub) + ManjunathCode10x Collection
+==========================================================================================
+
+Name:            Open India Law — Structured Indian Primary Law
+URL:             https://github.com/Vaquill-AI/open-india-law
+                 https://huggingface.co/collections/ManjunathCode10x/indian-legal-dataset-6914d1e3c7a2f82b3cafa12f
+Platform:        GitHub + Hugging Face
+Licence:         CC BY 4.0
+
+Reported contents:
+  - Millions of court judgment chunks (Supreme Court + all 25 High Courts)
+  - Over 1 million legislation provisions
+  - Structured Parquet format
+  - ManjunathCode10x collection aggregates: Vakil_Indian_Legal_Dataset,
+    indic-legal-benchmark, LLM fine-tuning data for Indian law
+
+Domains covered: Court judgments and legislation — NOT contracts/agreements
+Existing risk labels: NO
+Indian domain:        YES
+
+Suitability for project:
+  VERY LOW as a direct data source for contract clause risk training.
+  Primarily useful for pre-training a domain language model.
+  The ManjunathCode10x collection may contain some contract-related subsets —
+  worth browsing the individual datasets in the collection.
+
+Action required:
+  Browse: https://huggingface.co/collections/ManjunathCode10x/
+  Filter for any datasets mentioning "contracts" or "agreements".
+
+
+==========================================================================================
+SOURCE 6 — Manual Annotation from Public Indian Agreement PDFs
+==========================================================================================
+
+Name:            Public Indian Contract Documents (Government Portals + Legal Sites)
+URLs:
+  - Ministry of Corporate Affairs: https://www.mca.gov.in (registered agreements)
+  - e-Courts India: https://ecourts.gov.in (dispute-related agreements)
+  - Agreements.co.in: https://agreements.co.in (free templates)
+  - AgreementsIndia.com: Various Indian agreement templates
+  - NIC (National Informatics Centre): Government contract templates
+Platform:        Web / PDF
+Licence:         Public domain / government documents (verify per document)
+
+Reported contents:
+  - Real Indian rental deed templates
+  - Employment agreement templates
+  - Sale deed templates
+  - Loan agreement templates
+  - NDA templates
+
+Existing risk labels: NO — require manual annotation
+Manual annotation:    YES — required
+Indian domain:        YES — specifically Indian
+
+Suitability for project:
+  MEDIUM — source of genuine clause text.
+  Requires significant manual effort to extract clauses and assign risk labels.
+  Recommended approach: extract 20–30 clauses per agreement type × 3 risk levels
+  = approximately 180–270 verified examples per domain.
+
+Action required:
+  1. Download 5–10 public Indian rental deeds, employment contracts, NDAs, sale deeds.
+  2. Extract individual clause texts.
+  3. Manually assign LOW / MEDIUM / HIGH risk labels based on:
+     - Scope and breadth of obligations
+     - Whether obligations are mutual or unilateral
+     - Whether there are caps or limits on liability
+     - Duration of restrictions
+     - Penalty clauses and their magnitude
+  4. Mark each example with domain, clause_type, risk_level, source.
+
+
+==========================================================================================
+RANKING: BEST 3–5 SOURCES FOR FINAL PROJECT
+==========================================================================================
+
+RANK 1 — Legal Indian Contract Clauses Dataset (Kaggle)
+  Why: Only source with pre-annotated LOW/MEDIUM/HIGH risk labels for Indian clauses.
+  Action: Download and inspect immediately.
+  Risk: Label quality and size unconfirmed — verify before use.
+  Time to use: ~2 hours (download + inspection + quality check)
+
+RANK 2 — d-riti/Dataset-For-Indian-legal-knowledge-base (Hugging Face)
+  Why: Real Indian contract clause texts across NDA, Employment, Vendor domains.
+       "Good vs. Bad" examples are natural LOW/HIGH risk proxies.
+  Action: Load dataset, extract clauses, manually add risk_level labels.
+  Time to use: ~20–40 hours for annotation of 600 clauses
+
+RANK 3 — Manual Annotation from Public Indian Agreement PDFs
+  Why: Only guaranteed source of GENUINELY diverse clause wording.
+       Government templates are in public domain.
+  Action: Download 10–15 public Indian agreements, extract clauses, annotate.
+  Time to use: ~40–60 hours for 600 annotated examples
+
+RANK 4 — Nikhil-AI-Labs/legal-contract-classifier-best (as weak labeller)
+  Why: Can automatically generate candidate risk labels for unannotated clause texts.
+       Reduces manual annotation time by ~50%.
+  Action: Run model on extracted Indian clause texts from Sources 2 and 3.
+          Manually verify and correct predictions.
+  Time to use: ~4 hours setup + reduced annotation time
+
+RANK 5 — law-ai/InLegalBERT (as a better base encoder, not a data source)
+  Why: InLegalBERT is pre-trained specifically on Indian legal text —
+       it would give the final risk model stronger Indian legal language understanding
+       than nlpaueb/legal-bert-base-uncased.
+  Action: Swap the encoder to InLegalBERT when retraining the final risk model.
+  Time to use: ~1 hour to swap encoder + retrain (3 epochs, frozen encoder)
+
+
+==========================================================================================
+REALISTIC DATA COLLECTION ESTIMATE FOR FINAL-YEAR PROJECT
+==========================================================================================
+
+Option A — Kaggle Dataset Only (fastest)
+  Time: 2–4 hours
+  Expected yield: Unknown — verify size and quality first
+  Risk: May be insufficient or have quality issues
+
+Option B — Kaggle + HuggingFace d-riti annotation (recommended)
+  Time: 30–50 hours total
+  Expected yield: ~800–1000 annotated Indian clause examples
+  Domains: NDA, Employment, Vendor, Commercial + whatever Kaggle covers
+  Coverage gap: Rental and Property may still be sparse
+
+Option C — Full manual annotation of public PDFs (most thorough)
+  Time: 60–80 hours (outside typical final-year project scope)
+  Expected yield: ~600–900 annotated examples, highest quality
+  All domains covered
+  Suitable for: a dedicated data collection sprint or co-annotation with a teammate
+
+RECOMMENDATION FOR FINAL-YEAR PROJECT:
+  Pursue Option B.
+  Start with Kaggle (fastest check), then supplement with d-riti annotation.
+  Use Nikhil-AI-Labs model as a weak labeller to accelerate d-riti annotation.
+  DO NOT start model training until Kaggle dataset quality is confirmed.
+
+==========================================================================================

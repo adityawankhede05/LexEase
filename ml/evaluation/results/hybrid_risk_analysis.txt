@@ -1,0 +1,55 @@
+==========================================================================================
+HYBRID ENSEMBLE RISK ANALYSIS REPORT: PRETRAINED VS FINE-TUNED 6A
+==========================================================================================
+
+--- 1. ENSEMBLE WEIGHT COMBINATIONS GRID SEARCH ---
+Pretrained W | 6A Weight  | Thresholds      | Real Accuracy   | Macro F1   | HIGH Recall
+-------------------------------------------------------------------------------------
+0.0          | 1.0        | (39, 61)        | 42.6667%        | 42.7892%   | 96.2963%   
+0.1          | 0.9        | (41, 61)        | 29.3333%        | 31.4499%   | 96.2963%   
+0.2          | 0.8        | (39, 58)        | 29.3333%        | 31.4499%   | 96.2963%   
+0.3          | 0.7        | (40, 57)        | 28.6667%        | 30.5941%   | 96.2963%   
+0.4          | 0.6        | (39, 57)        | 28.6667%        | 30.7696%   | 96.2963%   
+0.5          | 0.5        | (37, 55)        | 27.3333%        | 30.0728%   | 92.5926%   
+0.6          | 0.4        | (36, 50)        | 27.3333%        | 25.8945%   | 100.0000%  
+0.7          | 0.3        | (34, 48)        | 27.3333%        | 26.1396%   | 100.0000%  
+0.8          | 0.2        | (33, 48)        | 26.6667%        | 27.6277%   | 96.2963%   
+0.9          | 0.1        | (35, 48)        | 13.3333%        | 13.4541%   | 18.5185%   
+1.0          | 0.0        | (37, 47)        | 22.6667%        | 20.2624%   | 18.5185%   
+
+--- 2. HIGH-RISK SAFETY-OVERRIDE RULE RESULTS ---
+  * Primary Model:     AnkushRaheja Pretrained Model (Calibrated <37 / <47)
+  * Safety-Override:   Flag as HIGH if Experiment 6A Risk Score >= 58
+  * Accuracy:          26.6667%
+  * Macro F1:          24.2847%
+  * HIGH-Risk Recall:  100.0000% (identified 27 out of 27)
+
+Confusion Matrix for Safety-Override:
+          | Pred Low | Pred Med | Pred High
+---------------------------------------------
+Act Low   | 10       | 27       | 50      
+Act Med   | 22       | 3        | 11      
+Act High  | 0        | 0        | 27      
+
+Prediction Distribution for Safety-Override:
+  * LOW:    32
+  * MEDIUM: 30
+  * HIGH:   88
+
+--- 3. COMPARISON METRICS SUMMARY TABLE ---
++---------------------------------------+-------------------+-----------------+-----------------+
+| Model / Pipeline                      | Risk Accuracy     | Risk Macro F1   | HIGH Recall     |
++---------------------------------------+-------------------+-----------------+-----------------+
+| Pretrained OOF Baseline               | 58.6667%          | 36.3510%        | 11.1111%        |
+| Experiment 6A (Fine-Tuned)            | 42.6667%          | 42.7892%        | 96.2963%        |
+| Best Ensemble (W_pre=0.0) | 42.6667%          | 42.7892%        | 96.2963%        |
+| Safety-Override Rule                  | 26.6667%          | 24.2847%        | 100.0000%       |
+| Groq API-Based Baseline               | 52.0000%          | 41.6197%        | 96.2963%        |
++---------------------------------------+-------------------+-----------------+-----------------+
+
+--- 4. HYBRID RECOMMENDATION ---
+1. High-Risk Safety Override Rule:
+   - The safety-override rule achieves 26.67% accuracy and 24.28% Macro F1, with a HIGH-risk recall of 100.00%.
+   - This represents a highly practical and defensible middle ground. It combines the high general-accuracy baseline of the pretrained model with the high high-risk sensitivity of the fine-tuned model.
+2. Weighted Ensemble combination:
+   - The best weighted ensemble (W_pre=0.0) achieves 42.67% accuracy and 42.79% Macro F1, representing the strongest overall ML metrics.

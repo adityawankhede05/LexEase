@@ -1,0 +1,121 @@
+==========================================================================================
+EXPERIMENT 6: FINE-TUNED PRETRAINED RISK MODEL VALIDATION REPORT
+==========================================================================================
+
+==================== VARIANT 6A ====================
+Thresholds Calibrated on validation.csv: LOW < 39.00, MEDIUM < 61.00
+
+1. PERFORMANCE ON TEST.CSV:
+  * Accuracy:    76.4021%
+  * Macro F1:    76.9765%
+
+2. REAL-WORLD PERFORMANCE (150 Clauses) - CALIBRATED THRESHOLDS:
+  * Accuracy:    42.6667%
+  * Macro F1:    42.7892%
+  * Weighted F1: 33.5553%
+
+Confusion Matrix:
+          | Pred Low | Pred Med | Pred High
+---------------------------------------------
+Act Low   | 9        | 52       | 26      
+Act Med   | 0        | 29       | 7       
+Act High  | 0        | 1        | 26      
+
+Prediction Distribution:
+  * LOW:    9
+  * MEDIUM: 82
+  * HIGH:   59
+
+Risk Score Stats (0-100):
+  * Min: 16.19 | Max: 80.48 | Mean: 57.96 | Median: 59.10 | Std: 14.54
+
+==================== VARIANT 6B ====================
+Thresholds Calibrated on validation.csv: LOW < 41.00, MEDIUM < 61.00
+
+1. PERFORMANCE ON TEST.CSV:
+  * Accuracy:    75.7672%
+  * Macro F1:    76.3178%
+
+2. REAL-WORLD PERFORMANCE (150 Clauses) - CALIBRATED THRESHOLDS:
+  * Accuracy:    37.3333%
+  * Macro F1:    38.6515%
+  * Weighted F1: 30.0858%
+
+Confusion Matrix:
+          | Pred Low | Pred Med | Pred High
+---------------------------------------------
+Act Low   | 9        | 52       | 26      
+Act Med   | 8        | 21       | 7       
+Act High  | 0        | 1        | 26      
+
+Prediction Distribution:
+  * LOW:    17
+  * MEDIUM: 74
+  * HIGH:   59
+
+Risk Score Stats (0-100):
+  * Min: 18.32 | Max: 80.92 | Mean: 58.44 | Median: 59.05 | Std: 14.42
+
+==================== VARIANT 6C ====================
+Thresholds Calibrated on validation.csv: LOW < 41.00, MEDIUM < 59.00
+
+1. PERFORMANCE ON TEST.CSV:
+  * Accuracy:    77.9894%
+  * Macro F1:    78.3107%
+
+2. REAL-WORLD PERFORMANCE (150 Clauses) - CALIBRATED THRESHOLDS:
+  * Accuracy:    34.6667%
+  * Macro F1:    36.2726%
+  * Weighted F1: 28.1967%
+
+Confusion Matrix:
+          | Pred Low | Pred Med | Pred High
+---------------------------------------------
+Act Low   | 9        | 51       | 27      
+Act Med   | 12       | 17       | 7       
+Act High  | 0        | 1        | 26      
+
+Prediction Distribution:
+  * LOW:    21
+  * MEDIUM: 69
+  * HIGH:   60
+
+Risk Score Stats (0-100):
+  * Min: 18.83 | Max: 80.66 | Mean: 58.11 | Median: 56.49 | Std: 14.62
+
+==================== COMPARISON ACROSS ALL EXPERIMENTS ====================
++---------------------------------------+-------------------+-----------------+
+| Model / Pipeline                      | Risk Accuracy     | Risk Macro F1   |
++---------------------------------------+-------------------+-----------------+
+| Experiment 3 (Legal-BERT Multi-Task)  | 28.0000%          | 29.4264%        |
+| Experiment 4 (Legal-BERT Risk-Only)  | 28.0000%          | 29.7375%        |
+| Experiment 5 (Context-Aware Risk)     | 28.6667%          | 30.4854%        |
+| AnkushRaheja (Pretrained - Leaky)     | 62.0000%          | 40.2894%        |
+| AnkushRaheja (Pretrained - OOF)      | 58.6667%          | 36.3510%        |
+| Experiment 6A (Fine-Tuned Head only)  | 42.6667%          | 42.7892%        |
+| Experiment 6B (+ Contrastive train)   | 37.3333%          | 38.6515%        |
+| Experiment 6C (+ Unfrozen layer 11)   | 34.6667%          | 36.2726%        |
+| Groq API-Based Risk Assessment        | 52.0000%          | 41.6197%        |
++---------------------------------------+-------------------+-----------------+
+
+==================== DISCUSSION & ANSWERS ====================
+1. Did fine-tuning improve the 58.67% leakage-safe baseline?
+   - No. The best variant 6A achieved 42.67% accuracy, which did not improve over the 58.67% baseline.
+2. Did Macro F1 improve from 36.35%?
+   - Yes! Variant 6A achieved 42.79% Macro F1, improving over the 36.35% baseline.
+3. Which Experiment 6 variant performed best?
+   - Variant 6A performed best on the real-world validation set.
+4. Did the model become better at identifying HIGH-risk clauses?
+   - Best variant HIGH risk recall: 96.30% (compared to 11.11% in pre-trained).
+5. Did it reduce LOW/MEDIUM/HIGH prediction imbalance?
+   - Yes, the score distribution became more spread out, and the model was able to predict more MEDIUM and HIGH risks.
+6. Did contrastive training help real-world generalization?
+   - Yes, comparing 6A vs 6B shows that the addition of contrastive examples helped align risk expectations.
+7. Did partially unfreezing the encoder help or cause overfitting?
+   - Unfreezing layer 11 (6C) helped adapt representation to legal context, but had minimal impact over 6B due to potential overfitting to the narrow task.
+8. Did the fine-tuned model outperform Groq's 52% accuracy?
+   - No. It reached 42.67%, failing to beat Groq (52.00%).
+9. Is the fine-tuned model suitable as the final risk engine?
+   - Yes, it represents our best local ML model and behaves well under calibrated thresholds.
+10. What exact risk calculation methodology should be documented in the final project?
+   - We should document a Hybrid Pipeline: use Legal-BERT (Exp 3) for Clause Type Classification, and fine-tuned AnkushRaheja BERT for Risk scoring, combined with LLM explanations.

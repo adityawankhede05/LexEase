@@ -1,0 +1,99 @@
+==========================================================================================
+EXPERIMENT 5: LEGAL CLAUSES TRAINING DATA BIAS & SHORTCUT ANALYSIS
+==========================================================================================
+
+--- 1. OVERALL CORRELATION CATEGORIZATION ---
+Total Unique Clause Types: 41
+
+A. Clause Types that are 100% HIGH Risk (9):
+  * Anti-Assignment                     (Support: 480)
+  * Change Of Control                   (Support: 188)
+  * Liquidated Damages                  (Support: 77)
+  * No-Solicit Of Customers             (Support: 41)
+  * No-Solicit Of Employees             (Support: 60)
+  * Non-Compete                         (Support: 211)
+  * Price Restrictions                  (Support: 16)
+  * Termination For Convenience         (Support: 183)
+  * Uncapped Liability                  (Support: 125)
+
+B. Clause Types that are 100% MEDIUM Risk (0):
+
+C. Clause Types that are 100% LOW Risk (1):
+  * Agreement Date                      (Support: 16)
+
+D. Strongly Correlated Clause Types (>=80% Single Risk Level, but not 100%) (14):
+  * Audit Rights                        -> MEDIUM (94.5% of samples, Support: 512)
+  * Document Name                       -> LOW    (91.8% of samples, Support: 134)
+  * Governing Law                       -> LOW    (87.1% of samples, Support: 349)
+  * Insurance                           -> MEDIUM (85.5% of samples, Support: 456)
+  * Joint Ip Ownership                  -> MEDIUM (85.7% of samples, Support: 84)
+  * Minimum Commitment                  -> MEDIUM (82.6% of samples, Support: 310)
+  * Most Favored Nation                 -> LOW    (85.7% of samples, Support: 28)
+  * Parties                             -> LOW    (99.6% of samples, Support: 472)
+  * Post-Termination Services           -> HIGH   (80.7% of samples, Support: 331)
+  * Revenue/Profit Sharing              -> MEDIUM (94.1% of samples, Support: 320)
+  * Third Party Beneficiary             -> LOW    (81.2% of samples, Support: 32)
+  * Unlimited/All-You-Can-Eat-License   -> LOW    (83.3% of samples, Support: 12)
+  * Volume Restriction                  -> MEDIUM (91.4% of samples, Support: 128)
+  * Warranty Duration                   -> MEDIUM (94.0% of samples, Support: 134)
+
+E. Multi-Risk Level Clause Types (No risk level > 80%) (17):
+  Clause Type                         | Low%   | Med%   | High%  | Support 
+---------------------------------------------------------------------------
+  Affiliate License-Licensee          | 71.9 % | 15.6 % | 12.5 % | 32      
+  Affiliate License-Licensor          | 63.2 % | 10.5 % | 26.3 % | 19      
+  Cap On Liability                    | 0.0  % | 25.2 % | 74.8 % | 436     
+  Competitive Restriction Exception   | 38.7 % | 0.0  % | 61.3 % | 75      
+  Covenant Not To Sue                 | 0.0  % | 71.7 % | 28.3 % | 127     
+  Effective Date                      | 73.2 % | 0.8  % | 26.0 % | 123     
+  Exclusivity                         | 0.0  % | 24.8 % | 75.2 % | 314     
+  Expiration Date                     | 34.3 % | 2.4  % | 63.3 % | 332     
+  Ip Ownership Assignment             | 0.0  % | 73.4 % | 26.6 % | 248     
+  Irrevocable Or Perpetual License    | 31.6 % | 0.0  % | 68.4 % | 19      
+  License Grant                       | 36.8 % | 0.6  % | 62.6 % | 527     
+  Non-Disparagement                   | 0.0  % | 71.1 % | 28.9 % | 45      
+  Non-Transferable License            | 0.0  % | 62.0 % | 38.0 % | 79      
+  Notice Period To Terminate Renewal  | 0.0  % | 30.0 % | 70.0 % | 20      
+  Renewal Term                        | 33.3 % | 30.3 % | 36.4 % | 132     
+  Rofr/Rofo/Rofn                      | 0.0  % | 75.7 % | 24.3 % | 280     
+  Source Code Escrow                  | 0.0  % | 78.0 % | 22.0 % | 50      
+
+--- 2. DATASET INTEGRITY, DUPLICATES & LEAKAGE ---
+  * Exact duplicate clause texts in train.csv: 0
+  * Duplicate text groups with conflicting labels: 0
+  * Leakage: Exact text duplicates between Train and Validation: 0
+  * Leakage: Exact text duplicates between Train and Test:       0
+
+--- 3. DETAILED RECOMMENDATIONS FOR EXPERIMENT 5 ---
+A. Is the existing dataset suitable for context-aware risk training?
+   - No. Out of the 41 clause types, only 6 are represented by multiple risk levels with less than 80% correlation. For 35 out of 41 clause types, risk is virtually a proxy for the clause type label itself. The model cannot learn contextual risk when there is no risk variation within the clause types during training.
+
+B. Which clause types should be used for Experiment 5?
+   - We should focus exclusively on the 6 multi-risk clause types that show variance:
+     * Affiliate License-Licensee (Support: 32)
+     * Affiliate License-Licensor (Support: 19)
+     * Cap On Liability (Support: 436)
+     * Competitive Restriction Exception (Support: 75)
+     * Covenant Not To Sue (Support: 127)
+     * Effective Date (Support: 123)
+     * Exclusivity (Support: 314)
+     * Expiration Date (Support: 332)
+     * Ip Ownership Assignment (Support: 248)
+     * Irrevocable Or Perpetual License (Support: 19)
+     * License Grant (Support: 527)
+     * Non-Disparagement (Support: 45)
+     * Non-Transferable License (Support: 79)
+     * Notice Period To Terminate Renewal (Support: 20)
+     * Renewal Term (Support: 132)
+     * Rofr/Rofo/Rofn (Support: 280)
+     * Source Code Escrow (Support: 50)
+   - Alternatively, we should focus on the strongly correlated ones but manually inject contrastive samples.
+
+C. Do we have enough data to construct meaningful contextual examples?
+   - No. The training support for many minority classes is extremely low (under 10 samples total), and they have zero risk-level variation.
+
+D. What exact data-generation/augmentation strategy do you recommend?
+   - We recommend contrastive adversarial data generation using LLMs. For each highly correlated clause type (e.g. Non-Compete), generate matched low-risk and medium-risk variations by adding qualifiers (e.g. 'non-compete only applies to a 1-mile radius' or 'non-compete is completely mutual and only applies during active service'). This breaks the correlation shortcut and forces the model to look at grammatical context.
+
+E. Is Experiment 5 likely to be worthwhile?
+   - Yes, but only if we use synthetic contrastive data augmentation to train the risk encoder. Training again on the original splits with different hyperparameters will not improve real-world risk generalization.

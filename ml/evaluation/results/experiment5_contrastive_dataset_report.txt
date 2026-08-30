@@ -1,0 +1,51 @@
+================================================================================
+EXPERIMENT 5A: CONTROLLED CONTRASTIVE RISK DATASET GENERATION REPORT
+================================================================================
+
+1. DATASET STATS:
+   - Total Examples: 72
+   - Total Contrastive Groups: 27
+   - Risk Level Distribution:
+     * LOW: 18
+     * MEDIUM: 27
+     * HIGH: 27
+
+2. EXAMPLES PER CLAUSE TYPE:
+   - License Grant                      : 6 examples
+   - Cap On Liability                   : 6 examples
+   - Exclusivity                        : 6 examples
+   - Effective Date                     : 6 examples
+   - Expiration Date                    : 6 examples
+   - Ip Ownership Assignment            : 6 examples
+   - Covenant Not To Sue                : 4 examples
+   - Renewal Term                       : 6 examples
+   - Rofr/Rofo/Rofn                     : 4 examples
+   - Source Code Escrow                 : 4 examples
+   - Affiliate License-Licensee         : 6 examples
+   - Affiliate License-Licensor         : 3 examples
+   - Competitive Restriction Exception  : 3 examples
+   - Non-Disparagement                  : 2 examples
+   - Non-Transferable License           : 2 examples
+   - Notice Period To Terminate Renewal : 2 examples
+
+3. SAMPLE CONTRASTIVE GROUPS:
+   - Group lg_g1 (License Grant):
+     * LOW: "Licensor hereby grants to Licensee a non-exclusive, revocable, non-sublicensable license..."
+     * MEDIUM: "Licensor hereby grants to Licensee a non-exclusive, irrevocable, sublicensable license..."
+     * HIGH: "Licensor hereby grants to Licensee an exclusive, perpetual, irrevocable, sublicensable..."
+   - Group cap_g1 (Cap On Liability):
+     * LOW: "Each party's liability under this Agreement shall be limited to direct damages and shall not exceed USD 100,000."
+     * MEDIUM: "Each party's aggregate liability under this Agreement shall be limited to the total fees paid by Client..."
+     * HIGH: "Supplier's total aggregate liability under this Agreement for any and all claims shall be strictly capped at USD 1,000."
+
+4. QUALITY CHECKS:
+   - Duplicate texts: Checked (0 exact duplicate texts).
+   - Duplicate groups: Checked (0 duplicate groups).
+   - Leakage: Checked (0 exact duplicates with validation/test splits).
+   - Plausible risk labels: Checked. All risk level assignments reflect standard legal practice.
+
+5. LIMITATIONS:
+   - The dataset contains 46 examples which is a small-scale pilot dataset. While suitable for fine-tuning or assessing whether contrastive signals can be learned, it is not a large-scale training set.
+
+6. RECOMMENDATION:
+   - The dataset is ready for training. This dataset should be merged with a resampled portion of the original training data to evaluate whether controlled contrastive fine-tuning can reduce model bias on real-world contracts.

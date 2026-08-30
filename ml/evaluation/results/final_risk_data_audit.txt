@@ -1,0 +1,166 @@
+==========================================================================================
+FINAL RISK DATA AUDIT REPORT
+Date: 2026-08-29
+==========================================================================================
+
+--- DATASET INVENTORY ---
+
+┌─────────────────────────────────────────┬───────┬──────────────────────────────────────┬─────────────────────────────────────────┐
+│ Dataset                                 │ Rows  │ Risk Distribution                    │ Notes                                   │
+├─────────────────────────────────────────┼───────┼──────────────────────────────────────┼─────────────────────────────────────────┤
+│ ml/data/splits/train.csv                │ 7,557 │ HIGH=3396 / MED=2676 / LOW=1485      │ REAL. Corporate legal contracts only.   │
+│ ml/data/splits/validation.csv           │   945 │ HIGH=424  / MED=335  / LOW=186       │ REAL. Corporate legal contracts only.   │
+│ ml/data/splits/test.csv                 │   945 │ HIGH=425  / MED=334  / LOW=186       │ REAL. Corporate legal contracts only.   │
+│ ml/data/experiment5_contrastive_train   │    72 │ HIGH=27   / MED=27   / LOW=18        │ SYNTHETIC. 16 corporate clause types.   │
+│ ml/data/final_risk_dataset.csv          │ 1,362 │ HIGH=457  / MED=457  / LOW=448       │ MIXED: 1050 real + 312 synthetic.       │
+│   └─ Indian domain portion only        │   240 │ (balanced)                           │ 100% SYNTHETIC (auto-variations).       │
+│ ml/data/real_world_validation/          │   150 │ HIGH=27   / MED=36   / LOW=87        │ REAL human-labelled. 5 document types.  │
+│   validation_clauses.csv               │       │                                      │ HELD OUT — must not be used for train.  │
+│ ml/data/experiment8_indian_clause_      │ 1,300 │ NO RISK LABELS                       │ Clause type labels only. Useless for    │
+│   dataset.csv                          │       │                                      │ risk training.                          │
+└─────────────────────────────────────────┴───────┴──────────────────────────────────────┴─────────────────────────────────────────┘
+
+
+--- DETAILED FINDINGS PER DATASET ---
+
+1. ml/data/splits/train.csv  (7,557 rows — REAL)
+   - 41 unique clause types, all from corporate/commercial US-style legal contracts.
+   - Only 9 clause types appear with LOW + MEDIUM + HIGH examples simultaneously.
+   - Most clause types are heavily skewed to one risk level:
+       Document Name: LOW=123, HIGH=9, MED=2   → 94% of examples are LOW
+       Governing Law: LOW=304, HIGH=43, MED=2  → 86% examples are LOW
+       Expiration Date: HIGH=210, LOW=114, MED=8 → MEDIUM almost absent
+   - Zero Indian-domain clause types (Rent, Security Deposit, Non-Compete etc.)
+   - Labels: REAL (from CUAD dataset annotations)
+   - Contextual risk variation present? PARTIALLY — 9/41 clause types have ≥3 examples
+     at each risk level, but many are still dominated by one class.
+
+2. ml/data/splits/validation.csv  (945 rows — REAL)
+   - Same corporate domain as train.csv. Mirrored distribution.
+   - Used for threshold calibration. Must remain untouched for evaluation.
+
+3. ml/data/experiment5_contrastive_train.csv  (72 rows — SYNTHETIC)
+   - 16 corporate clause types (License Grant, Exclusivity, Cap On Liability etc.)
+   - Each type has LOW + MEDIUM + HIGH examples — good contrastive structure.
+   - ALL 72 are marked source=synthetic_contrastive.
+   - No Indian-domain clause types.
+   - Too small to generalise across domains, but valuable for corporate contextual risk.
+
+4. ml/data/final_risk_dataset.csv  (1,362 rows — MIXED)
+   - 1,050 rows REAL (sampled from train.csv corporate splits, balanced)
+   - 312 rows SYNTHETIC (Indian domains + Exp5 contrastive)
+   - Indian-domain breakdown: Rental=96, Employment=48, Loan=48, NDA=48
+   - ALL 240 Indian-domain rows are 100% SYNTHETIC (auto-generated text variations)
+   - Only 5 Indian clause types have multi-risk examples:
+       Confidentiality, Interest & Penalties, Non-Compete, Security Deposit, Termination
+   - CRITICAL: The Indian examples are variations of the same 3 template sentences
+     with random number substitution (e.g. "30 days" → "45 days").
+     They do NOT represent genuine contextual wording differences across risk levels.
+   - This is why the integration test showed NDA Confidentiality LOW and HIGH
+     both scoring ~58.3 — the model cannot distinguish them.
+
+5. ml/data/real_world_validation/validation_clauses.csv  (150 rows — REAL)
+   - 5 document types: Commercial Lease (30), Employment (30), NDA (30),
+     SaaS (30), Software Dev (30)
+   - Human-labelled risk: LOW=87, MEDIUM=36, HIGH=27
+   - NOTE: The Commercial Lease (rental) domain risk distribution is:
+       LOW=27, MEDIUM=2, HIGH=1  (i.e. 90% of real rental clauses are LOW risk)
+   - Employment domain: HIGH=23, LOW=5, MEDIUM=2 (HIGH dominated)
+   - NDA domain: MED=23, LOW=6, HIGH=1 (MEDIUM dominated)
+   - This is the ONLY held-out real-world test set. MUST NOT be used for training.
+
+6. ml/data/experiment8_indian_clause_dataset.csv  (1,300 rows)
+   - Contains ONLY clause type labels. NO risk_level column.
+   - CANNOT be used for risk model training.
+
+
+--- CONTEXTUAL RISK LEARNING ASSESSMENT ---
+
+For a model to learn that the SAME clause type can be LOW or HIGH depending on wording,
+it needs genuine examples where:
+  - Text A (same clause type) → LOW risk (because: limited/mutual/capped)
+  - Text B (same clause type) → HIGH risk (because: unlimited/unilateral/perpetual)
+
+CORPORATE DOMAIN:
+  - train.csv: 9 clause types have all 3 risk levels, but LOW is over-represented.
+  - Experiment 5 contrastive: 16 clause types with genuine LOW/MED/HIGH variation.
+  - Assessment: ADEQUATE for corporate contextual risk. The AnkushRaheja pretrained
+    model already learned this from its original 7,500-example training, confirmed
+    by its 58.67% leakage-safe real-world accuracy.
+
+INDIAN LEGAL DOMAINS:
+  - Rental / Lease:    96 rows, ALL synthetic text-number variations. No genuine
+                       wording diversity. Risk scores are indistinguishable.
+  - Employment:         48 rows, ALL synthetic. Non-compete has multi-risk examples
+                       but these are trivial rewrites (3 km → 5 km radius).
+  - NDA:               48 rows, ALL synthetic. Integration test showed 0.04-point
+                       score difference between LOW and HIGH variants → effectively
+                       no contextual separation.
+  - Loan / Finance:     48 rows, ALL synthetic. Model scored HIGH penalty clause as
+                       MEDIUM in integration test.
+  - Property:           0 rows with risk labels.
+  - Service:            0 rows with risk labels.
+  - Partnership:        0 rows with risk labels.
+  - General Indian:     0 rows with risk labels.
+
+
+--- DECISION ---
+
+B) INSUFFICIENT REAL DATA
+
+The available data is NOT sufficient to train a defensible multi-domain Indian legal
+risk model that demonstrates contextual risk learning across Indian legal domains.
+
+
+--- EXACT MISSING DATA REQUIRED ---
+
+For the claim of Indian multi-domain contextual risk to be defensible, the following
+REAL (non-synthetic) labelled data is required:
+
+  1. Rental / Lease domain:
+     Minimum: 150 real clause snippets with genuine risk variation.
+     Required: Genuine LOW vs HIGH examples with wording differences
+     (e.g. refundable vs non-refundable deposit; reasonable vs excessive forfeiture).
+
+  2. Employment domain:
+     Minimum: 150 real clause snippets.
+     Required: Genuine examples where the same clause type (Non-Compete, Termination,
+     Confidentiality) has different wording at LOW/MEDIUM/HIGH risk levels.
+
+  3. NDA / Confidentiality domain:
+     Minimum: 100 real clause snippets.
+     Required: Genuine perpetual vs time-limited, unilateral vs mutual examples
+     with human-verified LOW/MEDIUM/HIGH labels.
+
+  4. Loan / Finance domain:
+     Minimum: 100 real clause snippets.
+     Required: Standard interest vs compound-penalty vs seizure-of-assets wording.
+
+  5. Property / Sale:
+     Minimum: 100 real clause snippets.
+     Required: Standard registration vs broad indemnity vs unlimited liability.
+
+  Source: Real Indian legal agreements (rental deeds, employment contracts, loan
+  agreements, sale deeds, NDAs from Indian jurisdictions) — NOT synthetic rewriting.
+
+  Total minimum requirement: ~600 real Indian-domain risk-labelled clauses.
+  Current real Indian-domain data: 0 rows.
+
+
+--- WHAT CAN BE DONE RIGHT NOW (WITHOUT NEW DATA) ---
+
+The current pretrained AnkushRaheja model (ml/models/final_risk_model/) remains the
+best available local risk model, with:
+  - 58.67% leakage-safe accuracy on the 150-clause real-world test set
+  - Adequate corporate domain contextual risk learning
+  - Partial Indian domain risk detection (Indemnity=HIGH, Governing Law=LOW correct;
+    but NDA, Loan, Salary levels are not well separated)
+
+For the final-year project presentation/viva, the honest documentation is:
+  "The system uses a Legal-BERT-based risk regression model achieving 58.67% leakage-safe
+  accuracy on real-world corporate legal clauses. Indian-domain risk assessment is partial
+  and is augmented by routing ambiguous clauses to an LLM (Groq API) for contextual
+  validation. Full Indian-domain ML risk learning requires ~600 additional real labelled
+  examples that are outside the scope of this project."
+
+==========================================================================================

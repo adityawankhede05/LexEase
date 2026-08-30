@@ -1,0 +1,71 @@
+==========================================================================================
+REAL-WORLD COMPARISON: LEGAL-BERT vs API-BASED RISK ASSESSMENT
+==========================================================================================
+
+Document Name: Residential Rental Agreement.pdf
+Number of Clauses Tested: 6
+Inference Device: cuda
+Agreement Rate: 16.67% (Agreed: 1, Disagreed: 5)
+
+--- SIDE-BY-SIDE COMPARISON TABLE ---
+Clause     | BERT Clause Type               | BERT Risk  | API Risk   | Agreement 
+--------------------------------------------------------------------------------
+Clause 1   | Revenue/Profit Sharing         | medium     | low        | Disagree  
+Clause 2   | Post-Termination Services      | high       | medium     | Disagree  
+Clause 3   | Termination For Convenience    | high       | low        | Disagree  
+Clause 4   | Warranty Duration              | medium     | medium     | Agree     
+Clause 5   | Volume Restriction             | medium     | low        | Disagree  
+Clause 6   | Exclusivity                    | high       | low        | Disagree  
+
+================================================================================
+
+--- DETAILED CLAUSE COMPARISONS ---
+
+[Clause 1] Text: "The Tenant shall pay monthly rent of INR 25,000 to the Landlord on or before the 5th day of each calendar month."
+  * Legal-BERT Classification: Revenue/Profit Sharing (Confidence: 0.6776)
+  * Legal-BERT Risk Level:    MEDIUM (Confidence: 0.9939)
+  * API-Based Risk Level:     LOW
+  * API-Based Explanation:    The rent amount and due date are clearly stated, giving the tenant a predictable payment schedule.
+  * Agreement Status:         Disagree
+
+[Clause 2] Text: "The Tenant shall pay a refundable security deposit of INR 50,000 before taking possession of the premises. The deposit shall be returned within 30 days after the tenancy ends, subject to lawful deductions."
+  * Legal-BERT Classification: Post-Termination Services (Confidence: 0.4684)
+  * Legal-BERT Risk Level:    HIGH (Confidence: 0.8341)
+  * API-Based Risk Level:     MEDIUM
+  * API-Based Explanation:    While a refundable deposit is normal, the phrase "subject to lawful deductions" is vague and could allow the landlord to retain part of the deposit without clear criteria.
+  * Agreement Status:         Disagree
+
+[Clause 3] Text: "Either party may terminate this Agreement by giving the other party at least 30 days written notice."
+  * Legal-BERT Classification: Termination For Convenience (Confidence: 0.9655)
+  * Legal-BERT Risk Level:    HIGH (Confidence: 0.9817)
+  * API-Based Risk Level:     LOW
+  * API-Based Explanation:    A 30‑day written notice for termination is a standard, balanced provision for both parties.
+  * Agreement Status:         Disagree
+
+[Clause 4] Text: "The Tenant shall keep the premises clean and in good condition. The Landlord shall be responsible for major structural repairs unless the damage was caused by the Tenant's negligence or misuse."
+  * Legal-BERT Classification: Warranty Duration (Confidence: 0.8506)
+  * Legal-BERT Risk Level:    MEDIUM (Confidence: 0.9822)
+  * API-Based Risk Level:     MEDIUM
+  * API-Based Explanation:    The tenant’s duty to keep the premises clean is normal, but "major structural repairs" and "negligence or misuse" are not precisely defined, which could lead to disputes.
+  * Agreement Status:         Agree
+
+[Clause 5] Text: "The Tenant shall pay electricity and water charges based on actual consumption. Property taxes and structural maintenance charges shall be paid by the Landlord."
+  * Legal-BERT Classification: Volume Restriction (Confidence: 0.7657)
+  * Legal-BERT Risk Level:    MEDIUM (Confidence: 0.9965)
+  * API-Based Risk Level:     LOW
+  * API-Based Explanation:    Allocation of utility costs to the tenant and property‑tax/maintenance costs to the landlord follows typical rental practice.
+  * Agreement Status:         Disagree
+
+[Clause 6] Text: "The premises shall be used only for residential purposes. The Tenant shall not use the premises for any unlawful activity or commercial operation without the Landlord's written consent."
+  * Legal-BERT Classification: Exclusivity (Confidence: 0.2637)
+  * Legal-BERT Risk Level:    HIGH (Confidence: 0.4472)
+  * API-Based Risk Level:     LOW
+  * API-Based Explanation:    Restricting use to residential purposes and prohibiting unlawful or commercial activity protects both parties and is standard.
+  * Agreement Status:         Disagree
+
+--- DISCUSSION & OBSERVATIONS ---
+1. Analysis of Disagreements:
+   - Compare the granular differences between Legal-BERT and API predictions. Large Language Models (LLMs) used in APIs usually assess risk based on broad commonsense reasoning and instructional context, whereas the specialized Legal-BERT model classifies based on domain-specific training corpus statistics.
+   - For instance, if Legal-BERT predicts a high risk while the API predicts low risk, it might be due to Legal-BERT capturing minor, subtle phrasing signals or dataset-specific biases, whereas the API analyzes context globally.
+2. No Ground Truth Disclaimer:
+   - Note that because we do not have annotated ground-truth labels for this new document, we cannot evaluate the absolute accuracy of either system. Instead, we analyze their agreement rate to understand model variance in wild documents.

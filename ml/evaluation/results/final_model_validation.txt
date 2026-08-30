@@ -1,0 +1,37 @@
+================================================================================
+LEXEASE EXPERIMENT 3 MODEL FINAL VALIDATION REPORT
+================================================================================
+
+1. FILE SYSTEM VERIFICATION:
+   - config.json: PASS
+   - clause_type_mapping.json: PASS
+   - risk_level_mapping.json: PASS
+   - pytorch_model.bin: PASS
+   - Status: ALL FILES PRESENT
+
+2. DEVICE VERIFICATION:
+   - Target Device: cuda
+   - CUDA Available: True
+   - Status: PASS (Running on GPU)
+
+3. METRICS VERIFICATION ON TEST SPLIT:
+   - Clause Type Accuracy:    86.6667% (Expected: 86.67%) -> PASS
+   - Clause Type Macro F1:    79.4460% (Expected: 79.45%) -> PASS
+   - Clause Type Weighted F1: 86.7685% (Expected: 86.77%) -> PASS
+   - Risk Level Accuracy:     93.8624% (Expected: 93.86%) -> PASS
+   - Risk Level Macro F1:     93.9145% (Expected: 93.91%) -> PASS
+   - Risk Level Weighted F1:  93.8666% (Expected: 93.87%) -> PASS
+   - Metrics Match Status:    PASS
+
+4. SAMPLE INFERENCE TEST:
+   - Sample 1: "Neither party shall be liable to the other for any indirect, incidental, special, or consequential damages."
+     * Predicted Clause Type: Cap On Liability (Confidence: 0.9494)
+     * Predicted Risk Level:  high (Confidence: 0.9960)
+   - Sample 2: "The Client agrees to pay the service provider a minimum monthly commitment of INR 50,000 for the duration."
+     * Predicted Clause Type: Minimum Commitment (Confidence: 0.9722)
+     * Predicted Risk Level:  medium (Confidence: 0.9894)
+
+5. FINAL STATUS:
+   - The validation has completed successfully.
+   - All expected metrics are verified.
+   - experiment3_model is READY for integration.

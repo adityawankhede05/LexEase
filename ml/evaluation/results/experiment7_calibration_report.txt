@@ -1,0 +1,49 @@
+==========================================================================================
+EXPERIMENT 7: CALIBRATION OPTIMIZATION REPORT FOR EXPERIMENT 6A
+==========================================================================================
+
+--- 1. OPTIMIZED THRESHOLDS AND SELECTION ---
+  * Thresholds optimized on validation.csv using Macro F1:
+     - LOW < 39.00
+     - MEDIUM < 61.00
+     - HIGH >= 61.00
+  * Best Validation Macro F1: 77.1186%
+
+--- 2. REAL-WORLD EVALUATION RESULTS (150 Clauses) ---
+  * Accuracy:    42.6667%
+  * Macro F1:    42.7892%
+  * Weighted F1: 33.5553%
+
+Class-level Performance (LOW, MEDIUM, HIGH):
+  * LOW    -> Precision: 1.0000, Recall: 0.1034, F1: 0.1875 (Support: 87)
+  * MEDIUM -> Precision: 0.3537, Recall: 0.8056, F1: 0.4915 (Support: 36)
+  * HIGH   -> Precision: 0.4407, Recall: 0.9630, F1: 0.6047 (Support: 27)
+
+Confusion Matrix:
+          | Pred Low | Pred Med | Pred High
+---------------------------------------------
+Act Low   | 9        | 52       | 26      
+Act Med   | 0        | 29       | 7       
+Act High  | 0        | 1        | 26      
+
+Prediction Distribution vs Ground Truth:
+  * LOW    -> Pred: 9   (GT: 87)
+  * MEDIUM -> Pred: 82  (GT: 36)
+  * HIGH   -> Pred: 59  (GT: 27)
+
+--- 3. COMPARISON METRICS TABLE ---
++---------------------------------------+-------------------+-----------------+
+| Model / Pipeline                      | Risk Accuracy     | Risk Macro F1   |
++---------------------------------------+-------------------+-----------------+
+| Experiment 6A (Original Thresholds)   | 42.6667%          | 42.7892%        |
+| Experiment 7 (Calibrated Thresholds)  | 42.6667%          | 42.7892%        |
+| Pretrained OOF Baseline               | 58.6667%          | 36.3510%        |
+| Groq API-Based Baseline               | 52.0000%          | 41.6197%        |
++---------------------------------------+-------------------+-----------------+
+
+--- 4. KEY SUMMARY & CONCLUSION ---
+1. Selected optimal thresholds: LOW < 39.00, MEDIUM < 61.00
+2. Real-world accuracy under optimized thresholds: 42.67%, Macro F1: 42.79%.
+3. High-risk recall: 96.30% (correctly identified 26 out of 27 high-risk clauses).
+4. Did changing the thresholds on 6A's existing scores improve performance?
+   - No. The accuracy did not improve.

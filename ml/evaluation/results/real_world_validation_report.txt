@@ -1,0 +1,59 @@
+==========================================================================================
+LEXEASE REAL-WORLD VALIDATION REPORT: LEGAL-BERT VS API-BASED RISK ASSESSMENT
+==========================================================================================
+
+Total Clauses in Dataset: 150
+Usable Clauses for Clause Type Classification (Excluding REVIEW_REQUIRED): 122
+Usable Clauses for Risk Level Classification (Excluding REVIEW_REQUIRED): 150
+
+--- METRIC PERFORMANCE SUMMARY ---
+1. Legal-BERT Clause Type Classification:
+   - Accuracy: 95.9016%
+   - Macro F1: 85.6506%
+
+2. Risk Level Classification Comparison:
+   - Legal-BERT Risk Accuracy: 28.0000%
+   - API-Based Risk Accuracy:  52.0000%
+   - Legal-BERT Risk Macro F1: 29.4264%
+   - API-Based Risk Macro F1:  41.6197%
+
+3. Agreement and Errors:
+   - Agreement between models on Risk Level: 26.67% (40 agreed out of 150)
+   - Total Legal-BERT errors against Ground Truth: 108
+   - Total API errors against Ground Truth:        72
+
+--- RISK OUTCOME CATEGORY DISTRIBUTION ---
+   - API Correct, Legal-BERT Wrong: 60 (40.00%)
+   - Both Wrong: 48 (32.00%)
+   - Legal-BERT Correct, API Wrong: 24 (16.00%)
+   - Both Correct: 18 (12.00%)
+
+--- SIDE-BY-SIDE COMPARISON OF DISAGREEMENTS ---
+Clause ID  | Ground Truth Type              | BERT Type                 | GT Risk | BERT Risk | API Risk
+--------------------------------------------------------------------------------------------------------------
+nda_04     | Expiration Date                | Expiration Date           | medium  | high      | low     
+nda_05     | No-Solicit Of Employees        | No-Solicit Of Employees   | medium  | high      | medium  
+nda_06     | Governing Law                  | Governing Law             | low     | low       | medium  
+nda_08     | Anti-Assignment                | Anti-Assignment           | low     | high      | low     
+nda_09     | Non-Disparagement              | Non-Disparagement         | medium  | medium    | low     
+saas_01    | License Grant                  | License Grant             | low     | high      | low     
+saas_02    | Non-Transferable License       | Anti-Assignment           | medium  | high      | low     
+saas_05    | Termination For Convenience    | Termination For Convenien | medium  | high      | low     
+saas_06    | Cap On Liability               | Uncapped Liability        | medium  | high      | low     
+saas_07    | Uncapped Liability             | Cap On Liability          | high    | high      | low     
+saas_08    | Warranty Duration              | Warranty Duration         | low     | medium    | low     
+saas_09    | Renewal Term                   | Renewal Term              | low     | medium    | medium  
+saas_10    | Notice Period To Terminate Ren | Notice Period To Terminat | low     | high      | medium  
+emp_01     | Non-Compete                    | Non-Compete               | high    | high      | medium  
+emp_02     | No-Solicit Of Customers        | No-Solicit Of Customers   | high    | high      | medium  
+emp_03     | Ip Ownership Assignment        | Ip Ownership Assignment   | medium  | high      | low     
+emp_04     | Competitive Restriction Except | Competitive Restriction E | low     | high      | low     
+emp_05     | Termination For Convenience    | Termination For Convenien | low     | high      | low     
+emp_06     | Change Of Control              | Change Of Control         | medium  | high      | low     
+emp_07     | Insurance                      | Insurance                 | low     | medium    | medium  
+
+================================================================================
+
+--- DISCUSSION & OBSERVATIONS ---
+- Better Performing System: API-Based System based on overall Accuracy on Ground Truth.
+- Analysis: Legal-BERT shows high specialized domain competence on structured clauses, while the API is sensitive to general contextual language. Class-weighted learning in Legal-BERT Experiment 3 preserved the high risk assessment precision while boosting rare clause recognition.

@@ -1,0 +1,70 @@
+{
+    "clause_classification": {
+        "accuracy": 0.9590163934426229,
+        "macro_f1": 0.8565055479556163
+    },
+    "primary_ml_risk": {
+        "accuracy": 0.22666666666666666,
+        "macro_f1": 0.20262353606583747,
+        "weighted_f1": 0.25990006071078314,
+        "precision_class": [
+            0.5217391304347826,
+            0.08064516129032258,
+            0.11904761904761904
+        ],
+        "recall_class": [
+            0.27586206896551724,
+            0.1388888888888889,
+            0.18518518518518517
+        ],
+        "f1_class": [
+            0.3609022556390977,
+            0.10204081632653061,
+            0.14492753623188406
+        ],
+        "support_class": [
+            87,
+            36,
+            27
+        ],
+        "confusion_matrix": [
+            [
+                24,
+                35,
+                28
+            ],
+            [
+                22,
+                5,
+                9
+            ],
+            [
+                0,
+                22,
+                5
+            ]
+        ],
+        "prediction_distribution": {
+            "medium": 62,
+            "low": 46,
+            "high": 42
+        }
+    },
+    "secondary_6a_signal": {
+        "high_precision": 0.4406779661016949,
+        "high_recall": 0.9629629629629629,
+        "warnings_count": 59,
+        "false_positives": 33
+    },
+    "hybrid_pipeline": {
+        "accuracy": 0.5133333333333333,
+        "macro_f1": 0.3791263791263792,
+        "high_recall": 0.2962962962962963,
+        "prediction_distribution": {
+            "low": 98,
+            "medium": 27,
+            "high": 25
+        },
+        "groq_routed_count": 117
+    }
+}

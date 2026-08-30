@@ -1,0 +1,92 @@
+==========================================================================================
+EXPERIMENT 5 RISK-ONLY CLASSIFIER FINAL VALIDATION REPORT
+==========================================================================================
+
+--- 1. PERFORMANCE ON UNTOUCHED TEST SPLIT (test.csv) ---
+  * Accuracy:    94.7090%
+  * Macro F1:    94.5899%
+  * Weighted F1: 94.7063%
+
+--- 2. PERFORMANCE ON REAL-WORLD VALIDATION DATASET (150 Clauses) ---
+  * Accuracy:    28.6667%
+  * Macro F1:    30.4854%
+  * Weighted F1: 24.1260%
+
+Class-level Performance (LOW, MEDIUM, HIGH):
+  * LOW    -> Precision: 0.1186, Recall: 0.1944, F1: 0.1474 (Support: 36)
+  * MEDIUM -> Precision: 0.4333, Recall: 0.9630, F1: 0.5977 (Support: 27)
+  * HIGH   -> Precision: 0.3226, Recall: 0.1149, F1: 0.1695 (Support: 87)
+
+Confusion Matrix:
+          | Pred Low | Pred Med | Pred High
+---------------------------------------------
+Act Low   | 7        | 8        | 21      
+Act Med   | 1        | 26       | 0       
+Act High  | 51       | 26       | 10      
+
+Prediction Distribution vs Ground Truth:
+  * LOW    -> Pred: 31  (GT: 87)
+  * MEDIUM -> Pred: 59  (GT: 36)
+  * HIGH   -> Pred: 60  (GT: 27)
+
+--- 3. CONTRASTIVE DATASET EVALUATION (72 Examples) ---
+  * Accuracy on synthetic contrastive pairs: 66.6667%
+
+--- 4. COMPARISON ACCROSS ML EXPERIMENTS & API ---
++---------------------------------------+-------------------+-----------------+
+| Model / Pipeline                      | Risk Accuracy     | Risk Macro F1   |
++---------------------------------------+-------------------+-----------------+
+| Experiment 3 (Legal-BERT Multi-Task)  | 28.0000%          | 29.4264%        |
+| Experiment 4 (Legal-BERT Risk-Only)  | 28.0000%          | 29.7375%        |
+| Experiment 5 (Context-Aware Risk)     | 28.6667%          | 30.4854%        |
+| Groq API-Based Risk Assessment        | 52.0000%          | 41.6197%        |
++---------------------------------------+-------------------+-----------------+
+
+--- 5. CLAUSE TYPE CORRELATION IN EXPERIMENT 5 ---
+Check if the model still maps clause types strictly to a single risk level:
+Clause Type                         | Total | Unique Predicted Risks (Counts)              
+-----------------------------------------------------------------------------------------------
+Agreement Date                      | 2     | low:2                                        
+Effective Date                      | 1     | low:1                                        
+Parties                             | 1     | low:1                                        
+Expiration Date                     | 21    | low:20, medium:1                             
+No-Solicit Of Employees             | 2     | high:2                                       
+Governing Law                       | 2     | low:2                                        
+Anti-Assignment                     | 1     | high:1                                       
+Non-Disparagement                   | 1     | medium:1                                     
+License Grant                       | 21    | high:21                                      
+Non-Transferable License            | 1     | high:1                                       
+Minimum Commitment                  | 1     | medium:1                                     
+Volume Restriction                  | 1     | medium:1                                     
+Termination For Convenience         | 2     | high:2                                       
+Cap On Liability                    | 2     | high:2                                       
+Uncapped Liability                  | 1     | high:1                                       
+Warranty Duration                   | 2     | medium:2                                     
+Renewal Term                        | 1     | medium:1                                     
+Notice Period To Terminate Renewal  | 1     | high:1                                       
+Non-Compete                         | 21    | high:21                                      
+No-Solicit Of Customers             | 1     | high:1                                       
+Ip Ownership Assignment             | 22    | medium:21, high:1                            
+Competitive Restriction Exception   | 1     | medium:1                                     
+Change Of Control                   | 1     | high:1                                       
+Insurance                           | 2     | medium:2                                     
+Liquidated Damages                  | 1     | high:1                                       
+Exclusivity                         | 1     | high:1                                       
+Rofr/Rofo/Rofn                      | 1     | medium:1                                     
+Joint Ip Ownership                  | 1     | medium:1                                     
+Irrevocable Or Perpetual License    | 1     | low:1                                        
+Source Code Escrow                  | 1     | medium:1                                     
+Covenant Not To Sue                 | 1     | medium:1                                     
+Third Party Beneficiary             | 1     | low:1                                        
+Most Favored Nation                 | 1     | low:1                                        
+Post-Termination Services           | 1     | high:1                                       
+
+--- 6. DISCUSSION & DIAGNOSIS ---
+1. Real-World Risk Accuracy Improvement:
+   - Experiment 5 risk accuracy is 28.67%, which did not improve over the 28.00% baseline of Experiment 3/4.
+2. Mitigation of Overprediction:
+   - The overprediction of HIGH/MEDIUM risks was not reduced. The model predicted 61 HIGH and 59 MEDIUM.
+3. Contrastive Performance:
+   - Although it achieved 66.67% accuracy on the synthetic contrastive dataset (proving it can memorize or fit these training pairs), it did not generalize to the real-world validation clauses.
+4. Clause Type Correlation:
+   - The table in Section 5 shows that for most classes, the model still maps clause types strictly to a single risk level (e.g. License Grant = 21 high, Non-Compete = 21 high).

@@ -1,0 +1,6 @@
+Document Name: Residential Rental Agreement.pdf
+Number of Clauses Tested: 6
+Agreement Rate: 16.67%
+Agreed: 1
+Disagreed: 5
+Inference Device: cuda

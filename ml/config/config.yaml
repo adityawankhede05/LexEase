@@ -1,0 +1,12 @@
+# Configuration file for LexEase Multi-Task Legal Clause Transformer Model
+
+model_name: "nlpaueb/legal-bert-base-uncased"
+max_len: 256
+batch_size: 16
+learning_rate: 2.0e-5
+epochs: 5
+seed: 42
+loss_weights:
+  clause_type: 1.0
+  risk_level: 1.0
+output_dir: "ml/models/best_model"

@@ -23,6 +23,13 @@ class ClauseRiskResult(BaseModel):
     explanation: str
     recommendation: str
     confidence: float = Field(..., ge=0.0, le=1.0)
+    
+    # Hybrid risk analysis fields (optional for backward compatibility)
+    risk_score: float | None = None
+    risk_label: str | None = None
+    reasons: list[str] | None = None
+    issues: list[str] | None = None
+    recommended_action: str | None = None
 
 
 class ClauseAnalysisAIResponse(BaseModel):

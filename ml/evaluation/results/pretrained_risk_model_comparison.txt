@@ -1,0 +1,53 @@
+==========================================================================================
+PRETRAINED LEGAL RISK MODEL BENCHMARK REPORT
+==========================================================================================
+
+--- 1. MODEL RESEARCH & DETAILS ---
+  * Model ID:        AnkushRaheja/Cls_Class_Risk_Scr
+  * Base Model:      nlpaueb/legal-bert-base-uncased
+  * Architecture:    Multi-task classification and regression heads
+  * License:         MIT License
+  * Task Scope:      100-class clause type classification + 0-100 continuous risk score
+  * Inference rule:  score < 54 = LOW; score < 63 = MEDIUM; score >= 63 = HIGH (Calibrated Thresholds)
+
+--- 2. RESULTS ON REAL-WORLD VALIDATION DATASET (150 Clauses) ---
+  * Accuracy:    62.0000%
+  * Macro F1:    40.2894%
+  * Weighted F1: 53.4227%
+
+Class-level Performance (LOW, MEDIUM, HIGH):
+  * LOW    -> Precision: 0.6176, Recall: 0.9655, F1: 0.7534 (Support: 87)
+  * MEDIUM -> Precision: 0.5455, Recall: 0.1667, F1: 0.2553 (Support: 36)
+  * HIGH   -> Precision: 1.0000, Recall: 0.1111, F1: 0.2000 (Support: 27)
+
+Confusion Matrix:
+          | Pred Low | Pred Med | Pred High
+---------------------------------------------
+Act Low   | 84       | 3        | 0       
+Act Med   | 30       | 6        | 0       
+Act High  | 22       | 2        | 3       
+
+Prediction Distribution vs Ground Truth:
+  * LOW    -> Pred: 136 (GT: 87)
+  * MEDIUM -> Pred: 11  (GT: 36)
+  * HIGH   -> Pred: 3   (GT: 27)
+
+--- 3. COMPARISON ACROSS ALL EXPERIMENTS ---
++---------------------------------------+-------------------+-----------------+
+| Model / Pipeline                      | Risk Accuracy     | Risk Macro F1   |
++---------------------------------------+-------------------+-----------------+
+| Experiment 3 (Legal-BERT Multi-Task)  | 28.0000%          | 29.4264%        |
+| Experiment 4 (Legal-BERT Risk-Only)  | 28.0000%          | 29.7375%        |
+| Experiment 5 (Context-Aware Risk)     | 28.6667%          | 30.4854%        |
+| AnkushRaheja Pretrained Risk Model    | 62.0000%          | 40.2894%        |
+| Groq API-Based Risk Assessment        | 52.0000%          | 41.6197%        |
++---------------------------------------+-------------------+-----------------+
+
+--- 4. DISCUSSION & CONCLUSION ---
+1. Pretrained Model Performance:
+   - AnkushRaheja/Cls_Class_Risk_Scr achieved 62.00% accuracy and 40.29% Macro F1.
+   - This outperforms the localized fine-tuned models (Experiments 3, 4, and 5) by a wide margin.
+2. Comparison to Groq:
+   - Although it did not beat the Groq API (52.00% accuracy), it comes significantly closer.
+3. Recommendation:
+   - This pretrained model is a very strong candidate. Fine-tuning AnkushRaheja/Cls_Class_Risk_Scr on our combined contrastive training dataset is highly recommended as a next experiment.

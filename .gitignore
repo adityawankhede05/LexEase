@@ -29,10 +29,29 @@ dist-ssr/
 .DS_Store
 Thumbs.db
 
-# Project specific
+# Project specific / root temp files
 .env
 dataset/Sample_P
+*.log
+*.csv
+!ml/data/**/*.csv
+!ml/data/real_world_validation/validation_clauses.csv
+!backend/tests/**/*.csv
+risky_patterns.txt
 
-
-
-
+# ML Models global binary ignores
+**/*.bin
+**/*.safetensors
+**/*.pt
+**/*.joblib
+**/*.pkl
+**/*.h5
+**/*.onnx
+**/models/best_model/
+**/models/experiment*/
+**/models/final_risk_model/
+**/models/improved_model/
+**/best_model/
+**/experiment*/
+**/final_risk_model/
+**/improved_model/

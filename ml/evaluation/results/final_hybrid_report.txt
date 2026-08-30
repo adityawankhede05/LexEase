@@ -1,0 +1,43 @@
+========================================================================================
+FINAL HYBRID PIPELINE REAL-WORLD EVALUATION REPORT (150 CLAUSES)
+========================================================================================
+
+Hybrid Accuracy:  58.67%
+Hybrid Macro F1:  59.16%
+HIGH-risk Recall:  96.30%
+
+Class-level Metrics:
+  LOW    -> Precision: 0.8444, Recall: 0.4368, F1: 0.5758 (Support: 87)
+  MEDIUM -> Precision: 0.6154, Recall: 0.6667, F1: 0.6400 (Support: 36)
+  HIGH   -> Precision: 0.3939, Recall: 0.9630, F1: 0.5591 (Support: 27)
+
+Confusion Matrix:
+          | Pred Low | Pred Med | Pred High
+---------------------------------------------
+Act Low   | 38       | 14       | 35      
+Act Med   | 7        | 24       | 5       
+Act High  | 0        | 1        | 26      
+
+Prediction Distribution vs Ground Truth:
+  LOW    -> Pred: 45   (GT: 87)
+  MEDIUM -> Pred: 39   (GT: 36)
+  HIGH   -> Pred: 66   (GT: 27)
+
+Per-Domain Performance:
+  Commercial Lease                    -> Accuracy: 100.00%, Macro F1: 100.00% (Support: 30)
+  Employment Contract                 -> Accuracy: 90.00%, Macro F1: 78.51% (Support: 30)
+  Non-Disclosure Agreement            -> Accuracy: 70.00%, Macro F1: 61.50% (Support: 30)
+  SaaS Subscription Agreement         -> Accuracy: 16.67%, Macro F1: 16.89% (Support: 30)
+  Software Development Agreement      -> Accuracy: 16.67%, Macro F1: 21.12% (Support: 30)
+
+========================================================================================
+COMPARATIVE PERFORMANCE TABLE
+========================================================================================
+Model / Pipeline                       | Accuracy   | Macro F1   | HIGH Recall
+------------------------------------------------------------------------------
+Experiment 3 (Legal-BERT Multi-Task)   | 28.00%     | 29.43%     | 78.50%     
+Pretrained OOF Baseline                | 58.67%     | 36.35%     | 11.11%     
+Experiment 6A (Fine-Tuned Risk)        | 42.67%     | 42.79%     | 96.30%     
+Groq API-Based Baseline                | 52.00%     | 41.62%     | 96.30%     
+Local ML Risk Model (final_risk_model) | 42.67%     | 41.78%     | 92.59%     
+FINAL HYBRID PIPELINE (this run)       | 58.67%     | 59.16%     | 96.30%

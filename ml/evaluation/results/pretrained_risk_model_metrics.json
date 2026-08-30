@@ -1,0 +1,18 @@
+{
+    "model_name": "AnkushRaheja/Cls_Class_Risk_Scr",
+    "validation_accuracy": 0.62,
+    "validation_macro_f1": 0.40289412587857387,
+    "validation_weighted_f1": 0.5342272683904208,
+    "comparison": {
+        "exp3_accuracy": 0.28,
+        "exp3_macro_f1": 0.29426448213653106,
+        "exp4_accuracy": 0.28,
+        "exp4_macro_f1": 0.29737455526929213,
+        "exp5_accuracy": 0.2866666666666667,
+        "exp5_macro_f1": 0.3048536986338826,
+        "api_accuracy": 0.52,
+        "api_macro_f1": 0.4161965791317373,
+        "raheja_accuracy": 0.62,
+        "raheja_macro_f1": 0.40289412587857387
+    }
+}

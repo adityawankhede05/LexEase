@@ -1,0 +1,90 @@
+{
+    "overall_accuracy": 0.5846153846153846,
+    "overall_macro_f1": 0.6060832811286333,
+    "domain_performance": {
+        "General": {
+            "accuracy": 0.7391304347826086,
+            "macro_f1": 0.6696049048990226,
+            "size": 46
+        },
+        "Original Corporate": {
+            "accuracy": 0.41379310344827586,
+            "macro_f1": 0.3039492298258077,
+            "size": 116
+        },
+        "Employment": {
+            "accuracy": 0.7037037037037037,
+            "macro_f1": 0.5523538961038961,
+            "size": 27
+        },
+        "Property": {
+            "accuracy": 0.5625,
+            "macro_f1": 0.2777777777777778,
+            "size": 16
+        },
+        "Rental": {
+            "accuracy": 0.8125,
+            "macro_f1": 0.6799999999999999,
+            "size": 32
+        },
+        "NDA/Confidentiality": {
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "size": 8
+        },
+        "Business": {
+            "accuracy": 0.5,
+            "macro_f1": 0.3333333333333333,
+            "size": 8
+        },
+        "Service": {
+            "accuracy": 0.5714285714285714,
+            "macro_f1": 0.36363636363636365,
+            "size": 7
+        }
+    },
+    "rental_clause_test": [
+        {
+            "clause": "Clause 1",
+            "text": "The Tenant shall pay monthly rent of INR 25,000 to the Landlord on or before the 5th day of each calendar month.",
+            "old_exp3": "Revenue/Profit Sharing",
+            "new_exp8": "Notice Period / Termination",
+            "expected": "Rent"
+        },
+        {
+            "clause": "Clause 2",
+            "text": "The Tenant shall pay a refundable security deposit of INR 50,000 before taking possession of the premises. The deposit shall be returned within 30 days after the tenancy ends, subject to lawful deductions.",
+            "old_exp3": "Post-Termination Services",
+            "new_exp8": "Notice Period / Termination",
+            "expected": "Security Deposit"
+        },
+        {
+            "clause": "Clause 3",
+            "text": "Either party may terminate this Agreement by giving the other party at least 30 days written notice.",
+            "old_exp3": "Termination For Convenience",
+            "new_exp8": "Notice Period / Termination",
+            "expected": "Notice Period / Termination"
+        },
+        {
+            "clause": "Clause 4",
+            "text": "The Tenant shall keep the premises clean and in good condition. The Landlord shall be responsible for major structural repairs unless the damage was caused by the Tenant's negligence or misuse.",
+            "old_exp3": "Warranty Duration",
+            "new_exp8": "Limitation of Liability",
+            "expected": "Maintenance & Utilities"
+        },
+        {
+            "clause": "Clause 5",
+            "text": "The Tenant shall pay electricity and water charges based on actual consumption. Property taxes and structural maintenance charges shall be paid by the Landlord.",
+            "old_exp3": "Volume Restriction",
+            "new_exp8": "Maintenance & Utilities",
+            "expected": "Maintenance & Utilities"
+        },
+        {
+            "clause": "Clause 6",
+            "text": "The premises shall be used only for residential purposes. The Tenant shall not use the premises for any unlawful activity or commercial operation without the Landlord's written consent.",
+            "old_exp3": "Exclusivity",
+            "new_exp8": "Limitation of Liability",
+            "expected": "Use of Premises"
+        }
+    ]
+}
