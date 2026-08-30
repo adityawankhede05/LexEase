@@ -137,43 +137,45 @@ async def test_clause_analysis_service_empty_clauses():
 
 
 # ---------------------------------------------------------------------------
-# 5. Service — AI provider error surfaces as ClauseAnalysisError
+# 5. Service — AI provider error falls back to local risk
 # ---------------------------------------------------------------------------
 
 @pytest.mark.anyio
 async def test_clause_analysis_service_ai_provider_error():
-    """ClauseAnalysisService wraps AIProviderError into ClauseAnalysisError."""
+    """ClauseAnalysisService falls back to local risk values when AIProviderError is raised."""
     class FailingProvider(BaseAIProvider):
         async def generate(self, prompt: str, system_instruction: str | None = None) -> str:
             raise AIProviderError("Gemini API unavailable.")
 
     service = ClauseAnalysisService(ai_service=AIService(provider=FailingProvider()))
-    with pytest.raises(ClauseAnalysisError) as exc_info:
-        await service.analyze_clauses([_make_clause(1)])
-    assert "Clause risk analysis failed" in str(exc_info.value)
+    response = await service.analyze_clauses([_make_clause(1)])
+    assert response.total_clauses == 1
+    assert len(response.results) == 1
+    assert "What this means:" in response.results[0].explanation
 
 
 # ---------------------------------------------------------------------------
-# 6. Service — invalid JSON from AI surfaces as ClauseAnalysisError
+# 6. Service — invalid JSON from AI falls back to local risk
 # ---------------------------------------------------------------------------
 
 @pytest.mark.anyio
 async def test_clause_analysis_service_invalid_json():
-    """ClauseAnalysisService raises ClauseAnalysisError when AI returns malformed JSON."""
+    """ClauseAnalysisService falls back to local risk values when AI returns malformed JSON."""
     mock_provider = MockAIProvider(response_text="not-valid-json")
     service = ClauseAnalysisService(ai_service=AIService(provider=mock_provider))
-    with pytest.raises(ClauseAnalysisError) as exc_info:
-        await service.analyze_clauses([_make_clause(1)])
-    assert "Clause risk analysis failed" in str(exc_info.value)
+    response = await service.analyze_clauses([_make_clause(1)])
+    assert response.total_clauses == 1
+    assert len(response.results) == 1
+    assert "What this means:" in response.results[0].explanation
 
 
 # ---------------------------------------------------------------------------
-# 7. Service — schema validation failure (missing field) raises ClauseAnalysisError
+# 7. Service — schema validation failure falls back to local risk
 # ---------------------------------------------------------------------------
 
 @pytest.mark.anyio
 async def test_clause_analysis_service_schema_validation_failure():
-    """ClauseAnalysisService raises ClauseAnalysisError when AI omits a required field."""
+    """ClauseAnalysisService falls back to local risk values when AI response schema validation fails."""
     # recommendation is intentionally omitted to trigger Pydantic validation error
     bad_result = {
         "clause_id": "clause_1",
@@ -185,9 +187,10 @@ async def test_clause_analysis_service_schema_validation_failure():
     mock_json = json.dumps({"results": [bad_result]})
     mock_provider = MockAIProvider(response_text=mock_json)
     service = ClauseAnalysisService(ai_service=AIService(provider=mock_provider))
-    with pytest.raises(ClauseAnalysisError) as exc_info:
-        await service.analyze_clauses([_make_clause(1)])
-    assert "Clause risk analysis failed" in str(exc_info.value)
+    response = await service.analyze_clauses([_make_clause(1)])
+    assert response.total_clauses == 1
+    assert len(response.results) == 1
+    assert "What this means:" in response.results[0].explanation
 
 
 # ---------------------------------------------------------------------------

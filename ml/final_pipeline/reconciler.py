@@ -66,7 +66,8 @@ class RiskReconciler:
             return exp, rec
 
         # If Groq was not queried or is unavailable, use standard user-friendly fallback
-        if groq_risk is None or "API Offline" in groq_risk.get("reasons", []):
+        groq_reasons = (groq_risk.get("reasons") or []) if groq_risk else []
+        if groq_risk is None or "API Offline" in groq_reasons:
             fallback_exp, fallback_rec = get_fallback_texts(local_level)
             return {
                 "final_risk_level": local_level,
