@@ -1,0 +1,13 @@
+{
+    "model_name": "nlpaueb/legal-bert-base-uncased",
+    "max_len": 256,
+    "batch_size": 16,
+    "learning_rate": 2e-05,
+    "epochs": 5,
+    "seed": 42,
+    "loss_weights": {
+        "clause_type": 1.0,
+        "risk_level": 1.0
+    },
+    "output_dir": "models/experiment3_model"
+}
