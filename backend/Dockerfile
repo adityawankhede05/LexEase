@@ -7,19 +7,16 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Install system build dependencies and uv
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/* \
-    && pip install --no-cache-dir uv
+# Install uv (psycopg2-binary bundles its own libpq — no extra system libs needed)
+RUN pip install --no-cache-dir uv
 
-# Copy configuration files
-COPY pyproject.toml ./
+# Copy lockfile and project manifest first for optimal layer caching
+COPY pyproject.toml uv.lock ./
 
-# Install project dependencies globally in the container using uv
+# Install all pinned dependencies from the lockfile (reproducible)
 RUN uv pip install --system --no-cache -r pyproject.toml
 
-# Copy application files
+# Copy application code
 COPY app/ ./app/
 
 # Expose port and start FastAPI
