@@ -139,36 +139,38 @@ function Home() {
   }, [verifyHealth])
 
   // Summarize Handler
-  const handleSummarize = useCallback(async (clauses) => {
+  const handleSummarize = useCallback(async (clauses, docId = null) => {
     if (!clauses || clauses.length === 0) return
     setIsSummarizing(true)
     setSummaryError(null)
 
     try {
-      const data = await summarizeDocument(clauses)
+      const targetDocId = docId || documentData?.document_id
+      const data = await summarizeDocument(clauses, targetDocId)
       setSummaryData(data)
     } catch (err) {
       setSummaryError(getErrorMessage(err))
     } finally {
       setIsSummarizing(false)
     }
-  }, [])
+  }, [documentData?.document_id])
 
   // Analyze Clauses Handler
-  const handleAnalyzeClauses = useCallback(async (clauses) => {
+  const handleAnalyzeClauses = useCallback(async (clauses, docId = null) => {
     if (!clauses || clauses.length === 0) return
     setIsAnalyzingClauses(true)
     setClauseAnalysisError(null)
 
     try {
-      const data = await analyzeClauses(clauses)
+      const targetDocId = docId || documentData?.document_id
+      const data = await analyzeClauses(clauses, targetDocId)
       setClauseAnalysisData(data)
     } catch (err) {
       setClauseAnalysisError(getErrorMessage(err))
     } finally {
       setIsAnalyzingClauses(false)
     }
-  }, [])
+  }, [documentData?.document_id])
 
   // Full Document Upload & Pipeline Trigger
   const handleFileUpload = async (file) => {
@@ -201,7 +203,7 @@ function Home() {
           setProcessingStage('preparing')
         }, 1500)
 
-        const sumPromise = summarizeDocument(uploadResp.clauses)
+        const sumPromise = summarizeDocument(uploadResp.clauses, uploadResp.document_id)
           .then((res) => {
             setSummaryData(res)
             setIsSummarizing(false)
@@ -214,7 +216,7 @@ function Home() {
             throw new Error(errMsg)
           })
 
-        const analyzePromise = analyzeClauses(uploadResp.clauses)
+        const analyzePromise = analyzeClauses(uploadResp.clauses, uploadResp.document_id)
           .then((res) => {
             setClauseAnalysisData(res)
             setIsAnalyzingClauses(false)

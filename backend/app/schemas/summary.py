@@ -5,7 +5,7 @@ class DocumentSummaryRequest(DocumentContext):
     """
     Request model for document summarization, inheriting clauses from DocumentContext.
     """
-    pass
+    document_id: str | None = None
 
 class DocumentSummaryResponse(BaseModel):
     """

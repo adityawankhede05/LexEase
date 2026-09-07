@@ -75,10 +75,12 @@ export async function uploadDocument(file) {
  *   document_type: string | null
  * }>}
  */
-export async function summarizeDocument(clauses) {
-  const response = await apiClient.post('/documents/summarize', {
-    clauses,
-  })
+export async function summarizeDocument(clauses, documentId = null) {
+  const payload = { clauses }
+  if (documentId) {
+    payload.document_id = documentId
+  }
+  const response = await apiClient.post('/documents/summarize', payload)
   return response.data
 }
 
@@ -86,6 +88,7 @@ export async function summarizeDocument(clauses) {
  * Performs legal risk analysis on all preprocessed clause segments in a single AI call.
  * POST /clauses/analyze
  * @param {Array<{ clause_id: string, clause_number: string | null, text: string }>} clauses
+ * @param {string | null} documentId
  * @returns {Promise<{
  *   total_clauses: number,
  *   results: Array<{
@@ -98,10 +101,12 @@ export async function summarizeDocument(clauses) {
  *   }>
  * }>}
  */
-export async function analyzeClauses(clauses) {
-  const response = await apiClient.post('/clauses/analyze', {
-    clauses,
-  })
+export async function analyzeClauses(clauses, documentId = null) {
+  const payload = { clauses }
+  if (documentId) {
+    payload.document_id = documentId
+  }
+  const response = await apiClient.post('/clauses/analyze', payload)
   return response.data
 }
 

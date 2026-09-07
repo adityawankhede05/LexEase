@@ -32,9 +32,10 @@ function Analysis() {
 
     try {
       // Execute both summary and clause risk analysis in parallel
+      const docId = passedState?.document_id
       const [summaryRes, analysisRes] = await Promise.all([
-        summarizeDocument(clauses),
-        analyzeClauses(clauses),
+        summarizeDocument(clauses, docId),
+        analyzeClauses(clauses, docId),
       ])
 
       setSummaryData(summaryRes)

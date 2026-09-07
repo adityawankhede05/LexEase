@@ -18,7 +18,9 @@ async def analyze_clauses(request: ClauseAnalysisRequest):
     """
     analysis_service = ClauseAnalysisService()
     try:
-        return await analysis_service.analyze_clauses(request.clauses)
+        return await analysis_service.analyze_clauses(
+            request.clauses, document_id=request.document_id
+        )
     except EmptyClauseListError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

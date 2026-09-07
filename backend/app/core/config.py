@@ -35,7 +35,7 @@ class Settings(BaseModel):
     
     # General AI Configuration
     MAX_RETRIES: int = int(os.getenv("MAX_RETRIES", "3"))
-    DATABASE_URL: str | None = os.getenv("DATABASE_URL")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./lexease.db")
     PORT: int = int(os.getenv("PORT", "8000"))
 
     # Cerebras AI Provider Configuration

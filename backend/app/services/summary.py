@@ -116,7 +116,41 @@ class DocumentSummaryService:
 
         return "\n\n".join(parts)
 
-    async def summarize_document(self, clauses: list[ClauseSegment]) -> DocumentSummaryResponse:
+    def _persist_summary(self, document_id: str, summary_res: DocumentSummaryResponse) -> None:
+        """Persists or updates the generated summary for a document in the database."""
+        from app.database.models import Document, Summary
+        from app.database.session import SessionLocal
+
+        with SessionLocal() as session:
+            doc = session.query(Document).filter(Document.id == document_id).first()
+            if not doc:
+                doc = Document(
+                    id=document_id,
+                    filename="uploaded_document.pdf",
+                    page_count=1,
+                    character_count=len(summary_res.summary),
+                )
+                session.add(doc)
+                session.flush()
+
+            existing = session.query(Summary).filter(Summary.document_id == document_id).first()
+            if existing:
+                existing.summary_text = summary_res.summary
+                existing.key_points = summary_res.key_points
+                existing.document_type = summary_res.document_type
+            else:
+                s = Summary(
+                    document_id=document_id,
+                    summary_text=summary_res.summary,
+                    document_type=summary_res.document_type,
+                )
+                s.key_points = summary_res.key_points
+                session.add(s)
+            session.commit()
+
+    async def summarize_document(
+        self, clauses: list[ClauseSegment], document_id: str | None = None
+    ) -> DocumentSummaryResponse:
         """
         Summarizes a legal document represented as a list of ClauseSegment objects.
         Uses single-pass summarization for small documents, and map-reduce chunked
@@ -124,6 +158,7 @@ class DocumentSummaryService:
         
         Args:
             clauses: List of ClauseSegment objects to summarize.
+            document_id: Optional document ID for database persistence.
             
         Returns:
             DocumentSummaryResponse containing summary, key_points, and document_type.
@@ -142,11 +177,17 @@ class DocumentSummaryService:
         try:
             # Case 1: Small document - fits into a single chunk (no pacing delay needed)
             if len(chunks) == 1:
-                return await self.ai_service.generate(
+                single_summary = await self.ai_service.generate(
                     task_type=AITask.DOCUMENT_SUMMARY,
                     payload={"document_text": chunks[0]},
                     response_schema=DocumentSummaryResponse,
                 )
+                if document_id:
+                    try:
+                        self._persist_summary(document_id, single_summary)
+                    except Exception as e:
+                        logger.error(f"Failed to persist summary for document {document_id}: {e}", exc_info=True)
+                return single_summary
 
             # Case 2: Large document - Map-Reduce chunked summarization
             logger.info(
@@ -192,6 +233,12 @@ class DocumentSummaryService:
                     if s.document_type and s.document_type != "Legal Document":
                         final_summary.document_type = s.document_type
                         break
+
+            if document_id:
+                try:
+                    self._persist_summary(document_id, final_summary)
+                except Exception as e:
+                    logger.error(f"Failed to persist summary for document {document_id}: {e}", exc_info=True)
 
             return final_summary
 

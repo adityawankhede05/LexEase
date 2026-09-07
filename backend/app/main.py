@@ -1,16 +1,25 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.api.routers import health, documents, summary, clause_analysis, qa
+from app.database.migrations.init_db import init_db
 
 # Setup logging
 setup_logging()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize database tables on startup
+    init_db()
+    yield
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description=settings.DESCRIPTION,
     version=settings.VERSION,
+    lifespan=lifespan,
 )
 
 # Set up CORS origins

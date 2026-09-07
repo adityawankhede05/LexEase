@@ -46,7 +46,7 @@ class ClauseAnalysisRequest(DocumentContext):
     Inherits `clauses: list[ClauseSegment]` from DocumentContext,
     following the same pattern as DocumentSummaryRequest.
     """
-    pass
+    document_id: str | None = None
 
 
 class ClauseAnalysisResponse(BaseModel):

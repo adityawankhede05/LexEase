@@ -149,8 +149,55 @@ class ClauseAnalysisService:
 
         return chunks
 
+    def _persist_results(
+        self, document_id: str, results: Sequence[ClauseRiskResult]
+    ) -> None:
+        """Persists or replaces the clause risk results for a document in the database."""
+        from app.database.models import ClauseRiskResult as DBClauseRiskResult, Document
+        from app.database.session import SessionLocal
+
+        with SessionLocal() as session:
+            doc = session.query(Document).filter(Document.id == document_id).first()
+            if not doc:
+                doc = Document(
+                    id=document_id,
+                    filename="uploaded_document.pdf",
+                    page_count=1,
+                    character_count=sum(len(r.explanation) for r in results),
+                )
+                session.add(doc)
+                session.flush()
+
+            # Remove previous risk results for this document if re-analyzing
+            session.query(DBClauseRiskResult).filter(
+                DBClauseRiskResult.document_id == document_id
+            ).delete()
+
+            for res in results:
+                db_res = DBClauseRiskResult(
+                    document_id=document_id,
+                    clause_id=res.clause_id,
+                    clause_number=res.clause_number,
+                    risk_level=(
+                        res.risk_level.value
+                        if hasattr(res.risk_level, "value")
+                        else str(res.risk_level)
+                    ),
+                    explanation=res.explanation,
+                    recommendation=res.recommendation,
+                    confidence=res.confidence,
+                    risk_score=res.risk_score,
+                    risk_label=res.risk_label,
+                    recommended_action=res.recommended_action,
+                )
+                db_res.reasons = res.reasons
+                db_res.issues = res.issues
+                session.add(db_res)
+
+            session.commit()
+
     async def analyze_clauses(
-        self, clauses: list[ClauseSegment]
+        self, clauses: list[ClauseSegment], document_id: str | None = None
     ) -> ClauseAnalysisResponse:
         """
         Analyzes a list of clause segments using the hybrid local ML + Groq pipeline.
@@ -281,6 +328,15 @@ class ClauseAnalysisService:
                 recommended_action=reconciled["recommendation"],
             )
             final_results.append(result)
+
+        if document_id:
+            try:
+                self._persist_results(document_id, final_results)
+            except Exception as e:
+                logger.error(
+                    f"Failed to persist risk results for document {document_id}: {e}",
+                    exc_info=True,
+                )
 
         return ClauseAnalysisResponse(
             total_clauses=len(final_results),

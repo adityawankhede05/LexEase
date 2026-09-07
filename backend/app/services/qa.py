@@ -50,6 +50,42 @@ class DocumentQAService:
             else ClauseRetrievalService(top_n=5)
         )
 
+    def _persist_interaction(
+        self, document_id: str, question: str, response: DocumentQAResponse
+    ) -> None:
+        """Persists a completed Q&A interaction in the database."""
+        from app.database.models import Document, QAInteraction
+        from app.database.session import SessionLocal
+
+        try:
+            with SessionLocal() as session:
+                doc = session.query(Document).filter(Document.id == document_id).first()
+                if not doc:
+                    doc = Document(
+                        id=document_id,
+                        filename="uploaded_document.pdf",
+                        page_count=1,
+                        character_count=len(question),
+                    )
+                    session.add(doc)
+                    session.flush()
+
+                interaction = QAInteraction(
+                    document_id=document_id,
+                    question=question,
+                    answer=response.answer,
+                    confidence=response.confidence,
+                    cannot_answer=response.cannot_answer,
+                )
+                interaction.source_clauses = response.source_clauses
+                session.add(interaction)
+                session.commit()
+        except Exception as e:
+            logger.error(
+                f"Failed to persist Q&A interaction for document {document_id}: {e}",
+                exc_info=True,
+            )
+
     async def answer_question(
         self, document_id: str, question: str
     ) -> DocumentQAResponse:
@@ -76,12 +112,14 @@ class DocumentQAService:
         relevant_clauses = self.retrieval_service.retrieve(question, clauses)
 
         if not relevant_clauses:
-            return DocumentQAResponse(
+            no_info_response = DocumentQAResponse(
                 answer="The provided document does not contain relevant information to answer this question.",
                 source_clauses=[],
                 confidence=0.0,
                 cannot_answer=True,
             )
+            self._persist_interaction(document_id, question, no_info_response)
+            return no_info_response
 
         clauses_context = self._format_clauses(relevant_clauses)
         payload = {"question": question, "clauses_context": clauses_context}
@@ -92,6 +130,7 @@ class DocumentQAService:
                 payload=payload,
                 response_schema=DocumentQAResponse,
             )
+            self._persist_interaction(document_id, question, response)
             return response
         except (AIProviderError, AIResponseValidationError, ValueError) as e:
             logger.error(f"Failed to generate document Q&A response: {e}")
