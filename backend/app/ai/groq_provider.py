@@ -38,58 +38,81 @@ def _parse_duration_string(duration_str: str) -> float | None:
             return None
 
 
+MAX_RETRY_DELAY = 30.0
+
+
 def parse_retry_after(response: httpx.Response) -> float | None:
     """
     Extracts retry delay in seconds from HTTP headers or Groq rate limit error response body.
+    Prioritizes token-reset duration for TPM exhaustion and enforces a conservative upper bound of 30.0s.
     Supports:
-    - 'Retry-After' header (seconds)
-    - 'x-ratelimit-reset-tokens' / 'x-ratelimit-reset-requests' header
+    - 'Retry-After' header (seconds, clamped to <= 30s)
+    - 'x-ratelimit-reset-tokens' header (preferred for TPM rate limits)
     - Error message regex: 'Please try again in Xs'
+    - 'x-ratelimit-reset-requests' header (fallback only)
     """
+    delay: float | None = None
+
     # 1. Check 'Retry-After' header
     retry_after_hdr = response.headers.get("retry-after")
     if retry_after_hdr:
         try:
             val = float(retry_after_hdr)
             if val >= 0:
-                return val
+                delay = val
         except ValueError:
             pass
 
-    # 2. Check ratelimit headers
-    for hdr_name in ("x-ratelimit-reset-tokens", "x-ratelimit-reset-requests"):
-        val_str = response.headers.get(hdr_name)
+    # 2. Prefer 'x-ratelimit-reset-tokens' for TPM rate limits
+    if delay is None:
+        val_str = response.headers.get("x-ratelimit-reset-tokens")
         if val_str:
             parsed = _parse_duration_string(val_str)
             if parsed is not None and parsed >= 0:
-                return parsed
+                delay = parsed
 
-    # 3. Check error message in response body
-    try:
-        data = response.json()
-        error_msg = data.get("error", {}).get("message", "")
-    except Exception:
-        error_msg = response.text or ""
+    # 3. Check error message in response body (e.g. 'try again in 17.45s')
+    if delay is None:
+        try:
+            data = response.json()
+            error_msg = data.get("error", {}).get("message", "")
+        except Exception:
+            error_msg = response.text or ""
 
-    if error_msg:
-        # Match e.g. "Please try again in 17.45s", "try again in 17s", "try again in 500ms"
-        match = re.search(
-            r"try again in (\d+(?:\.\d+)?)\s*(ms|s|m|seconds?|minutes?)?",
-            error_msg,
-            re.IGNORECASE,
-        )
-        if match:
-            try:
-                num = float(match.group(1))
-                unit = (match.group(2) or "s").lower()
-                if unit.startswith("ms"):
-                    return num / 1000.0
-                elif unit.startswith("m") and not unit.startswith("ms"):
-                    return num * 60.0
-                else:
-                    return num
-            except ValueError:
-                pass
+        if error_msg:
+            match = re.search(
+                r"try again in (\d+(?:\.\d+)?)\s*(ms|s|m|seconds?|minutes?)?",
+                error_msg,
+                re.IGNORECASE,
+            )
+            if match:
+                try:
+                    num = float(match.group(1))
+                    unit = (match.group(2) or "s").lower()
+                    if unit.startswith("ms"):
+                        delay = num / 1000.0
+                    elif unit.startswith("m") and not unit.startswith("ms"):
+                        delay = num * 60.0
+                    else:
+                        delay = num
+                except ValueError:
+                    pass
+
+    # 4. Fallback to 'x-ratelimit-reset-requests' if still None
+    if delay is None:
+        val_str = response.headers.get("x-ratelimit-reset-requests")
+        if val_str:
+            parsed = _parse_duration_string(val_str)
+            if parsed is not None and parsed >= 0:
+                delay = parsed
+
+    if delay is not None:
+        clamped = min(max(0.0, delay), MAX_RETRY_DELAY)
+        if delay > MAX_RETRY_DELAY:
+            logger.warning(
+                f"Groq retry delay {delay:.2f}s exceeded maximum cap of {MAX_RETRY_DELAY:.2f}s; clamped to {clamped:.2f}s."
+            )
+        return clamped
 
     return None
 

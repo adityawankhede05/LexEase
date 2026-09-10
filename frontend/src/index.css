@@ -2,13 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@property --accent-position {
-  syntax: '<percentage>';
-  inherits: false;
-  initial-value: 80%;
-}
-
-/* Base legal workspace background & typography */
+/* Base light legal-tech workspace background & typography */
 :root {
   --mouse-offset-x: 0px;
   --mouse-offset-y: 0px;
@@ -20,143 +14,293 @@ body,
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background-color: #060A0E;
-  color: #F5F6F8;
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #F8FAF8;
+  color: #16221C;
+  font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Clean Dark Navy Legal Workspace Background */
+/* Light Warm-Neutral Legal Workspace Background */
 .legal-workspace-bg {
-  background-color: #060A0E;
+  background-color: #F8FAF8;
   background-image:
-    /* Top subtle ambient depth */
-    radial-gradient(1100px circle at 50% -10%, rgba(110, 145, 181, 0.06), transparent 70%);
+    radial-gradient(1200px circle at 50% -10%, rgba(23, 107, 77, 0.05), transparent 70%);
   background-size: 100% 100%;
 }
 
-/* LexEase Wordmark Metallic Silver Sheen Animation */
-@keyframes silverSheen {
-  0% {
-    background-position: 180% center;
-  }
-  23% {
-    background-position: -40% center;
-  }
-  100% {
-    background-position: -40% center;
-  }
-}
-
+/* LexEase Deep Forest Spruce Wordmark */
 .lexease-wordmark {
-  background: linear-gradient(
-    115deg,
-    #F5F6F8 0%,
-    #F5F6F8 35%,
-    #8EABC8 50%,
-    #F5F6F8 65%,
-    #F5F6F8 100%
-  );
-  background-size: 260% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: #F5F6F8;
-  animation: silverSheen 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  color: #12372A;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   display: inline-block;
 }
 
-/* Hero Glow Text with cursor reactive properties */
-.hero-glow-text {
-  --accent-position: 80%;
-  background: #F5F6F8; /* fallback */
-  background: linear-gradient(
-    90deg,
-    #F5F6F8 0%,
-    #F5F6F8 calc(var(--accent-position) - 25%),
-    #8EABC8 var(--accent-position),
-    #F5F6F8 calc(var(--accent-position) + 25%),
-    #F5F6F8 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  display: inline-block;
-  transition: --accent-position 600ms cubic-bezier(0.16, 1, 0.3, 1);
-}
+/* ==========================================================================
+   Hero Staged Entrance Animation (Natural Revealed Sequence)
+   Total duration completes in ~1.5 - 1.7 seconds
+   ========================================================================== */
 
-.hero-glow-text.active {
-  /* Eased horizontal following effect */
-  transition: --accent-position 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-/* Staged Entrance Animations for Legal Workspace Landing */
-@keyframes legalUnfold {
-  0% {
+/* Step 1: Navbar (fades in smoothly, ~450ms, ~10px upward, opacity 0 -> 1) */
+@keyframes entranceNavbar {
+  from {
     opacity: 0;
-    transform: translateY(14px) scale(0.99);
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-entrance-navbar {
+  opacity: 0;
+  animation: entranceNavbar 450ms cubic-bezier(0.16, 1, 0.3, 1) 0ms forwards;
+}
+
+/* Step 2: Hero Badge (delay ~120ms, duration ~450ms, ~12px upward, opacity 0 -> 1) */
+@keyframes entranceBadge {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-entrance-badge {
+  opacity: 0;
+  animation: entranceBadge 450ms cubic-bezier(0.16, 1, 0.3, 1) 120ms forwards;
+}
+
+/* Step 3: Main Headline "Make every contract" (duration ~650ms, ~18px upward, opacity 0 -> 1) */
+@keyframes entranceHeadline {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-entrance-headline {
+  opacity: 0;
+  animation: entranceHeadline 650ms cubic-bezier(0.16, 1, 0.3, 1) 200ms forwards;
+}
+
+/* Step 4: Serif Headline "easier to understand." (delay ~100ms after main heading, duration ~650ms, ~16px upward, opacity 0 -> 1) */
+@keyframes entranceSerif {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-entrance-serif {
+  opacity: 0;
+  animation: entranceSerif 650ms cubic-bezier(0.16, 1, 0.3, 1) 300ms forwards;
+}
+
+/* Step 5: Description (delay ~100ms, duration ~500ms, ~12px upward, opacity 0 -> 1) */
+@keyframes entranceDesc {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-entrance-desc {
+  opacity: 0;
+  animation: entranceDesc 500ms cubic-bezier(0.16, 1, 0.3, 1) 400ms forwards;
+}
+
+/* Step 6: CTA "Analyze a Contract" (delay ~100ms, duration ~450ms, ~10px upward, opacity 0 -> 1) */
+@keyframes entranceCta {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-entrance-cta {
+  opacity: 0;
+  animation: entranceCta 450ms cubic-bezier(0.16, 1, 0.3, 1) 500ms forwards;
+}
+
+/* Step 7: Dropzone "or drag & drop your PDF here" (duration ~400ms, ~8px upward, opacity 0 -> 1) */
+@keyframes entranceDropzone {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-entrance-dropzone {
+  opacity: 0;
+  animation: entranceDropzone 400ms cubic-bezier(0.16, 1, 0.3, 1) 600ms forwards;
+}
+
+/* Step 8: Trust Metadata (duration ~400ms, ~6px upward, opacity 0 -> 1) */
+@keyframes entranceTrust {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-entrance-trust {
+  opacity: 0;
+  animation: entranceTrust 400ms cubic-bezier(0.16, 1, 0.3, 1) 700ms forwards;
+}
+
+/* ==========================================================================
+   Right Document Preview Staged Reveal
+   ========================================================================== */
+
+/* 1. Document Card Container */
+@keyframes docCardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-doc-card {
+  opacity: 0;
+  animation: docCardEntrance 600ms cubic-bezier(0.16, 1, 0.3, 1) 250ms forwards;
+}
+
+/* 2. Document Header */
+@keyframes docHeaderEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-doc-header {
+  opacity: 0;
+  animation: docHeaderEntrance 450ms cubic-bezier(0.16, 1, 0.3, 1) 450ms forwards;
+}
+
+/* 3. Clause Preview */
+@keyframes docClauseEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-doc-clause {
+  opacity: 0;
+  animation: docClauseEntrance 500ms cubic-bezier(0.16, 1, 0.3, 1) 650ms forwards;
+}
+
+/* 4. Risk Analysis Panel */
+@keyframes docPanelEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-doc-panel {
+  opacity: 0;
+  animation: docPanelEntrance 500ms cubic-bezier(0.16, 1, 0.3, 1) 850ms forwards;
+}
+
+/* 5. Floating Badges Settle In */
+@keyframes badgeSettleIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-badge-settle-1 {
+  opacity: 0;
+  animation: badgeSettleIn 450ms cubic-bezier(0.16, 1, 0.3, 1) 1050ms forwards, gentleFloat 4.2s ease-in-out 1500ms infinite;
+}
+.animate-badge-settle-2 {
+  opacity: 0;
+  animation: badgeSettleIn 450ms cubic-bezier(0.16, 1, 0.3, 1) 1150ms forwards, gentleFloat 4.8s ease-in-out 1600ms infinite;
+}
+.animate-badge-settle-3 {
+  opacity: 0;
+  animation: badgeSettleIn 450ms cubic-bezier(0.16, 1, 0.3, 1) 1250ms forwards, gentleFloat 5.2s ease-in-out 1700ms infinite;
+}
+
+/* Gentle Floating animation for document preview badges */
+@keyframes gentleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-float-1 {
+  animation: gentleFloat 4.2s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: gentleFloat 4.8s ease-in-out 1.2s infinite;
+}
+
+.animate-float-3 {
+  animation: gentleFloat 5.2s ease-in-out 2.2s infinite;
+}
+
+/* Subtle micro-transition when risk threshold is crossed */
+@keyframes riskPop {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.05);
   }
   100% {
+    transform: scale(1);
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
-@keyframes workflowLineDraw {
-  0% {
-    opacity: 0;
-    transform: scaleX(0);
-  }
-  100% {
-    opacity: 1;
-    transform: scaleX(1);
-  }
-}
-
-.animate-entrance-header {
-  animation: legalUnfold 600ms cubic-bezier(0.16, 1, 0.3, 1) 0ms forwards;
-}
-
-.animate-entrance-hero-title {
-  animation: legalUnfold 650ms cubic-bezier(0.16, 1, 0.3, 1) 350ms forwards;
-  opacity: 0;
-}
-
-.animate-entrance-hero-sub {
-  animation: legalUnfold 650ms cubic-bezier(0.16, 1, 0.3, 1) 700ms forwards;
-  opacity: 0;
-}
-
-.animate-entrance-intake {
-  animation: legalUnfold 650ms cubic-bezier(0.16, 1, 0.3, 1) 1050ms forwards;
-  opacity: 0;
-}
-
-.animate-entrance-workflow-line {
-  animation: workflowLineDraw 600ms cubic-bezier(0.16, 1, 0.3, 1) 1450ms forwards;
-  transform-origin: left center;
-  opacity: 0;
-}
-
-.animate-entrance-step-1 {
-  animation: legalUnfold 600ms cubic-bezier(0.16, 1, 0.3, 1) 1650ms forwards;
-  opacity: 0;
-}
-
-.animate-entrance-step-2 {
-  animation: legalUnfold 600ms cubic-bezier(0.16, 1, 0.3, 1) 1800ms forwards;
-  opacity: 0;
-}
-
-.animate-entrance-step-3 {
-  animation: legalUnfold 600ms cubic-bezier(0.16, 1, 0.3, 1) 1950ms forwards;
-  opacity: 0;
-}
-
-.animate-entrance-disclaimer {
-  animation: legalUnfold 600ms cubic-bezier(0.16, 1, 0.3, 1) 2150ms forwards;
-  opacity: 0;
+.animate-risk-pop {
+  animation: riskPop 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Progress Bar Animation for Document Intake stages */
@@ -190,20 +334,6 @@ body,
 
 /* Reduced motion accessibility */
 @media (prefers-reduced-motion: reduce) {
-  .lexease-wordmark {
-    animation: none !important;
-    background: none !important;
-    -webkit-text-fill-color: #F0F1F2 !important;
-    color: #F0F1F2 !important;
-  }
-
-  .hero-glow-text {
-    animation: none !important;
-    background: none !important;
-    -webkit-text-fill-color: #8EABC8 !important;
-    color: #8EABC8 !important;
-  }
-
   .reveal-card {
     animation: none !important;
     opacity: 1 !important;
@@ -219,28 +349,34 @@ body,
     animation: none !important;
   }
 
-  .legal-workspace-bg {
-    background-image:
-      radial-gradient(1100px circle at 50% -10%, rgba(110, 145, 181, 0.06), transparent 70%) !important;
-    background-position: center center !important;
-  }
-
-  .animate-entrance-header,
-  .animate-entrance-hero-title,
-  .animate-entrance-hero-sub,
-  .animate-entrance-intake,
-  .animate-entrance-workflow-line,
+  .animate-entrance-navbar,
+  .animate-entrance-badge,
+  .animate-entrance-headline,
+  .animate-entrance-serif,
+  .animate-entrance-desc,
+  .animate-entrance-cta,
+  .animate-entrance-dropzone,
+  .animate-entrance-trust,
+  .animate-doc-card,
+  .animate-doc-header,
+  .animate-doc-clause,
+  .animate-doc-panel,
+  .animate-badge-settle-1,
+  .animate-badge-settle-2,
+  .animate-badge-settle-3,
+  .animate-float-1,
+  .animate-float-2,
+  .animate-float-3,
   .animate-entrance-step-1,
   .animate-entrance-step-2,
-  .animate-entrance-step-3,
-  .animate-entrance-disclaimer {
+  .animate-entrance-step-3 {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
   }
 }
 
-/* Custom scrollbar styling specifically for Grounded Document Q&A conversation panel */
+/* Light mode custom scrollbar styling for Grounded Document Q&A conversation panel */
 .qa-thread-container::-webkit-scrollbar {
   width: 6px;
 }
@@ -250,7 +386,7 @@ body,
 }
 
 .qa-thread-container::-webkit-scrollbar-thumb {
-  background-color: rgba(52, 70, 90, 0.4);
+  background-color: rgba(23, 107, 77, 0.18);
   border-radius: 999px;
   border: 1px solid transparent;
   background-clip: padding-box;
@@ -258,15 +394,15 @@ body,
 }
 
 .qa-thread-container.scrolling::-webkit-scrollbar-thumb {
-  background-color: rgba(52, 70, 90, 0.85);
+  background-color: rgba(23, 107, 77, 0.35);
 }
 
 .qa-thread-container::-webkit-scrollbar-thumb:hover {
-  background-color: #6E91B5 !important;
+  background-color: #176B4D !important;
 }
 
 /* Firefox scrollbar styling */
 .qa-thread-container {
   scrollbar-width: thin;
-  scrollbar-color: rgba(52, 70, 90, 0.5) transparent;
+  scrollbar-color: rgba(23, 107, 77, 0.25) transparent;
 }

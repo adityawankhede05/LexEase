@@ -1,5 +1,10 @@
 import os
 import sys
+
+# Enforce offline Hugging Face loading to prevent network checks
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["HF_HUB_OFFLINE"] = "1"
+
 import json
 import torch
 import torch.nn.functional as F

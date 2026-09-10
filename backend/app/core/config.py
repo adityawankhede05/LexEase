@@ -2,7 +2,7 @@ import os
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-# Load environment variables from .env
+# Load environment variables from backend/.env (CWD when uvicorn runs from backend/)
 load_dotenv()
 
 class Settings(BaseModel):

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   checkHealth,
   uploadDocument,
@@ -14,6 +15,8 @@ import DocumentQA from '../components/DocumentQA'
 import DocumentProcessor from '../components/DocumentProcessor'
 
 function Home() {
+  const location = useLocation()
+
   // Backend Health State
   const [healthStatus, setHealthStatus] = useState(null)
   const [checkingHealth, setCheckingHealth] = useState(false)
@@ -37,8 +40,6 @@ function Home() {
 
   // Active Navigation Tab
   const [activeTab, setActiveTab] = useState('summary') // 'summary' | 'risks' | 'qa'
-
-  const headingRef = useRef(null)
 
   // Lightweight Mouse Ambient Light Handler (Zero React re-renders, max 5-10px shift)
   useEffect(() => {
@@ -76,50 +77,6 @@ function Home() {
     }
   }, [])
 
-  // Subtle cursor-reactive effect on the hero heading
-  useEffect(() => {
-    const heading = headingRef.current
-    if (!heading) return
-
-    // Disable on touch/mobile and prefers-reduced-motion
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches
-    if (prefersReducedMotion || isTouchDevice) return
-
-    let rafId = null
-
-    const handleMouseMove = (e) => {
-      if (rafId) return
-      rafId = requestAnimationFrame(() => {
-        const rect = heading.getBoundingClientRect()
-        const x = e.clientX - rect.left
-        const pct = Math.max(0, Math.min(100, (x / rect.width) * 100))
-
-        heading.style.setProperty('--accent-position', `${pct}%`)
-        rafId = null
-      })
-    }
-
-    const handleMouseEnter = () => {
-      heading.classList.add('active')
-    }
-
-    const handleMouseLeave = () => {
-      heading.classList.remove('active')
-      heading.style.setProperty('--accent-position', '80%')
-    }
-
-    heading.addEventListener('mousemove', handleMouseMove, { passive: true })
-    heading.addEventListener('mouseenter', handleMouseEnter)
-    heading.addEventListener('mouseleave', handleMouseLeave)
-
-    return () => {
-      heading.removeEventListener('mousemove', handleMouseMove)
-      heading.removeEventListener('mouseenter', handleMouseEnter)
-      heading.removeEventListener('mouseleave', handleMouseLeave)
-      if (rafId) cancelAnimationFrame(rafId)
-    }
-  }, [])
 
   // Health Check Handler
   const verifyHealth = useCallback(async () => {
@@ -137,6 +94,17 @@ function Home() {
   useEffect(() => {
     verifyHealth()
   }, [verifyHealth])
+
+  // Automatically trigger native file picker if navigated with triggerUpload state
+  useEffect(() => {
+    if (location.state?.triggerUpload) {
+      window.history.replaceState({}, document.title)
+      setTimeout(() => {
+        const fileInput = document.querySelector('input[type="file"]')
+        if (fileInput) fileInput.click()
+      }, 150)
+    }
+  }, [location.state])
 
   // Summarize Handler
   const handleSummarize = useCallback(async (clauses, docId = null) => {
@@ -281,7 +249,7 @@ function Home() {
   }
 
   return (
-    <div className="min-h-screen legal-workspace-bg text-legal-text flex flex-col font-sans selection:bg-legal-accent/20">
+    <div className="min-h-screen bg-[#F8FAF8] text-[#16221C] flex flex-col font-sans selection:bg-[#176B4D]/15">
       {/* Top Navigation */}
       <Navbar
         healthStatus={healthStatus}
@@ -292,22 +260,10 @@ function Home() {
       />
 
       {/* Main Content */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-12 sm:pb-16">
         {!documentData ? (
           /* ================= Legal Workspace Landing State ================= */
-          <div className="relative flex flex-col items-center justify-center space-y-10 sm:space-y-12 text-center">
-
-            {/* Hero Section */}
-            <div className="space-y-3.5 max-w-2xl mx-auto">
-              <h1 ref={headingRef} className="hero-glow-text text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight animate-entrance-hero-title">
-                Understand before you sign.
-              </h1>
-              <p className="text-sm sm:text-base text-[#A4AEB9] max-w-xl mx-auto leading-relaxed animate-entrance-hero-sub">
-                Review complex agreements in plain language, identify potential risks, and ask questions grounded in your document.
-              </p>
-            </div>
-
-            {/* Document Intake & Connected Workflow */}
+          <div className="w-full">
             {processingStage === 'idle' ? (
               <FileUpload
                 onFileUpload={handleFileUpload}
@@ -315,40 +271,51 @@ function Home() {
                 uploadError={uploadError}
               />
             ) : (
-              <DocumentProcessor
-                file={selectedFile}
-                stage={processingStage}
-                error={uploadError}
-                onRetry={() => handleFileUpload(selectedFile)}
-                onCancel={handleResetDocument}
-              />
+              <div className="w-full py-4 sm:py-8 lg:py-10">
+                <DocumentProcessor
+                  file={selectedFile}
+                  stage={processingStage}
+                  error={uploadError}
+                  onRetry={() => handleFileUpload(selectedFile)}
+                  onCancel={handleResetDocument}
+                />
+              </div>
             )}
           </div>
         ) : (
           /* ================= Document Analysis Dashboard ================= */
           <div className="space-y-6">
             {/* Document Context Header Banner */}
-            <div className="p-5 rounded-xl bg-legal-surface border border-legal-border flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-lg bg-legal-secondary border border-legal-border text-legal-info flex items-center justify-center shrink-0">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.75">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+            <div className="p-5 sm:p-6 rounded-2xl bg-white border border-[#DCE6E0] shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+              <div className="flex items-start sm:items-center gap-4 min-w-0">
+                <div className="w-12 h-12 rounded-2xl bg-[#E8F1EC] border border-[#DCE6E0] text-[#176B4D] flex items-center justify-center text-xl shrink-0 shadow-2xs">
+                  📄
                 </div>
-                <div className="min-w-0">
-                  <h2 className="text-sm sm:text-base font-semibold text-legal-text truncate">
-                    {documentData.filename}
-                  </h2>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-legal-textSec font-mono mt-0.5">
-                    <span>{documentData.page_count} {documentData.page_count === 1 ? 'page' : 'pages'}</span>
-                    <span>•</span>
-                    <span>{documentData.clauses?.length || 0} clauses</span>
-                    <span>•</span>
-                    <span>{documentData.character_count?.toLocaleString()} chars</span>
+                <div className="min-w-0 space-y-1">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h2 className="text-base sm:text-lg font-bold text-[#16221C] truncate tracking-tight">
+                      {documentData.filename}
+                    </h2>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase bg-[#E8F1EC] text-[#176B4D] border border-[#DCE6E0]">
+                      Verified Context
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#66736C]">
+                    <span className="font-medium text-[#16221C]">
+                      {documentData.page_count} {documentData.page_count === 1 ? 'page' : 'pages'}
+                    </span>
+                    <span className="text-[#DCE6E0]">&bull;</span>
+                    <span className="font-medium text-[#16221C]">
+                      {documentData.clauses?.length || 0} clauses detected
+                    </span>
+                    <span className="text-[#DCE6E0]">&bull;</span>
+                    <span>
+                      {documentData.character_count?.toLocaleString()} characters
+                    </span>
                     {documentData.document_id && (
                       <>
-                        <span>•</span>
-                        <span className="text-legal-textMuted">
+                        <span className="text-[#DCE6E0]">&bull;</span>
+                        <span className="text-[#8C9A92] font-mono text-[11px]">
                           ID: {documentData.document_id.substring(0, 8)}...
                         </span>
                       </>
@@ -357,70 +324,82 @@ function Home() {
                 </div>
               </div>
 
-              {/* Status Chips */}
-              <div className="flex items-center gap-2">
+              {/* Status & Actions */}
+              <div className="flex items-center gap-3 self-end md:self-center">
                 {isSummarizing || isAnalyzingClauses ? (
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-legal-secondary border border-legal-border text-legal-warning text-xs font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-legal-warning animate-pulse"></span>
+                  <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#FEF3E2] border border-[#F8DEC0] text-[#D18A24] text-xs font-bold">
+                    <span className="w-2 h-2 rounded-full bg-[#D18A24] animate-pulse"></span>
                     <span>Analyzing Document...</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-legal-secondary border border-legal-border text-legal-success text-xs font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-legal-success"></span>
-                    <span>Analysis Ready</span>
+                  <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#E8F1EC] border border-[#DCE6E0] text-[#176B4D] text-xs font-bold">
+                    <span className="w-2 h-2 rounded-full bg-[#3E8E63]"></span>
+                    <span>Analysis Complete</span>
                   </div>
                 )}
+
+                <button
+                  type="button"
+                  onClick={handleResetDocument}
+                  className="px-3.5 py-1.5 text-xs font-semibold rounded-xl text-[#66736C] hover:text-[#16221C] bg-[#F3F7F5] border border-[#DCE6E0] hover:border-[#176B4D]/40 transition-all focus:outline-none"
+                  title="Upload a different document"
+                >
+                  Change Document
+                </button>
               </div>
             </div>
 
-            {/* Dashboard Tabs */}
-            <div className="border-b border-legal-border">
-              <nav className="flex space-x-2">
+            {/* Dashboard Segmented Tabs */}
+            <div className="border-b border-[#DCE6E0]">
+              <nav className="flex space-x-2 sm:space-x-3 overflow-x-auto pb-px">
                 <button
                   type="button"
                   onClick={() => setActiveTab('summary')}
-                  className={`py-2 px-3.5 text-xs sm:text-sm font-medium rounded-t-xl transition-all border-b-2 flex items-center gap-2 ${
+                  className={`py-2.5 px-4 text-xs sm:text-sm font-bold rounded-t-xl transition-all border-b-2 flex items-center gap-2.5 cursor-pointer whitespace-nowrap ${
                     activeTab === 'summary'
-                      ? 'border-legal-info text-legal-text bg-legal-surface'
-                      : 'border-transparent text-legal-textSec hover:text-legal-text hover:bg-legal-surface/50'
+                      ? 'border-[#176B4D] text-[#12372A] bg-white shadow-2xs'
+                      : 'border-transparent text-[#66736C] hover:text-[#16221C] hover:bg-[#F3F7F5]'
                   }`}
                 >
+                  <span>📋</span>
                   <span>Document Summary</span>
                   {isSummarizing && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-legal-info animate-pulse"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#176B4D] animate-pulse"></span>
                   )}
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setActiveTab('risks')}
-                  className={`py-2 px-3.5 text-xs sm:text-sm font-medium rounded-t-xl transition-all border-b-2 flex items-center gap-2 ${
+                  className={`py-2.5 px-4 text-xs sm:text-sm font-bold rounded-t-xl transition-all border-b-2 flex items-center gap-2.5 cursor-pointer whitespace-nowrap ${
                     activeTab === 'risks'
-                      ? 'border-legal-info text-legal-text bg-legal-surface'
-                      : 'border-transparent text-legal-textSec hover:text-legal-text hover:bg-legal-surface/50'
+                      ? 'border-[#176B4D] text-[#12372A] bg-white shadow-2xs'
+                      : 'border-transparent text-[#66736C] hover:text-[#16221C] hover:bg-[#F3F7F5]'
                   }`}
                 >
+                  <span>⚖️</span>
                   <span>Clause Risk Analysis</span>
                   {clauseAnalysisData?.results?.length > 0 && (
-                    <span className="px-1.5 py-0.2 rounded-md bg-legal-secondary text-[10px] text-legal-textSec font-mono border border-legal-border">
+                    <span className="px-2 py-0.5 rounded-md bg-[#E8F1EC] text-[11px] text-[#176B4D] font-mono font-bold border border-[#DCE6E0]">
                       {clauseAnalysisData.results.length}
                     </span>
                   )}
                   {isAnalyzingClauses && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-legal-warning animate-pulse"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#D18A24] animate-pulse"></span>
                   )}
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setActiveTab('qa')}
-                  className={`py-2 px-3.5 text-xs sm:text-sm font-medium rounded-t-xl transition-all border-b-2 flex items-center gap-2 ${
+                  className={`py-2.5 px-4 text-xs sm:text-sm font-bold rounded-t-xl transition-all border-b-2 flex items-center gap-2.5 cursor-pointer whitespace-nowrap ${
                     activeTab === 'qa'
-                      ? 'border-legal-info text-legal-text bg-legal-surface'
-                      : 'border-transparent text-legal-textSec hover:text-legal-text hover:bg-legal-surface/50'
+                      ? 'border-[#176B4D] text-[#12372A] bg-white shadow-2xs'
+                      : 'border-transparent text-[#66736C] hover:text-[#16221C] hover:bg-[#F3F7F5]'
                   }`}
                 >
-                  <span>Ask Document (Q&A)</span>
+                  <span>💬</span>
+                  <span>Ask Document (Q&amp;A)</span>
                 </button>
               </nav>
             </div>
@@ -459,8 +438,8 @@ function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-legal-border py-6 text-center text-xs text-legal-textMuted">
-        <p>LexEase &bull; Legal Document Simplification &bull; Sprint 8 AI Architecture</p>
+      <footer className="border-t border-[#DCE6E0] py-6 text-center text-xs text-[#8C9A92] bg-white/50">
+        <p>LexEase &bull; AI-Powered Legal Document Simplification &amp; Risk Intelligence</p>
       </footer>
     </div>
   )

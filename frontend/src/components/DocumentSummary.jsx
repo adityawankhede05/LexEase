@@ -3,21 +3,21 @@ import React from 'react'
 function DocumentSummary({ summaryData, isLoading, error, onRetry }) {
   if (isLoading) {
     return (
-      <div className="p-6 rounded-2xl bg-legal-surface/50 border border-legal-border space-y-6 animate-pulse">
+      <div className="p-6 sm:p-8 rounded-2xl bg-white border border-[#DCE6E0] space-y-6 animate-pulse shadow-sm">
         <div className="flex items-center justify-between">
-          <div className="h-6 w-36 bg-legal-elevated rounded-md"></div>
-          <div className="h-6 w-24 bg-legal-elevated rounded-full"></div>
+          <div className="h-6 w-44 bg-[#E8F1EC] rounded-md"></div>
+          <div className="h-6 w-28 bg-[#E8F1EC] rounded-full"></div>
         </div>
-        <div className="space-y-2.5">
-          <div className="h-4 bg-legal-elevated rounded w-full"></div>
-          <div className="h-4 bg-legal-elevated rounded w-5/6"></div>
-          <div className="h-4 bg-legal-elevated rounded w-4/6"></div>
+        <div className="space-y-3">
+          <div className="h-4 bg-[#F3F7F5] rounded w-full"></div>
+          <div className="h-4 bg-[#F3F7F5] rounded w-11/12"></div>
+          <div className="h-4 bg-[#F3F7F5] rounded w-4/5"></div>
         </div>
-        <div className="space-y-3 pt-4 border-t border-legal-border/80">
-          <div className="h-5 w-32 bg-legal-elevated rounded"></div>
-          <div className="h-4 bg-legal-elevated rounded w-11/12"></div>
-          <div className="h-4 bg-legal-elevated rounded w-4/5"></div>
-          <div className="h-4 bg-legal-elevated rounded w-3/4"></div>
+        <div className="space-y-3 pt-4 border-t border-[#DCE6E0]">
+          <div className="h-5 w-36 bg-[#E8F1EC] rounded"></div>
+          <div className="h-4 bg-[#F3F7F5] rounded w-full"></div>
+          <div className="h-4 bg-[#F3F7F5] rounded w-5/6"></div>
+          <div className="h-4 bg-[#F3F7F5] rounded w-3/4"></div>
         </div>
       </div>
     )
@@ -25,20 +25,20 @@ function DocumentSummary({ summaryData, isLoading, error, onRetry }) {
 
   if (error) {
     return (
-      <div className="p-6 rounded-2xl bg-legal-surface/50 border border-legal-danger/30 space-y-4 text-center">
-        <div className="w-12 h-12 rounded-full bg-legal-danger/10 border border-legal-danger/20 text-legal-danger flex items-center justify-center mx-auto text-xl">
+      <div className="p-6 sm:p-8 rounded-2xl bg-white border border-[#F5C2C2] space-y-4 text-center shadow-sm">
+        <div className="w-12 h-12 rounded-full bg-[#FFF2F2] border border-[#F5C2C2] text-[#C94A4A] flex items-center justify-center mx-auto text-xl">
           ⚠️
         </div>
         <div className="space-y-1">
-          <h3 className="text-base font-semibold text-legal-danger">
+          <h3 className="text-base font-bold text-[#C94A4A]">
             Summarization Failed
           </h3>
-          <p className="text-xs text-legal-textSec max-w-md mx-auto">{error}</p>
+          <p className="text-xs text-[#66736C] max-w-md mx-auto">{error}</p>
         </div>
         {onRetry && (
           <button
             onClick={onRetry}
-            className="px-4 py-1.5 text-xs font-medium rounded-lg bg-legal-surface hover:bg-legal-secondary text-legal-text border border-legal-border transition-colors"
+            className="px-4 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-[#F3F7F5] text-[#16221C] border border-[#DCE6E0] transition-colors shadow-2xs"
           >
             Retry Summarization
           </button>
@@ -49,7 +49,7 @@ function DocumentSummary({ summaryData, isLoading, error, onRetry }) {
 
   if (!summaryData) {
     return (
-      <div className="p-8 rounded-2xl bg-legal-surface/40 border border-legal-border/80 text-center text-legal-textMuted">
+      <div className="p-8 rounded-2xl bg-white border border-[#DCE6E0] text-center text-[#8C9A92] shadow-sm">
         No summary generated yet.
       </div>
     )
@@ -60,57 +60,69 @@ function DocumentSummary({ summaryData, isLoading, error, onRetry }) {
   return (
     <div className="space-y-6">
       {/* Executive Summary Card */}
-      <div className="p-5 rounded-2xl bg-legal-surface border border-legal-border shadow-xl backdrop-blur-sm space-y-6">
+      <div className="p-6 sm:p-7 rounded-2xl bg-white border border-[#DCE6E0] shadow-sm space-y-6">
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-legal-border/80 pb-4">
-          <div className="flex items-center gap-2.5">
-            <span className="text-2xl">📋</span>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#DCE6E0] pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#E8F1EC] border border-[#DCE6E0] flex items-center justify-center text-lg text-[#176B4D] shadow-2xs">
+              📋
+            </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-legal-text">
+              <h2 className="text-base sm:text-lg font-bold text-[#16221C] tracking-tight">
                 Executive Document Summary
               </h2>
-              <p className="text-xs text-legal-textSec">
-                Plain-English distillation synthesized by AI
+              <p className="text-xs text-[#66736C]">
+                Synthesized high-level overview generated by AI
               </p>
             </div>
           </div>
 
           {document_type && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-legal-info/10 text-legal-info border border-legal-info/30 uppercase tracking-wider text-[10px]">
-              🏷️ {document_type}
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#E8F1EC] text-[#176B4D] border border-[#DCE6E0] tracking-wide">
+              <span>📄</span> {document_type}
             </span>
           )}
         </div>
 
         {/* Plain English Summary */}
         <div className="space-y-2">
-          <h3 className="text-xs font-semibold text-legal-textMuted uppercase tracking-wider">
-            Overview
+          <h3 className="text-[11px] font-bold text-[#176B4D] uppercase tracking-wider">
+            Agreement Overview
           </h3>
-          <p className="text-legal-textSec leading-relaxed text-sm whitespace-pre-line">
-            {summary}
-          </p>
+          <div className="p-5 rounded-xl bg-[#F4F8F5] border border-[#DCE6E0] border-l-4 border-l-[#176B4D]">
+            <p className="text-[#16221C] leading-relaxed text-sm sm:text-[15px] whitespace-pre-line font-sans font-normal">
+              {summary}
+            </p>
+          </div>
         </div>
 
         {/* Key Takeaways */}
         {key_points && key_points.length > 0 && (
-          <div className="space-y-3 pt-4 border-t border-legal-border/80">
-            <h3 className="text-xs font-semibold text-legal-textMuted uppercase tracking-wider flex items-center gap-1.5">
-              <span>📌</span> Key Points & Obligations
-            </h3>
-            <ul className="space-y-2.5">
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[11px] font-bold text-[#176B4D] uppercase tracking-wider flex items-center gap-1.5">
+                <span>📌</span> Key Highlights &amp; Contractual Obligations
+              </h3>
+              <span className="text-[11px] text-[#8C9A92] font-mono font-medium">
+                {key_points.length} {key_points.length === 1 ? 'point' : 'points'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2.5">
               {key_points.map((point, index) => (
-                <li
+                <div
                   key={index}
-                  className="flex items-start gap-3 p-4 rounded-xl bg-legal-secondary border border-legal-border text-sm text-legal-textSec"
+                  className="flex items-start gap-3.5 p-4 rounded-xl bg-[#F8FAF8] border border-[#DCE6E0] hover:border-[#176B4D]/40 hover:bg-white transition-all duration-200"
                 >
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-legal-info/10 text-legal-info border border-legal-info/20 text-xs font-bold shrink-0 mt-0.5">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#E8F1EC] text-[#176B4D] border border-[#DCE6E0] text-xs font-bold font-mono shrink-0 mt-0.5">
                     {index + 1}
                   </span>
-                  <span className="leading-snug">{point}</span>
-                </li>
+                  <span className="text-sm text-[#16221C] leading-relaxed flex-1 font-medium">
+                    {point}
+                  </span>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
       </div>

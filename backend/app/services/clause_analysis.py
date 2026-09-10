@@ -22,8 +22,10 @@ from app.services.exceptions import ClauseAnalysisError, EmptyClauseListError
 logger = logging.getLogger(__name__)
 
 # Default maximum estimated tokens per chunk sent to AI provider.
-# Keeps each request well below Groq's 8,000 TPM limit (target <= 5,000 tokens including overhead).
 DEFAULT_MAX_CHUNK_TOKENS = 3500
+# Right-sized Groq contextual chunk targets to keep completions comfortably below 4,096 tokens and respect 8,000 TPM limit
+DEFAULT_GROQ_MAX_CHUNK_TOKENS = 1800
+DEFAULT_GROQ_MAX_CLAUSES_PER_CHUNK = 8
 
 
 def estimate_tokens(text: str) -> int:
@@ -77,6 +79,15 @@ class ClauseAnalysisService:
             if project_root not in sys.path:
                 sys.path.insert(0, project_root)
 
+            # Bridge ML virtual environment if torch is not in current environment
+            ml_site_packages = os.path.join(project_root, "ml", ".venv", "Lib", "site-packages")
+            if os.path.isdir(ml_site_packages) and ml_site_packages not in sys.path:
+                sys.path.append(ml_site_packages)
+
+            # Enforce offline loading for Hugging Face Hub (eliminates ~55s cold-start network timeout)
+            os.environ["TRANSFORMERS_OFFLINE"] = "1"
+            os.environ["HF_HUB_OFFLINE"] = "1"
+
             try:
                 import torch
                 from ml.final_pipeline.domain_detector import LegalDomainDetector
@@ -90,24 +101,25 @@ class ClauseAnalysisService:
                 try:
                     cls._clause_classifier = HierarchicalClauseClassifier(cls._device)
                 except Exception as e:
-                    logger.warning(f"Could not load HierarchicalClauseClassifier ({e}), using default fallback.")
+                    logger.error(f"Could not load HierarchicalClauseClassifier ({e}), using default fallback.", exc_info=True)
                     cls._clause_classifier = None
 
                 try:
                     cls._risk_engine = LegalRiskEngine(cls._device)
                 except Exception as e:
-                    logger.warning(f"Could not load LegalRiskEngine ({e}), using default fallback.")
+                    logger.error(f"Could not load LegalRiskEngine ({e}), using default fallback.", exc_info=True)
                     cls._risk_engine = None
 
                 cls._router = HybridRiskRouter()
                 logger.info(f"Local ML models initialized (device: {cls._device}).")
             except Exception as e:
-                logger.warning(f"Local ML pipeline initialization failed ({e}). Proceeding with Groq fallback routing.")
+                logger.error(f"Local ML pipeline initialization failed ({e}). Proceeding with Groq fallback routing.", exc_info=True)
 
     def __init__(
         self,
         ai_service: AIService | None = None,
-        max_chunk_tokens: int = DEFAULT_MAX_CHUNK_TOKENS,
+        max_chunk_tokens: int | None = None,
+        max_clauses_per_chunk: int | None = None,
         chunk_delay: float | None = None,
     ):
         if ai_service is None:
@@ -115,7 +127,28 @@ class ClauseAnalysisService:
             self.ai_service = AIService(provider=provider)
         else:
             self.ai_service = ai_service
-        self.max_chunk_tokens = max_chunk_tokens
+
+        provider_cls = self.ai_service.provider.__class__.__name__
+        is_mock = "mock" in provider_cls.lower()
+        is_groq = provider_cls == "GroqProvider" or (
+            getattr(settings, "AI_PROVIDER", "").lower() == "groq" and not is_mock
+        )
+
+        # Right-size Groq contextual chunks to max 8 clauses and <= 1800 tokens to fit safely within 4,096 completion limit
+        if max_clauses_per_chunk is not None:
+            self.max_clauses_per_chunk = max_clauses_per_chunk
+        elif is_groq:
+            self.max_clauses_per_chunk = DEFAULT_GROQ_MAX_CLAUSES_PER_CHUNK
+        else:
+            self.max_clauses_per_chunk = None
+
+        if max_chunk_tokens is not None:
+            self.max_chunk_tokens = max_chunk_tokens
+        elif is_groq:
+            self.max_chunk_tokens = DEFAULT_GROQ_MAX_CHUNK_TOKENS
+        else:
+            self.max_chunk_tokens = DEFAULT_MAX_CHUNK_TOKENS
+
         self.chunk_delay = (
             chunk_delay if chunk_delay is not None else settings.GROQ_REQUEST_DELAY
         )
@@ -124,15 +157,25 @@ class ClauseAnalysisService:
         self, clauses: Sequence[ClauseSegment]
     ) -> list[list[ClauseSegment]]:
         """
-        Splits clauses into groups where each group's serialized JSON token estimate
-        is within `self.max_chunk_tokens`. Never truncates individual clauses.
+        Splits clauses into groups where each group has at most `self.max_clauses_per_chunk`
+        clauses (if set) AND its serialized JSON token estimate is within `self.max_chunk_tokens`.
+        Preserves exact clause ordering, drops zero clauses, and never duplicates clauses.
         """
+        if not clauses:
+            return []
+
         chunks: list[list[ClauseSegment]] = []
         current_chunk: list[ClauseSegment] = []
 
         for clause in clauses:
             if not current_chunk:
                 current_chunk.append(clause)
+                continue
+
+            # Hard ceiling on clauses per chunk to guarantee response fits within 4,096 completion tokens
+            if self.max_clauses_per_chunk and len(current_chunk) >= self.max_clauses_per_chunk:
+                chunks.append(current_chunk)
+                current_chunk = [clause]
                 continue
 
             candidate_json = _serialize_clauses(current_chunk + [clause])
@@ -146,6 +189,16 @@ class ClauseAnalysisService:
 
         if current_chunk:
             chunks.append(current_chunk)
+
+        # Integrity verification: verify clause counts, ordering, and absence of duplicates
+        flattened = [c.clause_id for ch in chunks for c in ch]
+        original_ids = [c.clause_id for c in clauses]
+        assert len(flattened) == len(clauses), f"Chunking lost clauses: {len(flattened)} vs {len(clauses)}"
+        assert flattened == original_ids, "Chunking altered clause ordering!"
+        assert len(set(flattened)) == len(clauses), "Chunking introduced duplicate clauses!"
+        logger.info(
+            f"Chunked {len(clauses)} clauses into {len(chunks)} chunks (max_clauses={self.max_clauses_per_chunk}, max_tokens={self.max_chunk_tokens}). Sizes: {[len(ch) for ch in chunks]}"
+        )
 
         return chunks
 

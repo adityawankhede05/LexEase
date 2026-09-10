@@ -18,10 +18,15 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 from app.database.document_context_store import document_context_store
+from app.database.migrations.init_db import init_db
 from app.schemas.document import ClauseSegment
 from app.services.qa import DocumentQAService
 
 async def run_qa_regression_test():
+    try:
+        init_db()
+    except Exception:
+        pass
     print("================================================================================")
     print("RUNNING Q&A REGRESSION AND PARAPHRASE TESTS")
     print("================================================================================\n")

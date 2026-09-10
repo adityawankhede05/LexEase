@@ -1,13 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { askDocumentQuestion, getErrorMessage } from '../api/client'
 
-const SAMPLE_QUESTIONS = [
-  'What are the payment terms and due dates?',
-  'What is the notice period required for termination?',
-  'Are there any penalties, fees, or deposit forfeiture conditions?',
-  'What are the landlord inspection and property access rights?',
-]
-
 function DocumentQA({ documentId, filename, onSelectClause }) {
   const [question, setQuestion] = useState('')
   const [messages, setMessages] = useState([])
@@ -104,64 +97,57 @@ function DocumentQA({ documentId, filename, onSelectClause }) {
   }
 
   return (
-    <div className="flex flex-col h-[650px] rounded-2xl bg-legal-surface/60 border border-legal-border shadow-2xl backdrop-blur-sm overflow-hidden">
+    <div className="flex flex-col min-h-[480px] h-[540px] sm:h-[580px] rounded-2xl bg-white border border-[#DCE6E0] shadow-sm overflow-hidden">
       {/* QA Header */}
-      <div className="px-6 py-4 border-b border-legal-border/80 bg-legal-surface/80 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <span className="text-xl">💬</span>
+      <div className="px-6 py-4 border-b border-[#DCE6E0] bg-white flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#E8F1EC] border border-[#DCE6E0] flex items-center justify-center text-[#176B4D] text-base shadow-2xs">
+            💬
+          </div>
           <div>
-            <h3 className="text-sm sm:text-base font-bold text-legal-text">
-              Grounded Document Q&A
+            <h3 className="text-sm sm:text-base font-bold text-[#16221C] tracking-tight">
+              Grounded Document Q&amp;A
             </h3>
-            <p className="text-xs text-legal-textSec">
-              Answers are strictly grounded in clauses from <span className="text-legal-text font-medium">{filename || 'uploaded document'}</span>
+            <p className="text-xs text-[#66736C]">
+              Answers strictly cited from <span className="text-[#16221C] font-semibold">{filename || 'uploaded document'}</span>
             </p>
           </div>
         </div>
 
         {documentId && (
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-legal-secondary text-[11px] font-mono text-legal-textSec border border-legal-border">
-            <span className="w-1.5 h-1.5 rounded-full bg-legal-success"></span>
-            doc: {documentId.substring(0, 8)}...
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E8F1EC] text-[11px] font-mono text-[#176B4D] border border-[#DCE6E0]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#3E8E63]"></span>
+            <span>doc: {documentId.substring(0, 8)}...</span>
           </span>
         )}
       </div>
 
       {/* Messages Thread */}
-      <div ref={threadContainerRef} className="flex-1 p-5 overflow-y-auto space-y-4 qa-thread-container">
+      <div ref={threadContainerRef} className="flex-1 p-5 sm:p-6 overflow-y-auto space-y-4 qa-thread-container bg-[#F8FAF8]/50">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-8">
-            <div className="w-14 h-14 rounded-2xl bg-legal-info/10 border border-legal-info/20 text-legal-info flex items-center justify-center text-2xl">
-              💡
+          <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-8 px-4 max-w-md mx-auto my-auto select-none">
+            <div className="w-12 h-12 rounded-2xl bg-[#E8F1EC] border border-[#DCE6E0] flex items-center justify-center text-[#176B4D] shadow-2xs">
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
             </div>
-            <div className="space-y-1 max-w-md">
-              <h4 className="text-sm font-semibold text-legal-text">
-                Ask anything about your document
+            <div className="space-y-1.5">
+              <h4 className="text-base sm:text-lg font-bold text-[#12372A] tracking-tight">
+                Ask anything about your agreement
               </h4>
-              <p className="text-xs text-legal-textSec">
-                LexEase uses lexical retrieval and legal AI to find specific clauses and provide direct, cited answers.
+              <p className="text-xs sm:text-[13px] text-[#66736C] leading-relaxed max-w-sm mx-auto">
+                Ask a question about the document and LexEase will answer using the relevant clauses.
               </p>
-            </div>
-
-            {/* Quick Prompts */}
-            <div className="w-full max-w-md space-y-2 pt-2 text-left">
-              <span className="text-[11px] font-semibold text-legal-textMuted uppercase tracking-wider block text-center">
-                Suggested Questions
-              </span>
-              <div className="grid grid-cols-1 gap-2">
-                {SAMPLE_QUESTIONS.map((sample, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleAsk(sample)}
-                    className="p-2.5 rounded-xl bg-legal-bg border border-legal-border hover:border-legal-info/40 text-xs text-legal-textSec hover:text-legal-text transition-all text-left flex items-center justify-between group"
-                  >
-                    <span>{sample}</span>
-                    <span className="text-legal-textMuted group-hover:text-legal-info text-xs">
-                      &rarr;
-                    </span>
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
         ) : (
@@ -172,59 +158,64 @@ function DocumentQA({ documentId, filename, onSelectClause }) {
                 msg.sender === 'user' ? 'items-end' : 'items-start'
               }`}
             >
+              {/* Sender Label */}
+              <span className="text-[10px] font-bold text-[#8C9A92] uppercase tracking-wider mb-1 px-1">
+                {msg.sender === 'user' ? 'You' : 'LexEase AI'}
+              </span>
+
               {/* Message Bubble */}
               <div
-                className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 shadow-md space-y-2.5 ${
+                className={`max-w-[88%] sm:max-w-[80%] rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3 ${
                   msg.sender === 'user'
-                    ? 'bg-legal-secondary border border-legal-border text-legal-text rounded-br-none'
+                    ? 'bg-[#E8F1EC] border border-[#C8DECE] text-[#16221C] rounded-tr-xs'
                     : msg.isError
-                    ? 'bg-legal-danger/10 border border-legal-danger/30 text-legal-text rounded-bl-none'
+                    ? 'bg-[#FFF2F2] border border-[#F5C2C2] text-[#C94A4A] rounded-tl-xs'
                     : msg.cannot_answer
-                    ? 'bg-legal-surface border border-legal-warning/35 text-legal-text rounded-bl-none'
-                    : 'bg-legal-surface border border-legal-border text-legal-text rounded-bl-none'
+                    ? 'bg-white border border-[#F8DEC0] text-[#16221C] rounded-tl-xs'
+                    : 'bg-white border border-[#DCE6E0] text-[#16221C] rounded-tl-xs shadow-xs'
                 }`}
               >
                 {/* User Text */}
                 {msg.sender === 'user' ? (
-                  <p className="text-xs sm:text-sm leading-relaxed">{msg.text}</p>
+                  <p className="text-xs sm:text-sm leading-relaxed font-medium">{msg.text}</p>
                 ) : (
                   <>
                     {/* Unanswerable banner */}
                     {msg.cannot_answer && !msg.isError && (
-                      <div className="flex items-center gap-2 text-xs font-semibold text-legal-warning bg-legal-warning/10 px-2.5 py-1 rounded-md border border-legal-warning/20">
-                        <span>⚠️</span> Unanswerable Context
+                      <div className="flex items-center gap-2 text-xs font-bold text-[#D18A24] bg-[#FEF3E2] px-3 py-1.5 rounded-lg border border-[#F8DEC0]">
+                        <span>⚠️</span> Context Not Present in Agreement
                       </div>
                     )}
 
                     {/* AI Answer Text */}
-                    <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-line text-legal-text">
+                    <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-line text-[#16221C]">
                       {msg.answer}
                     </p>
 
                     {/* Citations & Confidence Bar */}
                     {!msg.cannot_answer && !msg.isError && (
-                      <div className="pt-2 border-t border-legal-border/60 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                      <div className="pt-3 border-t border-[#DCE6E0] flex flex-wrap items-center justify-between gap-2 text-[11px]">
                         {/* Source Clauses */}
                         {msg.source_clauses && msg.source_clauses.length > 0 ? (
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-legal-textSec font-medium">Sources:</span>
+                            <span className="text-[#66736C] font-semibold">Cited Clauses:</span>
                             {msg.source_clauses.map((clauseId) => (
                               <button
                                 key={clauseId}
                                 onClick={() => onSelectClause && onSelectClause(clauseId)}
-                                className="px-2 py-0.5 rounded bg-legal-info/10 text-legal-info font-mono border border-legal-info/35 hover:bg-legal-info/20 transition-colors"
-                                title="Click to view clause"
+                                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#E8F1EC] text-[#176B4D] font-mono font-bold border border-[#C8DECE] hover:bg-[#D4EAE0] transition-all cursor-pointer shadow-2xs"
+                                title="Click to view and highlight clause in Risk Analysis"
                               >
-                                #{clauseId}
+                                <span>🔗</span> #{clauseId}
                               </button>
                             ))}
                           </div>
                         ) : (
-                          <span className="text-legal-textSec italic">No direct clause citation</span>
+                          <span className="text-[#8C9A92] italic">No direct clause citation</span>
                         )}
 
                         {/* Confidence */}
-                        <span className="text-legal-textSec font-mono">
+                        <span className="text-[#66736C] font-mono bg-[#F8FAF8] px-2 py-0.5 rounded border border-[#DCE6E0] text-[10px]">
                           {Math.round((msg.confidence ?? 0) * 100)}% match
                         </span>
                       </div>
@@ -234,7 +225,7 @@ function DocumentQA({ documentId, filename, onSelectClause }) {
               </div>
 
               {/* Timestamp */}
-              <span className="text-[10px] text-legal-textMuted px-1 mt-1 font-mono">
+              <span className="text-[10px] text-[#8C9A92] px-1 mt-1 font-mono">
                 {msg.timestamp}
               </span>
             </div>
@@ -244,10 +235,13 @@ function DocumentQA({ documentId, filename, onSelectClause }) {
         {/* Loading Spinner in Thread */}
         {isLoading && (
           <div className="flex flex-col items-start">
-            <div className="bg-legal-elevated border border-legal-border rounded-2xl rounded-bl-none p-4 shadow-md flex items-center space-x-3">
-              <div className="w-4 h-4 border-2 border-legal-info border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-xs text-legal-text">
-                Searching document clauses & synthesizing grounded answer...
+            <span className="text-[10px] font-bold text-[#8C9A92] uppercase tracking-wider mb-1 px-1">
+              LexEase AI
+            </span>
+            <div className="bg-white border border-[#DCE6E0] rounded-2xl rounded-tl-xs p-4 shadow-sm flex items-center space-x-3">
+              <div className="w-4 h-4 border-2 border-[#176B4D] border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-xs text-[#66736C] font-medium">
+                Retrieving relevant clauses &amp; synthesizing grounded answer...
               </span>
             </div>
           </div>
@@ -257,13 +251,13 @@ function DocumentQA({ documentId, filename, onSelectClause }) {
       </div>
 
       {/* Input Area */}
-      <div className="p-5 border-t border-legal-border/80 bg-legal-surface/80">
+      <div className="p-4 sm:p-5 border-t border-[#DCE6E0] bg-white">
         <form
           onSubmit={(e) => {
             e.preventDefault()
             handleAsk()
           }}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2.5"
         >
           <input
             ref={inputRef}
@@ -275,16 +269,16 @@ function DocumentQA({ documentId, filename, onSelectClause }) {
             disabled={isLoading || !documentId}
             placeholder={
               documentId
-                ? 'Ask a question about this document (e.g. "What is the penalty for late rent?")...'
+                ? 'Ask a question about this agreement (e.g. "What are the termination conditions?")...'
                 : 'Upload a document first to ask questions...'
             }
-            className="flex-1 px-4 py-2.5 rounded-xl bg-legal-bg border border-legal-border text-xs sm:text-sm text-legal-text placeholder-legal-textMuted focus:outline-none focus:border-legal-info/75 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-3 rounded-xl bg-[#F8FAF8] border border-[#DCE6E0] text-xs sm:text-sm text-[#16221C] placeholder-[#8C9A92] focus:outline-none focus:border-[#176B4D] focus:ring-1 focus:ring-[#176B4D]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-2xs"
           />
 
           <button
             type="submit"
             disabled={!question.trim() || isLoading || !documentId}
-            className="px-4 sm:px-5 py-2.5 rounded-xl text-legal-text bg-legal-surface border border-legal-border hover:border-legal-info hover:bg-legal-secondary font-medium text-xs sm:text-sm shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0"
+            className="px-5 py-3 rounded-xl text-white bg-[#176B4D] hover:bg-[#0F5139] border border-transparent font-bold text-xs sm:text-sm shadow-xs hover:shadow-md active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shrink-0 cursor-pointer"
           >
             <span>Ask</span>
             <svg
@@ -296,16 +290,19 @@ function DocumentQA({ documentId, filename, onSelectClause }) {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth="2"
+                strokeWidth="2.2"
                 d="M14 5l7 7m0 0l-7 7m7-7H3"
               />
             </svg>
           </button>
         </form>
 
-        <div className="flex items-center justify-between px-1 pt-2 text-[10px] text-legal-textMuted">
-          <span>Grounded retrieval with Indian legal PII protection</span>
-          <span>{question.length} / 2000 chars</span>
+        <div className="flex items-center justify-between px-1 pt-2.5 text-[10px] text-[#8C9A92]">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#3E8E63]"></span>
+            Grounded lexical retrieval with PII protection
+          </span>
+          <span className="font-mono">{question.length} / 2000</span>
         </div>
       </div>
     </div>

@@ -61,5 +61,11 @@ ml/models/experiment5_model/
 ml/models/experiment6_model/6b/
 ml/models/experiment6_model/6c/
 ml/models/clause_risk_model.joblib
+# Local SQLite databases & logs
+*.db
+*.log
 
-
+# Scratch data and evaluation results
+driti_parsed_risky_patterns.csv
+risky_patterns.txt
+ml/evaluation/results/*.csv

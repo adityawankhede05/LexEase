@@ -36,11 +36,27 @@ class ClauseRetrievalService:
             "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your",
             "yours", "yourself", "yourselves", "shall", "will",
             # Common query template and framing terms
-            "due", "amount", "much", "many", "tell", "explain", "state", "mention", "give", "find"
+            "due", "amount", "much", "many", "tell", "explain", "state", "mention", "mentioned", "give", "find",
+            "agreement", "agreements", "contract", "contracts", "document", "documents", "clause", "clauses"
         }
     )
 
-    def __init__(self, top_n: int = 5, min_score: float = 0.6):
+    LEGAL_SYNONYMS: dict[str, str] = {
+        "normal": "ordinary",
+        "routine": "ordinary",
+        "fired": "terminate",
+        "firing": "terminate",
+        "limit": "limitation",
+        "cap": "limitation",
+        "capped": "limitation",
+        "deadline": "day",
+        "duration": "year",
+        "last": "year",
+        "restriction": "compete",
+        "broad": "anywhere",
+    }
+
+    def __init__(self, top_n: int = 5, min_score: float = 0.55):
         self.top_n = top_n
         self.min_score = min_score
 
@@ -92,6 +108,11 @@ class ClauseRetrievalService:
 
         return [clause for _, _, clause in scored_clauses[: self.top_n]]
 
+    @classmethod
+    def _normalize_legal_term(cls, term: str) -> str:
+        """Maps query terms to standard contract vocabulary."""
+        stemmed = cls._stem(term)
+        return cls.LEGAL_SYNONYMS.get(term, cls.LEGAL_SYNONYMS.get(stemmed, stemmed))
 
     @classmethod
     def _stem(cls, word: str) -> str:
@@ -123,20 +144,29 @@ class ClauseRetrievalService:
 
     @classmethod
     def _tokenize(cls, text: str) -> set[str]:
-        """Normalizes text to lowercase and returns both raw and stemmed tokens."""
+        """Normalizes text to lowercase and returns raw, stemmed, and legal-canonical tokens."""
         if not text:
             return set()
         raw_tokens = set(re.findall(r"\b[a-z0-9]+\b", text.lower()))
         tokens = set(raw_tokens)
         for t in raw_tokens:
-            tokens.add(cls._stem(t))
+            stemmed = cls._stem(t)
+            tokens.add(stemmed)
+            tokens.add(cls._normalize_legal_term(t))
+            tokens.add(cls._normalize_legal_term(stemmed))
         return tokens
 
     @classmethod
     def _tokenize_and_filter(cls, text: str) -> set[str]:
-        """Tokenizes text, filters out stop words, and stems remaining terms."""
+        """Tokenizes text, filters out stop words and single-letter possessives, and normalizes legal terms."""
         if not text:
             return set()
-        raw_tokens = set(re.findall(r"\b[a-z0-9]+\b", text.lower()))
-        filtered = {term for term in raw_tokens if term not in cls.STOP_WORDS}
-        return {cls._stem(term) for term in filtered}
+        raw_tokens = re.findall(r"\b[a-z0-9]+\b", text.lower())
+        filtered = {
+            term
+            for term in raw_tokens
+            if term not in cls.STOP_WORDS
+            and cls._stem(term) not in cls.STOP_WORDS
+            and len(term) > 1
+        }
+        return {cls._normalize_legal_term(term) for term in filtered}
