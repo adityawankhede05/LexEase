@@ -33,6 +33,33 @@ Thumbs.db
 .env
 dataset/Sample_P
 
+# ML Models global binary ignores
+**/*.safetensors
+**/*.pt
+**/*.joblib
+**/*.pkl
+**/*.h5
+**/*.onnx
 
+# Allow only the 4 required production inference models
+!ml/models/experiment3_model/
+!ml/models/experiment3_model/**
+!ml/models/experiment8_indian_classifier/
+!ml/models/experiment8_indian_classifier/**
+!ml/models/final_risk_model/
+!ml/models/final_risk_model/**
+!ml/models/experiment6_model/
+!ml/models/experiment6_model/6a/
+!ml/models/experiment6_model/6a/**
+
+# Non-production experiment models (keep ignored)
+ml/ml/
+ml/models/best_model/
+ml/models/improved_model/
+ml/models/experiment4_risk_model/
+ml/models/experiment5_model/
+ml/models/experiment6_model/6b/
+ml/models/experiment6_model/6c/
+ml/models/clause_risk_model.joblib
 
 
