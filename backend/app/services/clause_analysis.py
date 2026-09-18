@@ -264,7 +264,7 @@ class ClauseAnalysisService:
 
         # 1. Initialize local ML models
         self._init_models()
-        from ml.final_pipeline.reconciler import RiskReconciler
+        from app.utils.reconciler import RiskReconciler
 
         # Combine text to detect overall document domain
         combined_text = "\n\n".join([c.text for c in clauses])
