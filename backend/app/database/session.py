@@ -44,6 +44,9 @@ def _build_engine():
     argument (and passing it would raise an error).
     """
     url: str = settings.DATABASE_URL
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+
     connect_args: dict = {}
     if url.startswith("sqlite"):
         connect_args["check_same_thread"] = False

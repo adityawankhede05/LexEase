@@ -11,7 +11,11 @@ class Settings(BaseModel):
     VERSION: str = "0.1.0"
     API_PREFIX: str = "/api"
     
-    ALLOWED_ORIGINS: list[str] = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+    ALLOWED_ORIGINS: list[str] = [
+        origin.strip()
+        for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+        if origin.strip()
+    ]
     
     # Active AI Provider: "gemini", "groq", "openrouter", "cerebras"
     AI_PROVIDER: str = os.getenv("AI_PROVIDER", "gemini").lower()
