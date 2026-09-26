@@ -13,6 +13,7 @@ Engine configuration:
 - Override via DATABASE_URL environment variable for PostgreSQL deployment
 """
 
+import sqlite3
 from collections.abc import Generator
 
 from sqlalchemy import create_engine, event
@@ -23,7 +24,7 @@ from app.core.config import settings
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
-    if hasattr(dbapi_connection, "cursor"):
+    if isinstance(dbapi_connection, sqlite3.Connection):
         try:
             cursor = dbapi_connection.cursor()
             cursor.execute("PRAGMA foreign_keys=ON")
