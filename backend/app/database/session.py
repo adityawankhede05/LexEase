@@ -51,11 +51,22 @@ def _build_engine():
     if url.startswith("sqlite"):
         connect_args["check_same_thread"] = False
 
+    # PostgreSQL / psycopg2 only: skip native HSTORE OID detection.
+    # psycopg2 normally issues two extra queries on every new connection to
+    # discover HSTORE type OIDs.  When Supabase's transaction-mode pooler
+    # returns a connection that is already in an aborted-transaction state,
+    # those queries raise InFailedSqlTransaction and crash startup before
+    # Base.metadata.create_all() can complete.  LexEase uses no HSTORE
+    # columns anywhere, so disabling this feature is completely safe.
+    is_postgres = url.startswith("postgresql") or url.startswith("postgres")
+    extra: dict = {"use_native_hstore": False} if is_postgres else {}
+
     return create_engine(
         url,
         connect_args=connect_args,
         # Echo SQL to the log only in debug builds; keep silent in production.
         echo=False,
+        **extra,
     )
 
 
