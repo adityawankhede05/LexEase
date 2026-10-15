@@ -17,10 +17,17 @@ function Navbar({ healthStatus, checkingHealth, onCheckHealth, hasDocument, onRe
   }
 
   const handleNavClick = (path) => {
-    if (hasDocument && onResetDocument && path !== location.pathname) {
-      onResetDocument()
+    if (path === '/') {
+      if (hasDocument && onResetDocument) {
+        onResetDocument()
+      }
+      navigate('/')
+    } else {
+      if (hasDocument && onResetDocument && path !== location.pathname) {
+        onResetDocument()
+      }
+      navigate(path)
     }
-    navigate(path)
     setMobileMenuOpen(false)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -115,6 +122,13 @@ function Navbar({ healthStatus, checkingHealth, onCheckHealth, hasDocument, onRe
             }`}
           >
             About
+          </button>
+          <button
+            type="button"
+            onClick={() => handleNavClick('/adaptive-learning')}
+            className={`px-4 py-2 rounded-lg text-sm transition-all duration-150 cursor-pointer ${location.pathname.startsWith('/adaptive-learning') ? 'text-[#12372A] bg-[#E8F1EC] font-bold shadow-2xs' : 'text-[#66736C] hover:text-[#16221C] hover:bg-[#F3F7F5]'}`}
+          >
+            Clause Feedback
           </button>
         </nav>
 
@@ -248,6 +262,13 @@ function Navbar({ healthStatus, checkingHealth, onCheckHealth, hasDocument, onRe
             }`}
           >
             About
+          </button>
+          <button
+            type="button"
+            onClick={() => handleNavClick('/adaptive-learning')}
+            className={`w-full text-left px-3.5 py-2 rounded-lg text-sm transition-all ${location.pathname.startsWith('/adaptive-learning') ? 'text-[#12372A] bg-[#E8F1EC] font-bold' : 'text-[#66736C] hover:text-[#16221C] hover:bg-[#F3F7F5]'}`}
+          >
+            Clause Feedback
           </button>
         </div>
       )}

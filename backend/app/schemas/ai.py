@@ -6,6 +6,7 @@ class AITask(StrEnum):
     DOCUMENT_SUMMARY = "document_summary"
     CLAUSE_ANALYSIS = "clause_analysis"
     DOCUMENT_QA = "document_qa"
+    CLAUSE_REWRITE = "clause_rewrite"
 
 
 class ClauseSimplificationResponse(BaseModel):
