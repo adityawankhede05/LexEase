@@ -418,19 +418,27 @@ def _load_sample_pdf() -> bytes:
         if candidate.exists():
             return candidate.read_bytes()
     doc = fitz.open()
-    page = doc.new_page(width=595, height=842)
-    sample_text = (
-        "SERVICES AGREEMENT\n\n"
-        "7. Client Materials and Work Product\n"
-        "Client retains ownership of materials it provides. After Client pays all amounts due, "
-        "Client owns the final reports specifically created for Client under a project statement.\n\n"
-        "8. Indemnification\n"
-        "Client will defend, indemnify, and hold harmless Provider and its affiliates from any "
-        "and all claims, losses, damages, liabilities, and expenses arising out of or relating to the services.\n\n"
-        "9. Limitation of Liability\n"
-        "To the maximum extent permitted by law, Provider's liability will not exceed the fees paid by Client.\n"
+    # Page 0: Cover / Title agreement
+    p0 = doc.new_page(width=595, height=842)
+    p0.insert_textbox(
+        fitz.Rect(54, 54, 541, 788),
+        "CONSULTING SERVICES AGREEMENT\n\nThis Consulting Services Agreement is entered into by and between Client and Provider.",
+        fontsize=10,
     )
-    page.insert_textbox(fitz.Rect(54, 54, 541, 788), sample_text, fontsize=10)
+    # Page 1: Clauses 7, 8, 9, signatures, footer
+    p1 = doc.new_page(width=595, height=842)
+    blocks = [
+        ("7. Client Materials and Work Product", fitz.Rect(54, 54, 541, 74), "hebo", 10),
+        ("Client retains ownership of materials it provides. After Client pays all amounts due, Client owns the final reports specifically created for Client under a project statement.", fitz.Rect(54, 76, 541, 120), "helv", 9.5),
+        ("8. Indemnification", fitz.Rect(54, 130, 541, 150), "hebo", 10),
+        ("Client will defend, indemnify, and hold harmless Provider and its affiliates from any and all claims, losses, damages, liabilities, and expenses arising out of or relating to the services.", fitz.Rect(54, 152, 541, 200), "helv", 9.5),
+        ("9. Limitation of Liability", fitz.Rect(54, 210, 541, 230), "hebo", 10),
+        ("To the maximum extent permitted by law, Provider's liability will not exceed the fees paid by Client.", fitz.Rect(54, 232, 541, 270), "helv", 9.5),
+        ("SIGNATURES (INTENTIONALLY OMITTED)", fitz.Rect(54, 300, 541, 330), "helv", 9.5),
+        ("Page 2", fitz.Rect(54, 800, 541, 820), "helv", 9),
+    ]
+    for text, rect, font, size in blocks:
+        p1.insert_textbox(rect, text, fontname=font, fontsize=size)
     pdf_bytes = doc.tobytes()
     doc.close()
     return pdf_bytes
