@@ -36,17 +36,42 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 # Engine
 # ---------------------------------------------------------------------------
 
-def _build_engine():
+def normalize_database_url(url: str) -> str:
     """
-    Creates the SQLAlchemy engine from settings.DATABASE_URL.
+    Normalizes database connection URLs to ensure compatibility with installed drivers.
+
+    Supabase, Render, and Heroku often supply connection strings starting with
+    `postgres://`, `postgresql://`, or `postgresql+psycopg://` (the Psycopg 3 default).
+    Because LexEase is configured with `psycopg2-binary`, we normalize all PostgreSQL
+    connection schemes to `postgresql+psycopg2://`.
+    """
+    if not url:
+        return url
+    url = url.strip()
+    if url.startswith("postgresql+psycopg2://"):
+        return url
+    for prefix in (
+        "postgresql+psycopg://",
+        "postgres+psycopg://",
+        "postgres+psycopg2://",
+        "postgresql://",
+        "postgres://",
+    ):
+        if url.startswith(prefix):
+            return "postgresql+psycopg2://" + url[len(prefix):]
+    return url
+
+
+def _build_engine(database_url: str | None = None) -> Engine:
+    """
+    Creates the SQLAlchemy engine from settings.DATABASE_URL (or database_url).
 
     SQLite receives ``check_same_thread=False`` so it can safely be used
     from FastAPI's threaded worker pool.  PostgreSQL does not need this
     argument (and passing it would raise an error).
     """
-    url: str = settings.DATABASE_URL
-    if url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql://", 1)
+    raw_url: str = database_url if database_url is not None else settings.DATABASE_URL
+    url: str = normalize_database_url(raw_url)
 
     connect_args: dict = {}
     if url.startswith("sqlite"):

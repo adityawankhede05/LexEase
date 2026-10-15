@@ -264,3 +264,61 @@ def test_store_fallback_on_db_failure(monkeypatch):
     assert retrieved is not None
     assert len(retrieved) == 1
     assert retrieved[0].text == "Fallback clause"
+
+
+# ---------------------------------------------------------------------------
+# 7. Database URL Normalization and Engine Creation Tests
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "input_url,expected_url",
+    [
+        (
+            "postgresql+psycopg://user:pass@ep-cool-pooler.supabase.com:5432/postgres",
+            "postgresql+psycopg2://user:pass@ep-cool-pooler.supabase.com:5432/postgres",
+        ),
+        (
+            "postgres+psycopg://user:pass@ep-cool-pooler.supabase.com:5432/postgres",
+            "postgresql+psycopg2://user:pass@ep-cool-pooler.supabase.com:5432/postgres",
+        ),
+        (
+            "postgres://user:pass@localhost:5432/lexease",
+            "postgresql+psycopg2://user:pass@localhost:5432/lexease",
+        ),
+        (
+            "postgresql://user:pass@localhost:5432/lexease",
+            "postgresql+psycopg2://user:pass@localhost:5432/lexease",
+        ),
+        (
+            "postgresql+psycopg2://user:pass@localhost:5432/lexease",
+            "postgresql+psycopg2://user:pass@localhost:5432/lexease",
+        ),
+        (
+            "  postgresql+psycopg://user:pass@localhost:5432/lexease?sslmode=require  ",
+            "postgresql+psycopg2://user:pass@localhost:5432/lexease?sslmode=require",
+        ),
+        (
+            "sqlite:///./lexease.db",
+            "sqlite:///./lexease.db",
+        ),
+        (
+            "",
+            "",
+        ),
+    ],
+)
+def test_normalize_database_url(input_url, expected_url):
+    """Verify that PostgreSQL variants normalize to postgresql+psycopg2:// while SQLite is preserved."""
+    assert session_module.normalize_database_url(input_url) == expected_url
+
+
+def test_build_engine_postgres_dialect_and_hstore():
+    """Verify that _build_engine produces a psycopg2 dialect engine and does not attempt to import psycopg (v3)."""
+    supabase_style_url = "postgresql+psycopg://user:pass@aws-0-us-east-1.pooler.supabase.com:5432/postgres"
+    test_engine = session_module._build_engine(database_url=supabase_style_url)
+    try:
+        assert test_engine.dialect.name == "postgresql"
+        assert test_engine.dialect.driver == "psycopg2"
+        assert test_engine.dialect.use_native_hstore is False
+    finally:
+        test_engine.dispose()
