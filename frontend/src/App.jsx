@@ -2,6 +2,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import WhyLexEase from './pages/WhyLexEase'
 import About from './pages/About'
+import ClauseDraftingPage from './pages/ClauseDraftingPage'
+import AdaptiveLearning from './pages/AdaptiveLearning'
+import AdaptiveLearningAdmin from './pages/AdaptiveLearningAdmin'
 
 function App() {
   return (
@@ -10,6 +13,10 @@ function App() {
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/draft" element={<ClauseDraftingPage />} />
+            <Route path="/clause-drafting" element={<ClauseDraftingPage />} />
+            <Route path="/adaptive-learning" element={<AdaptiveLearning />} />
+            <Route path="/adaptive-learning/admin" element={<AdaptiveLearningAdmin />} />
             <Route path="/why-lexease" element={<WhyLexEase />} />
             <Route path="/about" element={<About />} />
           </Routes>
