@@ -296,3 +296,57 @@ class QAInteraction(Base):
         return (
             f"<QAInteraction id={self.id!r} document_id={self.document_id!r}>"
         )
+
+
+# ---------------------------------------------------------------------------
+# ClauseFeedback
+# ---------------------------------------------------------------------------
+
+class ClauseFeedback(Base):
+    """
+    Stores consented customer feedback proposing a corrected risk label for a clause.
+    Feedback is held for reviewer approval and retained for offline analysis.
+    Approval does not retrain or alter the live model.
+    """
+    __tablename__ = "clause_feedback"
+
+    id: str = Column(String, primary_key=True, default=_new_uuid)
+    clause_text: str = Column(Text, nullable=False)
+    predicted_risk_level: str = Column(String, nullable=False)
+    corrected_risk_level: str = Column(String, nullable=False)
+    consent: bool = Column(Boolean, nullable=False, default=False)
+    status: str = Column(String, nullable=False, default="pending")  # pending / approved / rejected
+    review_note: str | None = Column(Text, nullable=True)
+    source_group_id: str = Column(String, nullable=False, default=_new_uuid)
+    created_at: datetime = Column(
+        DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+    reviewed_at: datetime | None = Column(DateTime(timezone=True), nullable=True)
+
+    def __repr__(self) -> str:
+        return f"<ClauseFeedback id={self.id!r} status={self.status!r}>"
+
+
+# ---------------------------------------------------------------------------
+# ClauseFeedbackSubmission
+# ---------------------------------------------------------------------------
+
+class ClauseFeedbackSubmission(Base):
+    """
+    Stores batch document clause feedback submissions awaiting reviewer evaluation.
+    """
+    __tablename__ = "clause_feedback_submissions"
+
+    id: str = Column(String, primary_key=True, default=_new_uuid)
+    clauses_json: str = Column(Text, nullable=False, default="[]")
+    clause_count: int = Column(Integer, nullable=False, default=0)
+    consent: bool = Column(Boolean, nullable=False, default=False)
+    status: str = Column(String, nullable=False, default="pending")  # pending / annotated / rejected
+    review_note: str | None = Column(Text, nullable=True)
+    created_at: datetime = Column(
+        DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+    reviewed_at: datetime | None = Column(DateTime(timezone=True), nullable=True)
+
+    def __repr__(self) -> str:
+        return f"<ClauseFeedbackSubmission id={self.id!r} status={self.status!r}>"

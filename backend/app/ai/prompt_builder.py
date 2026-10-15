@@ -80,5 +80,24 @@ class PromptBuilder:
                 )
             )
 
+        if task_type == AITask.CLAUSE_REWRITE:
+            clauses_json = payload.get("clauses_json")
+            if not clauses_json:
+                raise ValueError("Missing required key 'clauses_json' in payload for clause rewrite task.")
+            template_path = PROMPTS_DIR / "clause_rewrite.txt"
+            if not template_path.is_file():
+                raise FileNotFoundError(f"Prompt template file not found at: {template_path}")
+            template = template_path.read_text(encoding="utf-8")
+            retry_block = ""
+            if payload.get("retry_instruction"):
+                retry_block = (
+                    "\n\nCRITICAL RETRY INSTRUCTION (PREVIOUS DRAFT REJECTED):\n"
+                    f"{payload['retry_instruction']}\n"
+                    "You MUST correct this flaw in the new draft.\n"
+                )
+            return template.replace("{{clauses_json}}", str(clauses_json)).replace(
+                "{{retry_instruction}}", retry_block
+            )
+
         raise ValueError(f"Unsupported AI task: {task_type}")
 

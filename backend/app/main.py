@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.logging import setup_logging
-from app.api.routers import health, documents, summary, clause_analysis, qa
+from app.api.routers import health, documents, summary, clause_analysis, clause_rewrite, qa, adaptive_learning
 from app.database.migrations.init_db import init_db
 
 # Setup logging
@@ -29,6 +29,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition", "X-Export-Mode"],
 )
 
 # Include routers
@@ -36,5 +37,7 @@ app.include_router(health.router, prefix="/api", tags=["System"])
 app.include_router(documents.router)
 app.include_router(summary.router)
 app.include_router(clause_analysis.router)
+app.include_router(clause_rewrite.router)
 app.include_router(qa.router)
+app.include_router(adaptive_learning.router)
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   checkHealth,
   uploadDocument,
@@ -13,9 +13,12 @@ import DocumentSummary from '../components/DocumentSummary'
 import ClauseRiskAnalysis from '../components/ClauseRiskAnalysis'
 import DocumentQA from '../components/DocumentQA'
 import DocumentProcessor from '../components/DocumentProcessor'
+import DocumentLearningSubmission from '../components/DocumentLearningSubmission'
+import { getCurrentDocumentFile, setCurrentDocumentFile } from '../documentFileStore'
 
 function Home() {
   const location = useLocation()
+  const navigate = useNavigate()
 
   // Backend Health State
   const [healthStatus, setHealthStatus] = useState(null)
@@ -142,6 +145,7 @@ function Home() {
 
   // Full Document Upload & Pipeline Trigger
   const handleFileUpload = async (file) => {
+    setCurrentDocumentFile(file)
     setSelectedFile(file)
     setProcessingStage('uploading')
     setIsUploading(true)
@@ -224,6 +228,7 @@ function Home() {
 
   // Reset Document State to Upload New
   const handleResetDocument = () => {
+    setCurrentDocumentFile(null)
     setDocumentData(null)
     setSummaryData(null)
     setClauseAnalysisData(null)
@@ -416,13 +421,33 @@ function Home() {
               )}
 
               {activeTab === 'risks' && (
-                <ClauseRiskAnalysis
-                  analysisData={clauseAnalysisData}
-                  originalClauses={documentData.clauses}
-                  isLoading={isAnalyzingClauses}
-                  error={clauseAnalysisError}
-                  onRetry={() => handleAnalyzeClauses(documentData.clauses)}
-                />
+                <>
+                  <ClauseRiskAnalysis
+                    analysisData={clauseAnalysisData}
+                    originalClauses={documentData.clauses}
+                    isLoading={isAnalyzingClauses}
+                    error={clauseAnalysisError}
+                    onRetry={() => handleAnalyzeClauses(documentData.clauses)}
+                  />
+                  {clauseAnalysisData && (
+                    <DocumentLearningSubmission
+                      clauses={documentData.clauses}
+                      analysisData={clauseAnalysisData}
+                      onDraftSafer={() => navigate('/clause-drafting', {
+                        state: {
+                          workspace: {
+                            documentData,
+                            summaryData,
+                            clauseAnalysisData,
+                            selectedFile,
+                            sourceFile: selectedFile || getCurrentDocumentFile(),
+                            activeTab: 'risks',
+                          },
+                        },
+                      })}
+                    />
+                  )}
+                </>
               )}
 
               {activeTab === 'qa' && (
