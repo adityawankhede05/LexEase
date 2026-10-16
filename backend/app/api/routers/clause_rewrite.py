@@ -65,6 +65,8 @@ async def download_proposed_pdf(
         raise HTTPException(status_code=422, detail=exc.errors()) from exc
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to generate proposed draft PDF: {exc}") from exc
 
     filename = proposed_pdf_filename(file.filename)
     return StreamingResponse(

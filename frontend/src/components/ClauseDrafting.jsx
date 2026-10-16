@@ -83,7 +83,23 @@ function ClauseDrafting({ clauses = [], analysisData, filename = 'contract.pdf',
       anchor.remove()
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
     } catch (requestError) {
-      setError(getErrorMessage(requestError))
+      let message = getErrorMessage(requestError)
+      if (requestError?.response?.data instanceof Blob) {
+        try {
+          const text = await requestError.response.data.text()
+          const json = JSON.parse(text)
+          if (json?.detail) {
+            message = typeof json.detail === 'string'
+              ? json.detail
+              : Array.isArray(json.detail)
+                ? json.detail.map((d) => d.msg || JSON.stringify(d)).join(', ')
+                : JSON.stringify(json.detail)
+          }
+        } catch {
+          // Keep default message if text parsing fails
+        }
+      }
+      setError(message)
     } finally {
       setBusy(false)
     }

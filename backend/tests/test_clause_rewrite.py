@@ -618,3 +618,93 @@ def test_proposed_pdf_rejects_empty_replacement_before_export():
     )
     with pytest.raises(ValueError, match="empty replacement text"):
         build_proposed_draft_pdf(source_bytes, request)
+
+
+def test_download_proposed_pdf_endpoint_success_with_multiple_replacements_and_edited_text():
+    """Regression test: POST /documents/proposed-pdf successfully exports a PDF with multiple included replacements and edited text."""
+    import json
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    source_bytes = _load_sample_pdf()
+
+    edited_text_1 = "Client retains all ownership of materials it provides. After Client pays all amounts due, Client exclusively owns all final reports and deliverables."
+    edited_text_2 = "Each Party shall defend, indemnify, and hold harmless the other Party from claims arising out of the indemnifying Party's gross negligence or willful misconduct."
+
+    payload = {
+        "clauses": [
+            {
+                "clause_id": "clause_8",
+                "clause_number": "7",
+                "text": "7. Client Materials and Work Product\nClient retains ownership of materials it provides. After Client pays all amounts due, Client owns the final reports specifically created for Client under a project statement.",
+            },
+            {
+                "clause_id": "clause_9",
+                "clause_number": "8",
+                "text": "8. Indemnification\nClient will defend, indemnify, and hold harmless Provider and its affiliates from any and all claims, losses, damages, liabilities, and expenses arising out of or relating to the services.",
+            },
+            {
+                "clause_id": "clause_10",
+                "clause_number": "9",
+                "text": "9. Limitation of Liability\nTo the maximum extent permitted by law, Provider's liability will not exceed the fees paid by Client.",
+            },
+        ],
+        "rewrites": [
+            {
+                "clause_id": "clause_8",
+                "clause_number": "7",
+                "replacement_text": edited_text_1,
+                "changes_summary": "Exclusively owns deliverables",
+                "client_tradeoff": "None",
+                "review_note": "User edited proposal",
+                "estimated_customer_risk": "LOW",
+                "risk_estimate_note": "Low risk",
+            },
+            {
+                "clause_id": "clause_9",
+                "clause_number": "8",
+                "replacement_text": edited_text_2,
+                "changes_summary": "Mutual indemnification for gross negligence",
+                "client_tradeoff": "Mutual obligation",
+                "review_note": "User edited proposal",
+                "estimated_customer_risk": "MEDIUM",
+                "risk_estimate_note": "Balanced indemnity",
+            },
+        ],
+        "source_filename": "consulting_agreement.pdf",
+    }
+
+    response = client.post(
+        "/documents/proposed-pdf",
+        files={"file": ("consulting_agreement.pdf", source_bytes, "application/pdf")},
+        data={"request_json": json.dumps(payload)},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert "attachment; filename=" in response.headers.get("content-disposition", "")
+    assert "consulting_agreement_proposed_draft.pdf" in response.headers.get("content-disposition", "")
+    assert response.headers.get("x-export-mode") in ("in_place", "addendum")
+
+    # Verify returned PDF content
+    doc = fitz.open(stream=response.content, filetype="pdf")
+    assert doc.page_count >= 2
+    full_text = " ".join(page.get_text() for page in doc)
+    norm_text = " ".join(full_text.split())
+    assert "exclusively owns all final reports and deliverables" in norm_text
+    assert "gross negligence or willful misconduct" in norm_text
+    doc.close()
+
+
+def test_download_proposed_pdf_endpoint_rejects_missing_multipart_form_data():
+    """Verify endpoint rejects application/json without multipart files with 422."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    response = client.post(
+        "/documents/proposed-pdf",
+        json={"file": "not_multipart"},
+    )
+    assert response.status_code == 422

@@ -164,6 +164,9 @@ export async function downloadProposedPdf(sourceFile, payload) {
   formData.append('request_json', JSON.stringify(payload))
   return apiClient.post('/documents/proposed-pdf', formData, {
     responseType: 'blob',
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   })
 }
 
